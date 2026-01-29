@@ -1,0 +1,603 @@
+{% extends "base.html" %}
+
+{% block title %}Email OSINT{% endblock %}
+{% block page_title %}Email OSINT Investigation{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-envelope-at"></i> Email OSINT Investigation
+                    </h5>
+                    <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#helpModal">
+                        <i class="bi bi-question-circle"></i> Help
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Email Investigation Tool</strong><br>
+                    This tool investigates email addresses for fraud and cybercrime cases. It checks for:
+                    <ul class="mb-0 mt-2">
+                        <li>Email validation and deliverability</li>
+                        <li>Data breaches (HaveIBeenPwned)</li>
+                        <li>Domain registration and WHOIS information</li>
+                        <li>DNS records (SPF, DMARC, MX)</li>
+                        <li>Social media account discovery</li>
+                        <li>Risk assessment and reputation</li>
+                    </ul>
+                </div>
+
+                <form method="POST" action="{{ url_for('investigations.email_search') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                    <div class="mb-3">
+                        <label for="case_id" class="form-label">
+                            <i class="bi bi-folder"></i> Select Case <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="case_id" name="case_id" required>
+                            <option value="">-- Select a case --</option>
+                            {% for case in cases %}
+                            <option value="{{ case.id }}">
+                                {{ case.case_number }} - {{ case.title }} ({{ case.status|title }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted">
+                            This investigation will be linked to the selected case
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">
+                            <i class="bi bi-envelope"></i> Email Address <span class="text-danger">*</span>
+                        </label>
+                        <input type="email"
+                               class="form-control"
+                               id="email"
+                               name="email"
+                               placeholder="suspect@example.com"
+                               required
+                               autofocus>
+                        <small class="form-text text-muted">
+                            Enter the email address you want to investigate
+                        </small>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Important:</strong>
+                        <ul class="mb-0 mt-1">
+                            <li>All investigations are logged and audited</li>
+                            <li>External API calls may have rate limits (HaveIBeenPwned: 1 request per 1.5 seconds)</li>
+                            <li>Investigation typically takes 5-15 seconds</li>
+                            <li>Evidence hash will be generated for chain of custody</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-search"></i> Start Investigation
+                        </button>
+                        <a href="{{ url_for('investigations.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Investigations
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Recent Email Investigations -->
+        <div class="card shadow mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-clock-history"></i> Recent Email Investigations
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if recent_investigations %}
+                <div class="list-group">
+                    {% for inv in recent_investigations %}
+                    <a href="{{ url_for('investigations.view_email_result', investigation_id=inv.id) }}"
+                       class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                <i class="bi bi-envelope"></i> {{ inv.target_identifier }}
+                            </h6>
+                            <small class="text-muted">{{ inv.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                        <small class="text-muted">
+                            {% if inv.status == 'completed' %}
+                            <span class="badge bg-success">Completed</span>
+                            {% elif inv.status == 'failed' %}
+                            <span class="badge bg-danger">Failed</span>
+                            {% else %}
+                            <span class="badge bg-warning">{{ inv.status|title }}</span>
+                            {% endif %}
+                            | Execution time: {{ "%.2f"|format(inv.execution_time) }}s
+                        </small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No recent email investigations</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="helpModalLabel">
+                    <i class="bi bi-book"></i> Email OSINT Investigation Guide
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Welcome Message -->
+                <div class="alert alert-info">
+                    <h6 class="alert-heading"><i class="bi bi-info-circle"></i> Welcome to the Email OSINT Investigation Tool!</h6>
+                    <p class="mb-0">This guide will walk you through every step of using this powerful tool to investigate email addresses in cybercrime cases. Even if you're new to digital investigations, this guide will help you understand exactly what to do.</p>
+                </div>
+
+                <!-- Quick Start -->
+                <h5 class="text-primary"><i class="bi bi-rocket-takeoff"></i> Step-by-Step: How to Start an Investigation</h5>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title"><strong>STEP 1: Select a Case</strong></h6>
+                        <p class="card-text">
+                            <strong>What to do:</strong> Look for the dropdown box labeled "Select Case" with a folder icon (<i class="bi bi-folder"></i>).<br>
+                            <strong>Why:</strong> Every investigation must be linked to an official case for proper documentation and legal compliance.<br>
+                            <strong>How:</strong> Click on the dropdown and select your active case from the list. You'll see the case number, title, and status.<br>
+                            <strong>Important:</strong> If you don't see your case, contact your supervisor to request access or create a new case first.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title"><strong>STEP 2: Enter the Email Address</strong></h6>
+                        <p class="card-text">
+                            <strong>What to do:</strong> Find the text box labeled "Email Address" with an envelope icon (<i class="bi bi-envelope"></i>).<br>
+                            <strong>How:</strong> Type or paste the email address you want to investigate. For example: <code>suspect@gmail.com</code><br>
+                            <strong>Tips:</strong>
+                        </p>
+                        <ul class="small">
+                            <li>Make sure there are no extra spaces before or after the email</li>
+                            <li>The email must be in correct format (example@domain.com)</li>
+                            <li>Copy directly from your case file to avoid typing errors</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title"><strong>STEP 3: Click "Start Investigation"</strong></h6>
+                        <p class="card-text">
+                            <strong>What to do:</strong> Click the big blue button that says "Start Investigation" (<i class="bi bi-search"></i>).<br>
+                            <strong>What happens next:</strong> The system will automatically:
+                        </p>
+                        <ul class="small">
+                            <li>Check if the email address is valid and deliverable</li>
+                            <li>Search for data breaches involving this email</li>
+                            <li>Look up domain registration information</li>
+                            <li>Check DNS security records</li>
+                            <li>Search for social media accounts</li>
+                            <li>Calculate a risk score</li>
+                        </ul>
+                        <p class="card-text">
+                            <strong>Wait time:</strong> This usually takes 5-15 seconds. Please be patient and don't close the browser.<br>
+                            <strong>Note:</strong> All your actions are automatically logged for audit purposes.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card mb-3 border-success">
+                    <div class="card-body">
+                        <h6 class="card-title text-success"><strong>STEP 4: Review Your Results</strong></h6>
+                        <p class="card-text">
+                            <strong>What to do:</strong> After the investigation completes, you'll see a detailed report page.<br>
+                            <strong>How to read results:</strong> Results are organized into clear sections (explained in detail below).<br>
+                            <strong>Next actions:</strong>
+                        </p>
+                        <ul class="small">
+                            <li>Read the risk assessment at the top (tells you if this is a high-priority case)</li>
+                            <li>Review each section carefully and take notes</li>
+                            <li>Click "Download PDF Report" to save an official copy for your case file</li>
+                            <li>Verify any social media accounts manually by clicking "Visit" links</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- What This Tool Does -->
+                <h5 class="text-primary"><i class="bi bi-search"></i> What This Tool Investigates</h5>
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Investigation Area</th>
+                            <th>What You'll Learn</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Email Validation</strong></td>
+                            <td>Whether email exists, is deliverable, syntax correctness, MX records</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Data Breaches</strong></td>
+                            <td>All known breaches via HaveIBeenPwned, dates, compromised data types</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Domain Info</strong></td>
+                            <td>WHOIS data, registrar, creation date, expiration, country, nameservers</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DNS Records</strong></td>
+                            <td>MX (mail servers), SPF (anti-spoofing), DMARC (authentication), A records</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Social Media</strong></td>
+                            <td>Accounts on 13+ platforms: GitHub, LinkedIn, Twitter, Facebook, Instagram, etc.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Risk Assessment</strong></td>
+                            <td>Overall threat score (0-100), risk flags, recommendations</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <hr>
+
+                <!-- Understanding Results -->
+                <h5 class="text-primary"><i class="bi bi-graph-up"></i> Understanding Your Investigation Results</h5>
+
+                <div class="alert alert-light border">
+                    <p><strong>After your investigation completes, you'll see several sections with information. Here's how to understand each part:</strong></p>
+                </div>
+
+                <h6 class="mt-3"><i class="bi bi-speedometer2"></i> 1. Risk Score - What Does It Mean?</h6>
+                <p class="small">The risk score is a number from 0 to 100 that tells you how suspicious this email address appears. The system calculates this automatically based on multiple factors.</p>
+
+                <table class="table table-sm table-bordered">
+                    <thead>
+                        <tr class="table-light">
+                            <th>Score Range</th>
+                            <th>Risk Level</th>
+                            <th>What It Means</th>
+                            <th>What You Should Do</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="table-success">
+                            <td><strong>0-39</strong></td>
+                            <td><span class="badge bg-success">LOW RISK</span></td>
+                            <td>Very few or no suspicious indicators found</td>
+                            <td>Continue with normal investigation procedures. Email appears legitimate.</td>
+                        </tr>
+                        <tr class="table-warning">
+                            <td><strong>40-69</strong></td>
+                            <td><span class="badge bg-warning">MODERATE RISK</span></td>
+                            <td>Some concerning factors detected</td>
+                            <td>Investigate more carefully. Look for additional evidence. Check the flagged issues below the score.</td>
+                        </tr>
+                        <tr class="table-danger">
+                            <td><strong>70-100</strong></td>
+                            <td><span class="badge bg-danger">HIGH RISK</span></td>
+                            <td>Multiple serious red flags present</td>
+                            <td>Priority case! Report to supervisor immediately. Likely connected to fraud or cybercrime.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h6 class="mt-3"><i class="bi bi-exclamation-triangle"></i> 2. Risk Flags - Warning Signs to Watch</h6>
+                <p class="small">Risk flags are specific issues the system found. Here's what each one means:</p>
+
+                <div class="accordion" id="riskFlagsAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flag1">
+                                <strong>Multiple Data Breaches</strong>
+                            </button>
+                        </h2>
+                        <div id="flag1" class="accordion-collapse collapse" data-bs-parent="#riskFlagsAccordion">
+                            <div class="accordion-body small">
+                                <strong>What it means:</strong> This email was found in 2 or more data breaches.<br>
+                                <strong>Why it matters:</strong> The person's passwords and personal information may be available to criminals on the dark web.<br>
+                                <strong>Investigation tip:</strong> Check the breach details section to see what information was stolen (passwords, phone numbers, addresses, etc.)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flag2">
+                                <strong>Recent Breaches</strong>
+                            </button>
+                        </h2>
+                        <div id="flag2" class="accordion-collapse collapse" data-bs-parent="#riskFlagsAccordion">
+                            <div class="accordion-body small">
+                                <strong>What it means:</strong> This email appeared in a data breach within the last 2 years.<br>
+                                <strong>Why it matters:</strong> Recent breaches indicate current threats. Information may be actively used by criminals.<br>
+                                <strong>Investigation tip:</strong> This is especially important for fraud cases involving recent transactions.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flag3">
+                                <strong>Disposable/Temporary Email</strong>
+                            </button>
+                        </h2>
+                        <div id="flag3" class="accordion-collapse collapse" data-bs-parent="#riskFlagsAccordion">
+                            <div class="accordion-body small">
+                                <strong>What it means:</strong> This email is from a temporary email service (like 10minutemail, guerrillamail, etc.)<br>
+                                <strong>Why it matters:</strong> Criminals use disposable emails to hide their identity. These emails expire after a short time.<br>
+                                <strong>Investigation tip:</strong> Very strong indicator of fraudulent activity. Document this in your case file.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flag4">
+                                <strong>No SPF/DMARC Records</strong>
+                            </button>
+                        </h2>
+                        <div id="flag4" class="accordion-collapse collapse" data-bs-parent="#riskFlagsAccordion">
+                            <div class="accordion-body small">
+                                <strong>What it means:</strong> The email's domain doesn't have proper email security configured.<br>
+                                <strong>Why it matters:</strong> This domain can be easily spoofed (faked) by scammers. Anyone can pretend to send emails from this domain.<br>
+                                <strong>Investigation tip:</strong> If investigating phishing, this suggests the sender might be impersonating someone else.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flag5">
+                                <strong>Invalid/Non-Existent Email</strong>
+                            </button>
+                        </h2>
+                        <div id="flag5" class="accordion-collapse collapse" data-bs-parent="#riskFlagsAccordion">
+                            <div class="accordion-body small">
+                                <strong>What it means:</strong> This email address doesn't actually exist or cannot receive emails.<br>
+                                <strong>Why it matters:</strong> Suspect may have provided fake contact information to evade detection.<br>
+                                <strong>Investigation tip:</strong> Check if suspect has provided other contact methods. Compare with case evidence.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Social Media Discovery -->
+                <h5 class="text-primary"><i class="bi bi-share"></i> 3. Social Media Accounts - Finding the Suspect Online</h5>
+
+                <div class="alert alert-light border">
+                    <p class="mb-1"><strong>What this section shows:</strong> The system automatically searches 13+ social media platforms to find accounts connected to the email address.</p>
+                </div>
+
+                <h6 class="mt-3">Platforms We Check:</h6>
+                <div class="row small">
+                    <div class="col-md-6">
+                        <ul>
+                            <li><strong>GitHub</strong> - Code sharing (programmers, hackers)</li>
+                            <li><strong>GitLab</strong> - Software development</li>
+                            <li><strong>LinkedIn</strong> - Professional networking, job history</li>
+                            <li><strong>Twitter/X</strong> - Social network, public posts</li>
+                            <li><strong>Facebook</strong> - Personal social network</li>
+                            <li><strong>Instagram</strong> - Photo sharing</li>
+                            <li><strong>Reddit</strong> - Discussion forums, interests</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul>
+                            <li><strong>Pinterest</strong> - Image collections, interests</li>
+                            <li><strong>Tumblr</strong> - Blogging platform</li>
+                            <li><strong>Medium</strong> - Writing, articles</li>
+                            <li><strong>Gravatar</strong> - Profile pictures</li>
+                            <li><strong>About.me</strong> - Personal pages</li>
+                            <li><strong>Plus more...</strong></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h6 class="mt-3">Understanding Confidence Levels:</h6>
+                <table class="table table-sm table-bordered">
+                    <tbody>
+                        <tr class="table-success">
+                            <td width="20%"><span class="badge bg-success">HIGH</span></td>
+                            <td><strong>Meaning:</strong> Account definitely exists. Verified through platform's API. <br><strong>Action:</strong> You can trust this result. Visit the profile to gather evidence.</td>
+                        </tr>
+                        <tr class="table-warning">
+                            <td><span class="badge bg-warning">MEDIUM</span></td>
+                            <td><strong>Meaning:</strong> Account likely exists but not 100% verified. <br><strong>Action:</strong> Visit the profile to confirm it belongs to your suspect.</td>
+                        </tr>
+                        <tr class="table-info">
+                            <td><span class="badge bg-info">LOW</span></td>
+                            <td><strong>Meaning:</strong> Possible match, but needs verification. <br><strong>Action:</strong> Check the profile carefully. May belong to someone else with similar email.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="card border-primary mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title text-primary">How to Use Social Media Findings:</h6>
+                        <ol class="small mb-0">
+                            <li><strong>Click "Visit" button</strong> next to each found account to open the profile in a new tab</li>
+                            <li><strong>Verify ownership:</strong> Check if profile picture, name, location match your suspect</li>
+                            <li><strong>Take screenshots:</strong> Capture relevant posts, photos, connections as evidence</li>
+                            <li><strong>Look for:</strong> Location tags, associates, posted threats, evidence of crimes</li>
+                            <li><strong>Document everything:</strong> Note username, profile URL, and relevant posts in your case file</li>
+                            <li><strong>Important:</strong> Don't interact with suspect's accounts (no liking, commenting, or following)</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Data Breach Information -->
+                <h5 class="text-primary"><i class="bi bi-shield-exclamation"></i> 4. Data Breaches - Has This Email Been Compromised?</h5>
+
+                <div class="alert alert-light border">
+                    <p class="mb-1"><strong>What this section shows:</strong> If this email address appeared in any known data breaches where hackers stole information from websites or companies.</p>
+                    <p class="mb-0 small"><strong>Data source:</strong> HaveIBeenPwned (HIBP) - A trusted database of over 12 billion compromised accounts from 600+ data breaches.</p>
+                </div>
+
+                <h6 class="mt-3">What Information You'll See About Each Breach:</h6>
+                <table class="table table-sm table-bordered">
+                    <tbody>
+                        <tr>
+                            <td width="25%"><strong>Breach Name</strong></td>
+                            <td>The company or website that was hacked (e.g., "LinkedIn", "Adobe", "Yahoo")</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Breach Date</strong></td>
+                            <td>When the hack occurred. Recent dates (within 2 years) are more concerning.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Accounts Affected</strong></td>
+                            <td>How many total users were compromised. Shows the scale of the breach.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Verified <span class="badge bg-success">YES</span></strong></td>
+                            <td>HIBP confirmed this breach is real and legitimate.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Sensitive <span class="badge bg-danger">YES</span></strong></td>
+                            <td>The breach included very private information (passwords, financial data, etc.). High risk!</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Data Classes</strong></td>
+                            <td>What specific information was stolen (see explanation below)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h6 class="mt-3">Understanding "Data Classes" (What Was Stolen):</h6>
+                <div class="row small">
+                    <div class="col-md-6">
+                        <ul>
+                            <li><strong>Email addresses:</strong> Confirmed the email was in the breach</li>
+                            <li><strong>Passwords:</strong> ⚠️ CRITICAL! Password may be cracked and public</li>
+                            <li><strong>Names:</strong> Person's real name was exposed</li>
+                            <li><strong>Phone numbers:</strong> Contact number was stolen</li>
+                            <li><strong>Physical addresses:</strong> Home/work address leaked</li>
+                            <li><strong>Dates of birth:</strong> Birthdate information compromised</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul>
+                            <li><strong>IP addresses:</strong> Their internet connection location</li>
+                            <li><strong>Security questions:</strong> Account recovery info stolen</li>
+                            <li><strong>Social media profiles:</strong> Links to other accounts</li>
+                            <li><strong>Financial info:</strong> ⚠️ Bank details, credit cards</li>
+                            <li><strong>Private messages:</strong> Personal communications exposed</li>
+                            <li><strong>Plus many more...</strong></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="alert alert-danger">
+                    <h6 class="alert-heading"><i class="bi bi-shield-exclamation"></i> CRITICAL WARNING!</h6>
+                    <p class="small mb-2"><strong>If you see "Passwords" in the Data Classes:</strong></p>
+                    <ul class="small mb-0">
+                        <li>Assume the password has been cracked (decoded) by hackers</li>
+                        <li>The password is likely available on dark web marketplaces</li>
+                        <li>Criminals may have already used it to access other accounts</li>
+                        <li><strong>Investigation action:</strong> If this is a victim's email, advise immediate password change on ALL accounts</li>
+                        <li><strong>If suspect's email:</strong> They may have had their identity stolen too, or they're using stolen credentials</li>
+                    </ul>
+                </div>
+
+                <div class="card border-info mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title text-info">What to Do When You Find Breaches:</h6>
+                        <ol class="small mb-0">
+                            <li><strong>Count the breaches:</strong> Multiple breaches = higher risk. Note the number in your report.</li>
+                            <li><strong>Check dates:</strong> Breaches in last 2 years are active threats. Older breaches still matter but less urgent.</li>
+                            <li><strong>Review data classes:</strong> Note what information was stolen, especially passwords and financial data.</li>
+                            <li><strong>For victims:</strong> Inform them their data was compromised. Recommend password changes and fraud monitoring.</li>
+                            <li><strong>For suspects:</strong> Document in case file. May indicate they're using compromised credentials or are victims themselves.</li>
+                            <li><strong>Include in report:</strong> Always document breaches in your official investigation report.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Best Practices -->
+                <h5 class="text-primary"><i class="bi bi-star"></i> Best Practices</h5>
+                <ul>
+                    <li><strong>Case Linking:</strong> Always link investigations to active cases for proper documentation</li>
+                    <li><strong>Download Reports:</strong> Generate PDF report immediately after investigation</li>
+                    <li><strong>Evidence Hash:</strong> Note the SHA-256 hash for legal chain of custody</li>
+                    <li><strong>Manual Verification:</strong> Verify social media accounts manually before drawing conclusions</li>
+                    <li><strong>Cross-Reference:</strong> Combine findings with other investigation methods</li>
+                    <li><strong>Legal Compliance:</strong> Ensure proper authorization for all investigations</li>
+                </ul>
+
+                <hr>
+
+                <!-- Time & Rate Limits -->
+                <h5 class="text-primary"><i class="bi bi-clock"></i> Time & Rate Limits</h5>
+                <div class="alert alert-warning small">
+                    <ul class="mb-0">
+                        <li><strong>Investigation Time:</strong> 5-15 seconds per email</li>
+                        <li><strong>HaveIBeenPwned API:</strong> 1 request per 1.5 seconds (automatic rate limiting)</li>
+                        <li><strong>Multiple Investigations:</strong> Use Bulk Email OSINT for investigating 2+ emails efficiently</li>
+                    </ul>
+                </div>
+
+                <hr>
+
+                <!-- Troubleshooting -->
+                <h5 class="text-primary"><i class="bi bi-wrench"></i> Troubleshooting</h5>
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Issue</th>
+                            <th>Solution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Investigation Failed</td>
+                            <td>Wait 2 minutes and retry. Check email format is correct.</td>
+                        </tr>
+                        <tr>
+                            <td>API Rate Limit Error</td>
+                            <td>Too many requests. Wait 2-3 minutes before next investigation.</td>
+                        </tr>
+                        <tr>
+                            <td>No Cases Available</td>
+                            <td>Create a new case first or request case assignment from supervisor.</td>
+                        </tr>
+                        <tr>
+                            <td>Some Results Missing</td>
+                            <td>Domain may not have all records. This is normal for some domains.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+            <div class="modal-footer">
+                <a href="{{ url_for('investigations.download_email_osint_guide') }}"
+                   class="btn btn-success me-auto"
+                   target="_blank">
+                    <i class="bi bi-file-pdf"></i> Download PDF Guide
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

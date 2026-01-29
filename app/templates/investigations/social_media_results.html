@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block title %}Social Media Results - {{ results.username }}{% endblock %}
+{% block page_title %}Social Media Investigation Results{% endblock %}
+
+{% block extra_css %}
+<style>
+    .results-header {
+        background: linear-gradient(135deg, var(--zps-primary), #000850);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--zps-primary);
+    }
+
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .platform-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .platform-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .platform-icon-large {
+        font-size: 2.5rem;
+    }
+
+    .platform-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .search-list {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .search-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .search-item.priority-high {
+        border-left-color: #dc3545;
+    }
+
+    .search-item.priority-medium {
+        border-left-color: #ffc107;
+    }
+
+    .search-item.priority-low {
+        border-left-color: #6c757d;
+    }
+
+    .search-item:hover {
+        background: #e9ecef;
+        transform: translateX(5px);
+    }
+
+    .search-info {
+        flex: 1;
+    }
+
+    .search-name {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.25rem;
+    }
+
+    .search-description {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+
+    .search-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: var(--zps-primary);
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .search-link:hover {
+        background: #000850;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .priority-badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .aggregator-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .aggregator-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .aggregator-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s;
+    }
+
+    .aggregator-card:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-4px);
+    }
+
+    .aggregator-card h6 {
+        color: white;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .aggregator-card p {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+
+    .aggregator-link {
+        display: inline-block;
+        padding: 0.5rem 1.5rem;
+        background: white;
+        color: #667eea;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+
+    .aggregator-link:hover {
+        color: #667eea;
+        transform: scale(1.05);
+    }
+
+    .case-info-badge {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        display: inline-block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Results Header -->
+<div class="results-header">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h3 class="mb-2">
+                <i class="bi bi-person-badge"></i> Username: {{ results.username }}
+            </h3>
+            <p class="mb-3 opacity-75">Social Media OSINT Investigation</p>
+            <div class="case-info-badge">
+                <i class="bi bi-folder"></i> Case: {{ case.case_number }} - {{ case.title }}
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <p class="mb-1"><i class="bi bi-calendar"></i> {{ investigation.created_at.strftime('%B %d, %Y') }}</p>
+            <p class="mb-1"><i class="bi bi-clock"></i> {{ investigation.created_at.strftime('%H:%M:%S') }}</p>
+            <p class="mb-0"><i class="bi bi-person"></i> {{ investigation.investigator.full_name }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-number">{{ results.statistics.platforms_searched }}</div>
+            <div class="stat-label">Platforms Searched</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-number">{{ results.statistics.total_searches }}</div>
+            <div class="stat-label">Total Search Links</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-number">{{ results.statistics.search_engines }}</div>
+            <div class="stat-label">Aggregator Tools</div>
+        </div>
+    </div>
+</div>
+
+<!-- Username Search Aggregators -->
+{% if results.search_engines %}
+<div class="aggregator-section">
+    <h4 class="mb-1">
+        <i class="bi bi-search"></i> Username Search Aggregators
+    </h4>
+    <p class="opacity-75 mb-3">These tools search across hundreds of platforms simultaneously</p>
+
+    <div class="aggregator-grid">
+        {% for engine in results.search_engines %}
+        <div class="aggregator-card">
+            <h6>{{ engine.name }}</h6>
+            <p>{{ engine.description }}</p>
+            <a href="{{ engine.url }}" target="_blank" class="aggregator-link">
+                <i class="bi bi-box-arrow-up-right"></i> Open Tool
+            </a>
+            {% if engine.get('note') %}
+            <p class="mt-2 mb-0" style="font-size: 0.75rem;">
+                <i class="bi bi-info-circle"></i> {{ engine.note }}
+            </p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Platform Results -->
+{% for platform_id, searches in results.platforms.items() %}
+<div class="platform-section">
+    <div class="platform-header">
+        <div class="platform-icon-large">
+            {% if platform_id == 'facebook' %}
+            <i class="bi bi-facebook" style="color: #1877F2;"></i>
+            {% elif platform_id == 'twitter' %}
+            <i class="bi bi-twitter-x" style="color: #000000;"></i>
+            {% elif platform_id == 'instagram' %}
+            <i class="bi bi-instagram" style="color: #E4405F;"></i>
+            {% elif platform_id == 'linkedin' %}
+            <i class="bi bi-linkedin" style="color: #0A66C2;"></i>
+            {% elif platform_id == 'tiktok' %}
+            <i class="bi bi-tiktok" style="color: #000000;"></i>
+            {% elif platform_id == 'youtube' %}
+            <i class="bi bi-youtube" style="color: #FF0000;"></i>
+            {% elif platform_id == 'reddit' %}
+            <i class="bi bi-reddit" style="color: #FF4500;"></i>
+            {% elif platform_id == 'github' %}
+            <i class="bi bi-github" style="color: #181717;"></i>
+            {% elif platform_id == 'telegram' %}
+            <i class="bi bi-telegram" style="color: #26A5E4;"></i>
+            {% endif %}
+        </div>
+        <div>
+            <h4 class="platform-title">{{ platform_id | title }}</h4>
+            <p class="text-muted mb-0">{{ searches | length }} search methods</p>
+        </div>
+    </div>
+
+    <div class="search-list">
+        {% for search in searches %}
+        <div class="search-item priority-{{ search.priority }}">
+            <div class="search-info">
+                <div class="search-name">
+                    {{ search.name }}
+                    <span class="priority-badge ms-2"
+                          style="background: {% if search.priority == 'high' %}#dc3545{% elif search.priority == 'medium' %}#ffc107; color: #000{% else %}#6c757d{% endif %};">
+                        {{ search.priority }}
+                    </span>
+                </div>
+                <p class="search-description">{{ search.description }}</p>
+            </div>
+            <div>
+                <a href="{{ search.url }}" target="_blank" class="search-link">
+                    <span>Open</span>
+                    <i class="bi bi-box-arrow-up-right"></i>
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+
+<!-- Investigation Notes -->
+{% if investigation.notes %}
+<div class="platform-section">
+    <h5 class="mb-3">
+        <i class="bi bi-journal-text"></i> Investigation Notes
+    </h5>
+    <div class="alert alert-info mb-0">
+        {{ investigation.notes }}
+    </div>
+</div>
+{% endif %}
+
+<!-- Action Buttons -->
+<div class="d-flex justify-content-between mt-4">
+    <a href="{{ url_for('cases.view_case', case_id=case.id) }}" class="btn btn-outline-secondary">
+        <i class="bi bi-folder"></i> Back to Case
+    </a>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('investigations.social_media_search') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> New Investigation
+        </a>
+        <button class="btn btn-success" onclick="window.print()">
+            <i class="bi bi-printer"></i> Print Results
+        </button>
+    </div>
+</div>
+
+<!-- Legal Notice -->
+<div class="alert alert-warning mt-4">
+    <h6><i class="bi bi-exclamation-triangle"></i> Legal Notice</h6>
+    <p class="mb-0">
+        This investigation generated search links only. No automated data collection was performed.
+        All searches must be conducted manually and in compliance with the Computer Misuse and Cybercrime Act,
+        Data Protection Act, and relevant platform Terms of Service.
+    </p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Print styling
+    window.addEventListener('beforeprint', function() {
+        document.querySelectorAll('.search-link').forEach(link => {
+            link.style.display = 'none';
+        });
+    });
+
+    window.addEventListener('afterprint', function() {
+        document.querySelectorAll('.search-link').forEach(link => {
+            link.style.display = 'inline-flex';
+        });
+    });
+</script>
+{% endblock %}

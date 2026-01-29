@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Edit User{% endblock %}
+{% block page_title %}Edit User - {{ user.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .form-section-title {
+        color: var(--zps-primary);
+        font-weight: 600;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--zps-green);
+    }
+
+    .user-header {
+        background: linear-gradient(135deg, var(--zps-primary), #000850);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+
+    .user-avatar-large {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: white;
+        color: var(--zps-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 700;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: red;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <!-- User Header -->
+        <div class="user-header">
+            <div class="d-flex align-items-center gap-3">
+                <div class="user-avatar-large">{{ user.full_name[0] }}</div>
+                <div>
+                    <h4 class="mb-1">{{ user.full_name }}</h4>
+                    <p class="mb-0 opacity-75">Badge: {{ user.badge_number }} | {{ user.rank }} | {{ user.department }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h5 class="mb-1">
+                        <i class="bi bi-pencil" style="color: var(--zps-primary);"></i>
+                        Edit User Details
+                    </h5>
+                    <p class="text-muted mb-0">Update user information and permissions</p>
+                </div>
+                <a href="{{ url_for('admin.list_users') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+
+            <form method="POST" action="{{ url_for('admin.edit_user', user_id=user.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <!-- Personal Information -->
+                <h5 class="form-section-title">
+                    <i class="bi bi-person"></i> Personal Information
+                </h5>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Badge Number</label>
+                        <input type="text" class="form-control" value="{{ user.badge_number }}" disabled>
+                        <small class="text-muted">Badge number cannot be changed</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="full_name" class="form-label required-field">Full Name</label>
+                        <input type="text" class="form-control" id="full_name" name="full_name"
+                               value="{{ user.full_name }}" required>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="rank" class="form-label required-field">Rank</label>
+                        <select class="form-select" id="rank" name="rank" required>
+                            <option value="Constable" {% if user.rank == 'Constable' %}selected{% endif %}>Constable</option>
+                            <option value="Sergeant" {% if user.rank == 'Sergeant' %}selected{% endif %}>Sergeant</option>
+                            <option value="Inspector" {% if user.rank == 'Inspector' %}selected{% endif %}>Inspector</option>
+                            <option value="Chief Inspector" {% if user.rank == 'Chief Inspector' %}selected{% endif %}>Chief Inspector</option>
+                            <option value="Superintendent" {% if user.rank == 'Superintendent' %}selected{% endif %}>Superintendent</option>
+                            <option value="Chief Superintendent" {% if user.rank == 'Chief Superintendent' %}selected{% endif %}>Chief Superintendent</option>
+                            <option value="Assistant Commissioner" {% if user.rank == 'Assistant Commissioner' %}selected{% endif %}>Assistant Commissioner</option>
+                            <option value="Deputy Commissioner" {% if user.rank == 'Deputy Commissioner' %}selected{% endif %}>Deputy Commissioner</option>
+                            <option value="Commissioner" {% if user.rank == 'Commissioner' %}selected{% endif %}>Commissioner</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="department" class="form-label required-field">Department</label>
+                        <select class="form-select" id="department" name="department" required>
+                            <option value="Cyber Crime Unit" {% if user.department == 'Cyber Crime Unit' %}selected{% endif %}>Cyber Crime Unit</option>
+                            <option value="Criminal Investigations" {% if user.department == 'Criminal Investigations' %}selected{% endif %}>Criminal Investigations</option>
+                            <option value="Intelligence" {% if user.department == 'Intelligence' %}selected{% endif %}>Intelligence</option>
+                            <option value="Forensics" {% if user.department == 'Forensics' %}selected{% endif %}>Forensics</option>
+                            <option value="Operations" {% if user.department == 'Operations' %}selected{% endif %}>Operations</option>
+                            <option value="Administration" {% if user.department == 'Administration' %}selected{% endif %}>Administration</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="phone_number" class="form-label">Phone Number</label>
+                    <input type="tel" class="form-control" id="phone_number" name="phone_number"
+                           value="{{ user.phone_number or '' }}" placeholder="+260 XXX XXX XXX">
+                </div>
+
+                <!-- Account Information -->
+                <h5 class="form-section-title">
+                    <i class="bi bi-shield-lock"></i> Account Information
+                </h5>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" value="{{ user.username }}" disabled>
+                        <small class="text-muted">Username cannot be changed</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="email" class="form-label required-field">Email Address</label>
+                        <input type="email" class="form-control" id="email" name="email"
+                               value="{{ user.email }}" required>
+                    </div>
+                </div>
+
+                <!-- Password Change (Optional) -->
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Change Password:</strong> Leave blank to keep current password
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="new_password" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password"
+                               minlength="8" placeholder="Leave blank to keep current">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="confirm_password" class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                               minlength="8" placeholder="Leave blank to keep current">
+                    </div>
+                </div>
+
+                <!-- Role and Permissions -->
+                <h5 class="form-section-title">
+                    <i class="bi bi-key"></i> Role and Permissions
+                </h5>
+
+                <div class="mb-3">
+                    <label for="role" class="form-label required-field">User Role</label>
+                    <select class="form-select" id="role" name="role" required onchange="updateRoleInfo()">
+                        <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Administrator</option>
+                        <option value="senior_investigator" {% if user.role == 'senior_investigator' %}selected{% endif %}>Senior Investigator</option>
+                        <option value="investigator" {% if user.role == 'investigator' %}selected{% endif %}>Investigator</option>
+                        <option value="analyst" {% if user.role == 'analyst' %}selected{% endif %}>Analyst</option>
+                    </select>
+                </div>
+
+                <div id="roleInfo" class="alert alert-light">
+                    <strong>Role Description:</strong>
+                    <p id="roleDescription" class="mb-0 mt-2"></p>
+                </div>
+
+                <!-- Account Status Info -->
+                <div class="alert alert-info">
+                    <strong>Account Status:</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Status: {% if user.is_active %}<span class="text-success">Active</span>{% else %}<span class="text-warning">Inactive</span>{% endif %}</li>
+                        <li>Locked: {% if user.is_locked %}<span class="text-danger">Yes</span>{% else %}<span class="text-success">No</span>{% endif %}</li>
+                        <li>2FA Enabled: {% if user.is_2fa_enabled %}<span class="text-success">Yes</span>{% else %}<span class="text-muted">No</span>{% endif %}</li>
+                        <li>Account Created: {{ user.created_at.strftime('%B %d, %Y') }}</li>
+                        {% if user.last_login %}
+                        <li>Last Login: {{ user.last_login.strftime('%B %d, %Y at %H:%M') }}</li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="{{ url_for('admin.list_users') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const roleDescriptions = {
+        'admin': 'Full system access including user management, system settings, and all investigation features.',
+        'senior_investigator': 'Can create and manage cases, assign officers, conduct investigations, and view all cases.',
+        'investigator': 'Can conduct investigations and manage assigned cases. Cannot create new cases.',
+        'analyst': 'Limited access to view cases and conduct OSINT investigations. Cannot manage cases.'
+    };
+
+    function updateRoleInfo() {
+        const role = document.getElementById('role').value;
+        const roleDescription = document.getElementById('roleDescription');
+
+        if (role && roleDescriptions[role]) {
+            roleDescription.textContent = roleDescriptions[role];
+        }
+    }
+
+    // Initialize role description on page load
+    updateRoleInfo();
+
+    // Password confirmation validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const newPassword = document.getElementById('new_password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+
+        if (newPassword || confirmPassword) {
+            if (newPassword !== confirmPassword) {
+                e.preventDefault();
+                alert('Passwords do not match!');
+                document.getElementById('confirm_password').focus();
+                return false;
+            }
+        }
+    });
+</script>
+{% endblock %}

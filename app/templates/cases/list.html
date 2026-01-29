@@ -1,0 +1,444 @@
+{% extends "base.html" %}
+
+{% block title %}Case Management{% endblock %}
+{% block page_title %}Case Management{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-folder2-open"></i> Case Management
+                    </h5>
+                    <div>
+                        <button type="button" class="btn btn-light btn-sm me-2" data-bs-toggle="modal" data-bs-target="#helpModal">
+                            <i class="bi bi-question-circle"></i> Help
+                        </button>
+                        <a href="{{ url_for('cases.create_case') }}" class="btn btn-success btn-sm">
+                            <i class="bi bi-plus-circle"></i> New Case
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if cases %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Case Number</th>
+                                <th>Title</th>
+                                <th>Type</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Lead Investigator</th>
+                                <th>Opened</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for case in cases %}
+                            <tr>
+                                <td><strong>{{ case.case_number }}</strong></td>
+                                <td>{{ case.title }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ case.case_type|title|replace('_', ' ') }}</span>
+                                </td>
+                                <td>
+                                    {% if case.priority == 'critical' %}
+                                    <span class="badge bg-danger">CRITICAL</span>
+                                    {% elif case.priority == 'high' %}
+                                    <span class="badge bg-warning">HIGH</span>
+                                    {% elif case.priority == 'medium' %}
+                                    <span class="badge bg-info">MEDIUM</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">LOW</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if case.status == 'open' %}
+                                    <span class="badge bg-success">Open</span>
+                                    {% elif case.status == 'investigating' %}
+                                    <span class="badge bg-primary">Investigating</span>
+                                    {% elif case.status == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                    {% elif case.status == 'closed' %}
+                                    <span class="badge bg-secondary">Closed</span>
+                                    {% else %}
+                                    <span class="badge bg-dark">Archived</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ case.lead_investigator.full_name }}</td>
+                                <td>{{ case.opened_date.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    <a href="{{ url_for('cases.view_case', case_id=case.id) }}"
+                                       class="btn btn-sm btn-primary">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No cases found. Create your first case to get started.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="helpModalLabel">
+                    <i class="bi bi-book"></i> Case Management User Guide
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Welcome Message -->
+                <div class="alert alert-info">
+                    <h6 class="alert-heading"><i class="bi bi-info-circle"></i> Welcome to Case Management!</h6>
+                    <p class="mb-0">This guide will help you effectively manage criminal cases in the CyberTrace system. You'll learn how to create, track, and manage cases from start to finish.</p>
+                </div>
+
+                <!-- What is a Case -->
+                <h5 class="text-primary"><i class="bi bi-folder2-open"></i> What is a Case?</h5>
+                <p>A <strong>case</strong> is a digital folder that contains all information about a specific criminal investigation. It includes:</p>
+                <ul class="small">
+                    <li><strong>Case details</strong> - Title, description, and classification</li>
+                    <li><strong>Investigations</strong> - All OSINT investigations (email, phone, IP address, etc.)</li>
+                    <li><strong>Evidence</strong> - Digital evidence collected during investigations</li>
+                    <li><strong>Team members</strong> - Lead investigator and assigned officers</li>
+                    <li><strong>Legal documents</strong> - Warrant information and case notes</li>
+                    <li><strong>Timeline</strong> - Complete history of all case activities</li>
+                </ul>
+                <hr>
+
+                <!-- Creating a Case -->
+                <h5 class="text-primary"><i class="bi bi-plus-circle"></i> Step-by-Step: How to Create a New Case</h5>
+
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title"><strong>STEP 1: Click "New Case" Button</strong></h6>
+                        <p class="card-text">
+                            <strong>What to do:</strong> Click the green "New Case" button at the top right corner of the Case Management page.<br>
+                            <strong>Note:</strong> Only officers with case creation permissions can create new cases. If you don't see this button, contact your supervisor.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title"><strong>STEP 2: Fill in Case Information</strong></h6>
+                        <p class="card-text"><strong>Required Fields:</strong></p>
+                        <ul class="small">
+                            <li><strong>Case Title:</strong> Short description (e.g., "Email Fraud - John Doe")</li>
+                            <li><strong>Case Description:</strong> Detailed explanation of the case including:
+                                <ul>
+                                    <li>What happened?</li>
+                                    <li>Who reported it?</li>
+                                    <li>When did it occur?</li>
+                                    <li>What evidence do you have?</li>
+                                </ul>
+                            </li>
+                            <li><strong>Case Type:</strong> Select the category:
+                                <ul>
+                                    <li><strong>Fraud</strong> - Financial fraud, scams</li>
+                                    <li><strong>Cybercrime</strong> - Hacking, cyber attacks</li>
+                                    <li><strong>Identity Theft</strong> - Stolen identity, impersonation</li>
+                                    <li><strong>Financial Crime</strong> - Money laundering, embezzlement</li>
+                                    <li><strong>Other</strong> - Other types of crime</li>
+                                </ul>
+                            </li>
+                            <li><strong>Priority Level:</strong>
+                                <ul>
+                                    <li><strong>Critical</strong> - Immediate danger, ongoing crime, high-value loss</li>
+                                    <li><strong>High</strong> - Serious crime, time-sensitive</li>
+                                    <li><strong>Medium</strong> - Standard investigation</li>
+                                    <li><strong>Low</strong> - Minor incidents, historical cases</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card mb-3 border-success">
+                    <div class="card-body">
+                        <h6 class="card-title text-success"><strong>STEP 3: Submit and Get Your Case Number</strong></h6>
+                        <p class="card-text">
+                            <strong>What happens:</strong> After clicking "Create Case", the system will:<br>
+                        </p>
+                        <ul class="small">
+                            <li>Automatically generate a unique case number (e.g., ZPS-2025-0001)</li>
+                            <li>Set you as the Lead Investigator</li>
+                            <li>Mark the case as "Open"</li>
+                            <li>Create an audit log entry</li>
+                            <li>Open the case detail page where you can start investigating</li>
+                        </ul>
+                        <p class="card-text small">
+                            <strong>Important:</strong> Write down your case number! You'll use it for all reports and investigations.
+                        </p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Understanding the Case List -->
+                <h5 class="text-primary"><i class="bi bi-list-ul"></i> Understanding the Case List</h5>
+
+                <h6 class="mt-3">What Cases Can You See?</h6>
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Your Role</th>
+                            <th>Cases You Can See</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Admin / Senior Investigator</strong></td>
+                            <td>ALL cases in the system</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Investigator / Analyst</strong></td>
+                            <td>Only cases where you are the Lead Investigator OR an Assigned Officer</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h6 class="mt-3">Understanding Case Status</h6>
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Status</th>
+                            <th>What It Means</th>
+                            <th>What You Should Do</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="table-success">
+                            <td><span class="badge bg-success">Open</span></td>
+                            <td>Case just created, ready to begin investigation</td>
+                            <td>Start collecting evidence and running OSINT investigations</td>
+                        </tr>
+                        <tr class="table-primary">
+                            <td><span class="badge bg-primary">Investigating</span></td>
+                            <td>Active investigation in progress</td>
+                            <td>Continue investigations, document findings, update case regularly</td>
+                        </tr>
+                        <tr class="table-warning">
+                            <td><span class="badge bg-warning">Pending</span></td>
+                            <td>Waiting for something (warrants, approvals, evidence)</td>
+                            <td>Follow up on pending items, update status when ready to proceed</td>
+                        </tr>
+                        <tr class="table-secondary">
+                            <td><span class="badge bg-secondary">Closed</span></td>
+                            <td>Investigation complete, case resolved</td>
+                            <td>No action needed. Can view reports and evidence.</td>
+                        </tr>
+                        <tr class="table-dark">
+                            <td><span class="badge bg-dark">Archived</span></td>
+                            <td>Case archived for long-term storage</td>
+                            <td>Read-only access for historical reference</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h6 class="mt-3">Understanding Priority Levels</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-sm table-bordered">
+                            <tbody>
+                                <tr class="table-danger">
+                                    <td width="30%"><span class="badge bg-danger">CRITICAL</span></td>
+                                    <td>Immediate action required. Ongoing crimes, life/safety threats, major financial losses</td>
+                                </tr>
+                                <tr class="table-warning">
+                                    <td><span class="badge bg-warning">HIGH</span></td>
+                                    <td>Serious crimes requiring urgent attention within 24-48 hours</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-sm table-bordered">
+                            <tbody>
+                                <tr class="table-info">
+                                    <td width="30%"><span class="badge bg-info">MEDIUM</span></td>
+                                    <td>Standard investigation timeline. Most cases fall here.</td>
+                                </tr>
+                                <tr class="table-secondary">
+                                    <td><span class="badge bg-secondary">LOW</span></td>
+                                    <td>Minor incidents, historical cases, or cases with low urgency</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Working with Cases -->
+                <h5 class="text-primary"><i class="bi bi-briefcase"></i> Working with Cases</h5>
+
+                <h6 class="mt-3">How to View a Case</h6>
+                <ol class="small">
+                    <li>Find your case in the list (use case number or title)</li>
+                    <li>Click the <span class="badge bg-primary"><i class="bi bi-eye"></i> View</span> button</li>
+                    <li>You'll see the complete case detail page with:
+                        <ul>
+                            <li>Case information and status</li>
+                            <li>All investigations linked to this case</li>
+                            <li>Evidence collected</li>
+                            <li>Case timeline and activity history</li>
+                            <li>Team members and assignments</li>
+                        </ul>
+                    </li>
+                </ol>
+
+                <h6 class="mt-3">Linking Investigations to Cases</h6>
+                <p class="small"><strong>Every investigation must be linked to a case.</strong> When you use any OSINT tool (Email, Phone, IP, etc.), you'll select which case the investigation belongs to.</p>
+                <div class="card border-primary mb-3">
+                    <div class="card-body small">
+                        <h6 class="card-title text-primary">Example Workflow:</h6>
+                        <ol class="mb-0">
+                            <li>Create a case: "Email Fraud - Victim Jane Smith"</li>
+                            <li>Go to Email OSINT tool</li>
+                            <li>Select your case from the dropdown</li>
+                            <li>Enter suspect's email address</li>
+                            <li>Run investigation</li>
+                            <li>Results are automatically saved to your case</li>
+                            <li>View all investigations in the case detail page</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Best Practices -->
+                <h5 class="text-primary"><i class="bi bi-star"></i> Best Practices for Case Management</h5>
+
+                <div class="row small">
+                    <div class="col-md-6">
+                        <h6> DO:</h6>
+                        <ul>
+                            <li>Create a new case for each investigation</li>
+                            <li>Use clear, descriptive case titles</li>
+                            <li>Write detailed descriptions with all known information</li>
+                            <li>Set accurate priority levels</li>
+                            <li>Link ALL investigations to the correct case</li>
+                            <li>Update case status as investigation progresses</li>
+                            <li>Add notes regularly to track progress</li>
+                            <li>Close cases when investigation is complete</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6> DON'T:</h6>
+                        <ul>
+                            <li>Use vague titles like "Case 1" or "Test"</li>
+                            <li>Leave case descriptions empty</li>
+                            <li>Run investigations without selecting a case</li>
+                            <li>Share case information with unauthorized persons</li>
+                            <li>Delete cases (archive instead)</li>
+                            <li>Forget to update case status</li>
+                            <li>Leave cases open indefinitely</li>
+                            <li>Work on cases you're not assigned to</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Case Lifecycle -->
+                <h5 class="text-primary"><i class="bi bi-arrow-repeat"></i> Case Lifecycle</h5>
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <p class="mb-2"><strong>Typical case workflow:</strong></p>
+                        <div class="d-flex justify-content-between align-items-center flex-wrap small">
+                            <div class="text-center">
+                                <div class="badge bg-success mb-2">1. OPEN</div>
+                                <div>Case created</div>
+                            </div>
+                            <div>'</div>
+                            <div class="text-center">
+                                <div class="badge bg-primary mb-2">2. INVESTIGATING</div>
+                                <div>Run investigations</div>
+                            </div>
+                            <div>'</div>
+                            <div class="text-center">
+                                <div class="badge bg-warning mb-2">3. PENDING</div>
+                                <div>Await warrants/approvals</div>
+                            </div>
+                            <div>'</div>
+                            <div class="text-center">
+                                <div class="badge bg-primary mb-2">4. INVESTIGATING</div>
+                                <div>Continue work</div>
+                            </div>
+                            <div>'</div>
+                            <div class="text-center">
+                                <div class="badge bg-secondary mb-2">5. CLOSED</div>
+                                <div>Investigation complete</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Troubleshooting -->
+                <h5 class="text-primary"><i class="bi bi-wrench"></i> Troubleshooting Common Issues</h5>
+
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Issue</th>
+                            <th>Solution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Can't see "New Case" button</td>
+                            <td>You don't have permission to create cases. Contact your supervisor to request access.</td>
+                        </tr>
+                        <tr>
+                            <td>Can't see a specific case</td>
+                            <td>You must be the Lead Investigator or an Assigned Officer. Ask the lead to add you to the case.</td>
+                        </tr>
+                        <tr>
+                            <td>Can't run investigation without case</td>
+                            <td>All investigations must be linked to a case. Create a new case first.</td>
+                        </tr>
+                        <tr>
+                            <td>Case number not showing</td>
+                            <td>Case numbers are auto-generated when you create a case. You cannot edit them.</td>
+                        </tr>
+                        <tr>
+                            <td>Need to reopen closed case</td>
+                            <td>Contact a Senior Investigator or Admin to reopen the case.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+            <div class="modal-footer">
+                <a href="{{ url_for('cases.download_case_management_guide') }}"
+                   class="btn btn-success me-auto"
+                   target="_blank">
+                    <i class="bi bi-file-pdf"></i> Download PDF Guide
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

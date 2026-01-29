@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}Threat Intelligence Search - CyberTrace{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-search text-primary"></i> Threat Intelligence Search</h2>
+            <p class="text-muted">Search local and global threat intelligence databases</p>
+        </div>
+        <div>
+            <a href="{{ url_for('threat_intel.dashboard') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Search Form -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-search"></i> Search for Threats</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('threat_intel.search') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="indicator" class="form-label">
+                            <strong>Indicator</strong> <span class="text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               class="form-control"
+                               id="indicator"
+                               name="indicator"
+                               placeholder="Enter phone number, email, domain, or IP address"
+                               required>
+                        <small class="form-text text-muted">
+                            Examples: +260xxxxxxxxx, scammer@example.com, suspicious-site.com, 192.168.1.1
+                        </small>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="indicator_type" class="form-label">
+                            <strong>Indicator Type</strong>
+                        </label>
+                        <select class="form-select" id="indicator_type" name="indicator_type">
+                            <option value="auto">Auto-detect</option>
+                            <option value="phone_number">Phone Number</option>
+                            <option value="email_address">Email Address</option>
+                            <option value="domain">Domain</option>
+                            <option value="ip_address">IP Address</option>
+                            <option value="url">URL</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2 mb-3">
+                        <label class="form-label d-block">&nbsp;</label>
+                        <div class="form-check">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   id="search_external"
+                                   name="search_external"
+                                   checked>
+                            <label class="form-check-label" for="search_external">
+                                Search External Sources
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">
+                            Checks 5 global threat databases
+                        </small>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-search"></i> Search Threat Intelligence
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Search Results -->
+    {% if search_performed %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-list-check"></i> Search Results for: <code>{{ results.indicator }}</code>
+            </h5>
+        </div>
+        <div class="card-body">
+            <!-- Local Database Results -->
+            <h6 class="text-primary"><i class="bi bi-database"></i> Zambian Threat Database</h6>
+            {% if results.local %}
+            <div class="alert alert-warning">
+                <strong><i class="bi bi-exclamation-triangle"></i> Found {{ results.local|length }} local threat(s)</strong>
+            </div>
+
+            <div class="table-responsive mb-4">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Indicator</th>
+                            <th>Type</th>
+                            <th>Severity</th>
+                            <th>Confidence</th>
+                            <th>Reports</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for threat in results.local %}
+                        <tr>
+                            <td><code>{{ threat.get_primary_indicator()['value'] }}</code></td>
+                            <td><span class="badge bg-secondary">{{ threat.threat_type }}</span></td>
+                            <td>
+                                {% if threat.severity == 'critical' %}
+                                <span class="badge bg-danger">Critical</span>
+                                {% elif threat.severity == 'high' %}
+                                <span class="badge bg-warning">High</span>
+                                {% elif threat.severity == 'medium' %}
+                                <span class="badge bg-info">Medium</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Low</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ threat.confidence_score }}%</td>
+                            <td>{{ threat.report_count }}</td>
+                            <td>
+                                {% if threat.verified %}
+                                <span class="badge bg-success">Verified</span>
+                                {% else %}
+                                <span class="badge bg-warning">Unverified</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('threat_intel.view_report', threat_id=threat.id) }}"
+                                   class="btn btn-sm btn-primary">
+                                    <i class="bi bi-eye"></i> View Details
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-success">
+                <i class="bi bi-check-circle"></i> No threats found in Zambian database
+            </div>
+            {% endif %}
+
+            <hr>
+
+            <!-- External Sources Results -->
+            {% if results.external %}
+            <h6 class="text-primary"><i class="bi bi-globe"></i> Global Threat Intelligence</h6>
+
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <div class="card {% if results.external.risk_level == 'critical' %}border-danger{% elif results.external.risk_level == 'high' %}border-warning{% elif results.external.risk_level == 'medium' %}border-info{% else %}border-success{% endif %}">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted">Risk Level</h6>
+                            <h3 class="{% if results.external.risk_level == 'critical' %}text-danger{% elif results.external.risk_level == 'high' %}text-warning{% elif results.external.risk_level == 'medium' %}text-info{% else %}text-success{% endif %}">
+                                {{ results.external.risk_level.upper() }}
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted">Threat Score</h6>
+                            <h3 class="{% if results.external.threat_score >= 80 %}text-danger{% elif results.external.threat_score >= 60 %}text-warning{% elif results.external.threat_score >= 40 %}text-info{% else %}text-success{% endif %}">
+                                {{ results.external.threat_score }}/100
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted">Sources Checked</h6>
+                            <h3>{{ results.external.total_sources }}</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted">Found In</h6>
+                            <h3>{{ results.external.sources_found|length }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if results.external.is_malicious %}
+            <div class="alert alert-danger">
+                <strong><i class="bi bi-exclamation-octagon"></i> WARNING: This indicator is flagged as MALICIOUS!</strong>
+            </div>
+            {% else %}
+            <div class="alert alert-success">
+                <i class="bi bi-shield-check"></i> This indicator appears clean in global threat databases
+            </div>
+            {% endif %}
+
+            <!-- Detailed Findings -->
+            {% if results.external.findings %}
+            <h6 class="mt-4">Detailed Findings:</h6>
+            <div class="accordion" id="findingsAccordion">
+                {% for finding in results.external.findings %}
+                {% if finding.success and finding.found %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading{{ loop.index }}">
+                        <button class="accordion-button {% if not loop.first %}collapsed{% endif %}"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#collapse{{ loop.index }}">
+                            <strong>{{ finding.source }}</strong>
+                            &nbsp;-&nbsp;
+                            <span class="badge bg-warning">Threat Detected</span>
+                            &nbsp;-&nbsp;
+                            Score: {{ finding.threat_score }}
+                        </button>
+                    </h2>
+                    <div id="collapse{{ loop.index }}"
+                         class="accordion-collapse collapse {% if loop.first %}show{% endif %}"
+                         data-bs-parent="#findingsAccordion">
+                        <div class="accordion-body">
+                            <table class="table table-sm">
+                                {% for key, value in finding.items() %}
+                                {% if key not in ['raw_data', 'success'] %}
+                                <tr>
+                                    <th style="width: 200px;">{{ key.replace('_', ' ').title() }}</th>
+                                    <td>
+                                        {% if value is string or value is number %}
+                                        {{ value }}
+                                        {% elif value is sequence and value is not string %}
+                                        <ul class="mb-0">
+                                            {% for item in value[:5] %}
+                                            <li>
+                                                {% if item is mapping %}
+                                                {{ item.get('name') or item.get('title') or item }}
+                                                {% else %}
+                                                {{ item }}
+                                                {% endif %}
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                        {% else %}
+                                        {{ value }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Logs{% endblock %}
+{% block page_title %}Audit Logs{% endblock %}
+
+{% block extra_css %}
+<style>
+    .logs-table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .logs-table th {
+        background: linear-gradient(135deg, var(--zps-primary), #000850);
+        color: white;
+        font-weight: 600;
+        padding: 1rem;
+        border: none;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .logs-table td {
+        padding: 1rem;
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+
+    .filter-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+    }
+
+    .log-action-badge {
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+    }
+
+    .log-details {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .pagination-info {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="filter-card">
+    <h5 class="mb-3">
+        <i class="bi bi-funnel"></i> Filter Audit Logs
+    </h5>
+    <form method="GET" action="{{ url_for('admin.audit_logs') }}">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Action Type</label>
+                <select class="form-select" name="action">
+                    <option value="">All Actions</option>
+                    {% for action in unique_actions %}
+                    <option value="{{ action }}" {% if action_filter == action %}selected{% endif %}>
+                        {{ action | replace('_', ' ') | title }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">User</label>
+                <select class="form-select" name="user">
+                    <option value="">All Users</option>
+                    {% for user in users %}
+                    <option value="{{ user.id }}" {% if user_filter|string == user.id|string %}selected{% endif %}>
+                        {{ user.full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-bold">Entity Type</label>
+                <select class="form-select" name="entity">
+                    <option value="">All Entities</option>
+                    {% for entity in unique_entities %}
+                    <option value="{{ entity }}" {% if entity_filter == entity %}selected{% endif %}>
+                        {{ entity | title }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-bold">Date From</label>
+                <input type="date" class="form-control" name="date_from" value="{{ date_from }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label fw-bold">Date To</label>
+                <input type="date" class="form-control" name="date_to" value="{{ date_to }}">
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> Apply Filters
+                </button>
+                <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle"></i> Clear Filters
+                </a>
+                <span class="pagination-info ms-3">
+                    Showing {{ logs.items|length }} of {{ logs.total }} records
+                </span>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Audit Logs Table -->
+<div class="card logs-table">
+    <div style="max-height: 600px; overflow-y: auto;">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th style="width: 15%;">Timestamp</th>
+                    <th style="width: 15%;">User</th>
+                    <th style="width: 12%;">Action</th>
+                    <th style="width: 10%;">Entity</th>
+                    <th style="width: 33%;">Details</th>
+                    <th style="width: 15%;">IP Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if logs.items %}
+                    {% for log in logs.items %}
+                    <tr>
+                        <td>
+                            <div class="fw-bold">{{ log.timestamp.strftime('%b %d, %Y') }}</div>
+                            <small class="text-muted">{{ log.timestamp.strftime('%H:%M:%S') }}</small>
+                        </td>
+                        <td>
+                            {% if log.user %}
+                            <div class="fw-bold">{{ log.user.full_name }}</div>
+                            <small class="text-muted">{{ log.user.badge_number }}</small>
+                            {% else %}
+                            <span class="text-muted">System</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="log-action-badge" style="background:
+                            {% if 'created' in log.action %}#e8fdf3; color: #43e97b
+                            {% elif 'updated' in log.action or 'modified' in log.action %}#e3f6ff; color: #4facfe
+                            {% elif 'deleted' in log.action or 'deactivated' in log.action %}#ffe5e9; color: #f5576c
+                            {% elif 'login' in log.action %}#f3e8ff; color: #667eea
+                            {% elif 'failed' in log.action %}#fff3cd; color: #856404
+                            {% else %}#f8f9fa; color: #6c757d{% endif %};">
+                                {{ log.action | replace('_', ' ') }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if log.resource_type %}
+                            <span class="badge bg-secondary">{{ log.resource_type | title }}</span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="log-details">
+                                {% if log.details is mapping %}
+                                    {% if log.details.message %}
+                                        {{ log.details.message }}
+                                    {% elif log.details.investigation_type %}
+                                        <strong>{{ log.details.investigation_type | title }} Investigation</strong>
+                                        {% if log.details.target %} - Target: {{ log.details.target }}{% endif %}
+                                        {% if log.details.case_number %} | Case: {{ log.details.case_number }}{% endif %}
+                                    {% else %}
+                                        {% for key, value in log.details.items() %}
+                                            <div><strong>{{ key | replace('_', ' ') | title }}:</strong> {{ value }}</div>
+                                        {% endfor %}
+                                    {% endif %}
+                                {% elif log.details is string %}
+                                    {{ log.details }}
+                                {% elif log.details %}
+                                    {{ log.details | tojson(indent=2) }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ log.ip_address }}</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <i class="bi bi-clock-history" style="font-size: 3rem; color: #dee2e6;"></i>
+                            <p class="text-muted mt-3 mb-0">No audit logs found</p>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if logs.pages > 1 %}
+<div class="d-flex justify-content-center mt-4">
+    <nav>
+        <ul class="pagination">
+            <!-- Previous Button -->
+            {% if logs.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.audit_logs', page=logs.prev_num, action=action_filter, user=user_filter, entity=entity_filter, date_from=date_from, date_to=date_to) }}">
+                    <i class="bi bi-chevron-left"></i> Previous
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link"><i class="bi bi-chevron-left"></i> Previous</span>
+            </li>
+            {% endif %}
+
+            <!-- Page Numbers -->
+            {% for page_num in range(1, logs.pages + 1) %}
+                {% if page_num == logs.page %}
+                <li class="page-item active">
+                    <span class="page-link">{{ page_num }}</span>
+                </li>
+                {% elif page_num <= 3 or page_num > logs.pages - 3 or (page_num >= logs.page - 1 and page_num <= logs.page + 1) %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.audit_logs', page=page_num, action=action_filter, user=user_filter, entity=entity_filter, date_from=date_from, date_to=date_to) }}">
+                        {{ page_num }}
+                    </a>
+                </li>
+                {% elif page_num == 4 or page_num == logs.pages - 3 %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            <!-- Next Button -->
+            {% if logs.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.audit_logs', page=logs.next_num, action=action_filter, user=user_filter, entity=entity_filter, date_from=date_from, date_to=date_to) }}">
+                    Next <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Next <i class="bi bi-chevron-right"></i></span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}
+
+<!-- Export Options -->
+<div class="mt-4">
+    <div class="alert alert-secondary">
+        <i class="bi bi-file-earmark-arrow-down"></i>
+        <strong>Export Options:</strong>
+        Export functionality coming soon. You can export audit logs to CSV or PDF format.
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-submit form when filters change (optional)
+    document.querySelectorAll('select[name="action"], select[name="user"], select[name="entity"]').forEach(function(select) {
+        select.addEventListener('change', function() {
+            // Optionally auto-submit on change
+            // this.closest('form').submit();
+        });
+    });
+</script>
+{% endblock %}

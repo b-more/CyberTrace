@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% block title %}Threat Intelligence Dashboard - CyberTrace{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-shield-exclamation text-danger"></i> Threat Intelligence Dashboard</h2>
+            <p class="text-muted">Real-time threat monitoring and intelligence</p>
+        </div>
+        <div>
+            <a href="{{ url_for('threat_intel.search') }}" class="btn btn-primary">
+                <i class="bi bi-search"></i> Search Threats
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card border-danger shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Threats</h6>
+                            <h3 class="mb-0">{{ stats.total_threats }}</h3>
+                        </div>
+                        <div class="text-danger">
+                            <i class="bi bi-exclamation-triangle" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-warning shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Active Threats</h6>
+                            <h3 class="mb-0">{{ stats.active_threats }}</h3>
+                        </div>
+                        <div class="text-warning">
+                            <i class="bi bi-activity" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-success shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Verified Threats</h6>
+                            <h3 class="mb-0">{{ stats.verified_threats }}</h3>
+                        </div>
+                        <div class="text-success">
+                            <i class="bi bi-patch-check" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card border-info shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Total Reports</h6>
+                            <h3 class="mb-0">{{ stats.total_reports }}</h3>
+                        </div>
+                        <div class="text-info">
+                            <i class="bi bi-file-earmark-text" style="font-size: 2rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Impact & Critical Threats -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-cash-stack"></i> Financial Impact</h5>
+                </div>
+                <div class="card-body">
+                    <h2 class="text-danger">K{{ '{:,.2f}'.format(stats.total_financial_loss) }}</h2>
+                    <p class="text-muted mb-3">Total financial losses reported in ZMW</p>
+
+                    {% if stats.critical_threats > 0 %}
+                    <div class="alert alert-danger mb-0">
+                        <strong><i class="bi bi-exclamation-octagon"></i> {{ stats.critical_threats }} Critical Threats</strong><br>
+                        <small>Require immediate attention</small>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-success mb-0">
+                        <i class="bi bi-check-circle"></i> No critical threats at this time
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Threats by Type</h5>
+                </div>
+                <div class="card-body">
+                    {% if stats.threats_by_type %}
+                    <table class="table table-sm mb-0">
+                        {% for threat_type, count in stats.threats_by_type.items() %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-secondary">{{ threat_type }}</span>
+                            </td>
+                            <td class="text-end">
+                                <strong>{{ count }}</strong> threat{{ 's' if count != 1 else '' }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                    {% else %}
+                    <p class="text-muted mb-0">No active threats recorded</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Critical Threats -->
+    {% if critical_threats %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="bi bi-exclamation-triangle-fill"></i> Critical Threats (Immediate Action Required)</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Indicator</th>
+                            <th>Type</th>
+                            <th>Category</th>
+                            <th>Risk Level</th>
+                            <th>Reports</th>
+                            <th>Last Seen</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for threat in critical_threats %}
+                        <tr>
+                            <td>
+                                <code>{{ threat.get_primary_indicator()['value'] or 'N/A' }}</code>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ threat.threat_type }}</span>
+                            </td>
+                            <td>{{ threat.threat_category or 'N/A' }}</td>
+                            <td>
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-exclamation-octagon"></i> {{ threat.get_risk_level().upper() }}
+                                </span>
+                            </td>
+                            <td>{{ threat.report_count }}</td>
+                            <td>{{ threat.last_seen.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                <a href="{{ url_for('threat_intel.view_report', threat_id=threat.id) }}"
+                                   class="btn btn-sm btn-primary">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Threats -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0"><i class="bi bi-clock-history"></i> Recent Threats (Last 30 Days)</h5>
+        </div>
+        <div class="card-body">
+            {% if recent_threats %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Indicator</th>
+                            <th>Type</th>
+                            <th>Severity</th>
+                            <th>Confidence</th>
+                            <th>Status</th>
+                            <th>Reports</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for threat in recent_threats %}
+                        <tr>
+                            <td>
+                                <code>{{ threat.get_primary_indicator()['value'] or 'N/A' }}</code>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">{{ threat.threat_type }}</span>
+                            </td>
+                            <td>
+                                {% if threat.severity == 'critical' %}
+                                <span class="badge bg-danger">Critical</span>
+                                {% elif threat.severity == 'high' %}
+                                <span class="badge bg-warning">High</span>
+                                {% elif threat.severity == 'medium' %}
+                                <span class="badge bg-info">Medium</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Low</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar {% if threat.confidence_score >= 80 %}bg-success{% elif threat.confidence_score >= 50 %}bg-warning{% else %}bg-danger{% endif %}"
+                                         role="progressbar"
+                                         style="width: {{ threat.confidence_score }}%;"
+                                         aria-valuenow="{{ threat.confidence_score }}"
+                                         aria-valuemin="0"
+                                         aria-valuemax="100">
+                                        {{ threat.confidence_score }}%
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if threat.verified %}
+                                <span class="badge bg-success"><i class="bi bi-patch-check"></i> Verified</span>
+                                {% else %}
+                                <span class="badge bg-warning">Unverified</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ threat.report_count }}</td>
+                            <td>{{ threat.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <a href="{{ url_for('threat_intel.view_report', threat_id=threat.id) }}"
+                                   class="btn btn-sm btn-primary">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">No recent threats in the last 30 days</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Regional Statistics (Zambia) -->
+    {% if regional_stats %}
+    <div class="card shadow-sm mt-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Threats by Region (Zambia)</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for region, count in regional_stats %}
+                <div class="col-md-3 mb-3">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h4>{{ count }}</h4>
+                            <p class="mb-0">{{ region or 'Unknown' }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

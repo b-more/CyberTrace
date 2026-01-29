@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk Email Investigation{% endblock %}
+{% block page_title %}Bulk Email OSINT Investigation{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-envelope-at-fill"></i> Bulk Email Investigation
+                    </h5>
+                    <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#helpModal">
+                        <i class="bi bi-question-circle"></i> Help
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Bulk Email Investigation Tool</strong><br>
+                    Investigate multiple email addresses at once. Enter up to 50 emails (one per line or comma-separated).
+                    Each email will be analyzed for validation, breaches, domain info, DNS records, and social media presence.
+                </div>
+
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                    <div class="mb-3">
+                        <label for="case_id" class="form-label">
+                            <i class="bi bi-folder"></i> Select Case <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="case_id" name="case_id" required>
+                            <option value="">-- Select a case --</option>
+                            {% for case in cases %}
+                            <option value="{{ case.id }}">
+                                {{ case.case_number }} - {{ case.title }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="emails" class="form-label">
+                            <i class="bi bi-envelope-fill"></i> Email Addresses <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control" id="emails" name="emails" rows="10"
+                                  placeholder="suspect1@example.com&#10;suspect2@example.com&#10;suspect3@example.com" required></textarea>
+                        <small class="form-text text-muted">
+                            Enter one email per line or comma-separated. Maximum 50 emails.
+                        </small>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Important:</strong>
+                        <ul class="mb-0">
+                            <li>Bulk investigations may take several minutes (5-15 seconds per email)</li>
+                            <li>HaveIBeenPwned API rate limit: 1 request per 1.5 seconds</li>
+                            <li>All investigations are logged and linked to the selected case</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-search"></i> Start Bulk Investigation
+                        </button>
+                        <a href="{{ url_for('investigations.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Investigations
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="helpModalLabel">
+                    <i class="bi bi-book"></i> Bulk Email Investigation Guide
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Quick Start -->
+                <h5 class="text-primary"><i class="bi bi-rocket-takeoff"></i> Quick Start Guide</h5>
+                <ol>
+                    <li><strong>Select a Case:</strong> Choose an active case to link all investigations to</li>
+                    <li><strong>Enter Emails:</strong> Paste up to 50 email addresses (one per line or comma-separated)</li>
+                    <li><strong>Start Bulk Investigation:</strong> Click button and wait for processing</li>
+                    <li><strong>Wait:</strong> Processing takes 5-15 seconds per email (may take 5-12 minutes for 50 emails)</li>
+                    <li><strong>Review Results:</strong> Summary table shows all investigation results</li>
+                </ol>
+
+                <hr>
+
+                <!-- How to Format Emails -->
+                <h5 class="text-primary"><i class="bi bi-list-ul"></i> How to Enter Multiple Emails</h5>
+                <p>You can enter emails in two formats:</p>
+
+                <h6 class="mt-3">Option 1: One Per Line</h6>
+                <div class="bg-light p-3 border rounded">
+                    <code>
+suspect1@example.com<br>
+suspect2@gmail.com<br>
+suspect3@yahoo.com<br>
+suspect4@domain.com
+                    </code>
+                </div>
+
+                <h6 class="mt-3">Option 2: Comma-Separated</h6>
+                <div class="bg-light p-3 border rounded">
+                    <code>
+suspect1@example.com, suspect2@gmail.com, suspect3@yahoo.com, suspect4@domain.com
+                    </code>
+                </div>
+
+                <h6 class="mt-3">Option 3: Mixed Format</h6>
+                <div class="bg-light p-3 border rounded">
+                    <code>
+suspect1@example.com, suspect2@gmail.com<br>
+suspect3@yahoo.com<br>
+suspect4@domain.com, suspect5@mail.com
+                    </code>
+                </div>
+
+                <div class="alert alert-info small mt-3">
+                    <i class="bi bi-info-circle"></i> <strong>Note:</strong> The system automatically parses all formats. Duplicate emails are processed only once. Invalid formats are skipped.
+                </div>
+
+                <hr>
+
+                <!-- Limits & Constraints -->
+                <h5 class="text-primary"><i class="bi bi-speedometer"></i> Limits & Constraints</h5>
+                <table class="table table-sm table-bordered">
+                    <tr>
+                        <td><strong>Maximum Emails:</strong></td>
+                        <td>50 emails per bulk investigation</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Processing Time:</strong></td>
+                        <td>5-15 seconds per email (average 10 seconds)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total Time (50 emails):</strong></td>
+                        <td>Approximately 5-12 minutes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>API Rate Limit:</strong></td>
+                        <td>HaveIBeenPwned: 1 request per 1.5 seconds (automatic)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Browser Requirement:</strong></td>
+                        <td>Keep browser window open during processing</td>
+                    </tr>
+                </table>
+
+                <div class="alert alert-warning small">
+                    <i class="bi bi-exclamation-triangle"></i> <strong>Important:</strong> If you exceed 50 emails, the system will automatically process only the first 50 and notify you.
+                </div>
+
+                <hr>
+
+                <!-- What Gets Investigated -->
+                <h5 class="text-primary"><i class="bi bi-search"></i> What Gets Investigated for Each Email</h5>
+                <p>Each email in the bulk investigation receives the <strong>full Email OSINT treatment:</strong></p>
+                <ul>
+                    <li><i class="bi bi-check-circle text-success"></i> Email validation (syntax, domain, MX records)</li>
+                    <li><i class="bi bi-check-circle text-success"></i> Data breach analysis (HaveIBeenPwned)</li>
+                    <li><i class="bi bi-check-circle text-success"></i> Domain WHOIS information</li>
+                    <li><i class="bi bi-check-circle text-success"></i> DNS records (SPF, DMARC, MX, A)</li>
+                    <li><i class="bi bi-check-circle text-success"></i> Social media account discovery (13+ platforms)</li>
+                    <li><i class="bi bi-check-circle text-success"></i> Risk assessment and scoring</li>
+                </ul>
+
+                <p>Each investigation is saved individually and can be accessed separately from the results page.</p>
+
+                <hr>
+
+                <!-- Understanding Bulk Results -->
+                <h5 class="text-primary"><i class="bi bi-table"></i> Understanding Bulk Results Page</h5>
+                <p>After processing, you'll see a summary table with:</p>
+
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Column</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Email</strong></td>
+                            <td>The email address investigated</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Status</strong></td>
+                            <td>Completed (success) or Failed (error)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Risk Score</strong></td>
+                            <td>0-100 score with color coding (green=low, yellow=moderate, red=high)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Breaches</strong></td>
+                            <td>Number of data breaches found</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Date</strong></td>
+                            <td>When investigation was conducted</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Actions</strong></td>
+                            <td>"View" button to see full detailed results</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h6 class="mt-3">Quick Analysis Tips</h6>
+                <ul class="small">
+                    <li><strong>Sort by Risk Score:</strong> Identify highest-risk emails first</li>
+                    <li><strong>Filter by Breaches:</strong> Focus on compromised accounts</li>
+                    <li><strong>Check Failed Status:</strong> Retry failed investigations individually</li>
+                    <li><strong>Click "View":</strong> Access full details for any email of interest</li>
+                </ul>
+
+                <hr>
+
+                <!-- When to Use Bulk Investigation -->
+                <h5 class="text-primary"><i class="bi bi-lightbulb"></i> When to Use Bulk Investigation</h5>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success">✓ Good Use Cases</h6>
+                        <ul class="small">
+                            <li>Investigating multiple suspects in one case</li>
+                            <li>Analyzing email lists from seized devices</li>
+                            <li>Screening contact lists</li>
+                            <li>Fraud ring investigations (multiple accounts)</li>
+                            <li>Phishing campaign analysis</li>
+                            <li>Data leak investigations</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-danger">✗ Not Recommended For</h6>
+                        <ul class="small">
+                            <li>Single email investigation (use Email OSINT)</li>
+                            <li>Quick checks (single is faster)</li>
+                            <li>More than 50 emails (split into batches)</li>
+                            <li>Urgent investigations (process one at a time)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Best Practices -->
+                <h5 class="text-primary"><i class="bi bi-star"></i> Best Practices</h5>
+                <ul>
+                    <li><strong>Batch Size:</strong> For best results, process 25-50 emails at a time</li>
+                    <li><strong>Keep Browser Open:</strong> Don't close tab during processing or investigations will fail</li>
+                    <li><strong>No Duplicates:</strong> Remove duplicate emails before submitting to save time</li>
+                    <li><strong>Validate Format:</strong> Ensure emails are properly formatted before bulk processing</li>
+                    <li><strong>Document Results:</strong> Export summary table or generate PDF reports for documentation</li>
+                    <li><strong>Review Failures:</strong> Check failed investigations and retry individually if needed</li>
+                    <li><strong>Schedule Wisely:</strong> Run large bulk investigations during low-activity periods</li>
+                </ul>
+
+                <hr>
+
+                <!-- Troubleshooting -->
+                <h5 class="text-primary"><i class="bi bi-wrench"></i> Troubleshooting</h5>
+
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Issue</th>
+                            <th>Solution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Processing Stuck/Frozen</strong></td>
+                            <td>Refresh page and check partial results on case page. Retry failed emails individually.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Some Emails Failed</strong></td>
+                            <td>Normal for invalid emails or API timeouts. Check error status and retry important ones.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Taking Too Long</strong></td>
+                            <td>Expected for 30+ emails. Wait patiently or reduce batch size for future investigations.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>"Maximum 50 emails" Warning</strong></td>
+                            <td>You've exceeded limit. First 50 will be processed. Split remainder into new batch.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Browser Timeout</strong></td>
+                            <td>Keep browser active (move mouse occasionally). Check results page for completed investigations.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>No Valid Emails Found</strong></td>
+                            <td>Check formatting. Ensure emails contain @ symbol and proper domain format.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <hr>
+
+                <!-- Time Estimation -->
+                <h5 class="text-primary"><i class="bi bi-clock-history"></i> Time Estimation Guide</h5>
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>5 emails:</strong></td>
+                        <td>~1 minute</td>
+                    </tr>
+                    <tr>
+                        <td><strong>10 emails:</strong></td>
+                        <td>~2 minutes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>25 emails:</strong></td>
+                        <td>~4-6 minutes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>50 emails:</strong></td>
+                        <td>~8-12 minutes</td>
+                    </tr>
+                </table>
+
+                <div class="alert alert-info small">
+                    <i class="bi bi-info-circle"></i> <strong>Tip:</strong> Use this time to document other aspects of your case or review previous investigation results.
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

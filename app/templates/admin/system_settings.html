@@ -1,0 +1,360 @@
+{% extends "base.html" %}
+
+{% block title %}System Settings{% endblock %}
+{% block page_title %}System Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+    }
+
+    .settings-section-title {
+        color: var(--zps-primary);
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--zps-green);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .setting-item {
+        padding: 1rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .setting-item:last-child {
+        border-bottom: none;
+    }
+
+    .form-switch {
+        padding-left: 2.5rem;
+    }
+
+    .form-switch .form-check-input {
+        width: 3rem;
+        height: 1.5rem;
+    }
+
+    .api-key-display {
+        font-family: 'Courier New', monospace;
+        background: #f8f9fa;
+        padding: 0.5rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 offset-lg-1">
+        <!-- Application Settings -->
+        <div class="settings-card">
+            <h5 class="settings-section-title">
+                <i class="bi bi-gear-fill"></i>
+                Application Settings
+            </h5>
+
+            <form method="POST" action="{{ url_for('admin.system_settings') }}">
+                <div class="setting-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold mb-1">Application Name</label>
+                            <p class="text-muted mb-0">The name displayed throughout the application</p>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" name="app_name" value="{{ settings.app_name }}" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold mb-1">Organization</label>
+                            <p class="text-muted mb-0">Organization name shown in headers and footers</p>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" name="organization" value="{{ settings.organization }}" readonly>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Security Settings -->
+        <div class="settings-card">
+            <h5 class="settings-section-title">
+                <i class="bi bi-shield-lock-fill"></i>
+                Security Settings
+            </h5>
+
+            <div class="setting-item">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold mb-1">Two-Factor Authentication (2FA)</label>
+                        <p class="text-muted mb-0">Allow users to enable TOTP-based 2FA for enhanced security</p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" disabled
+                                   {% if settings.enable_2fa %}checked{% endif %}>
+                            <label class="form-check-label">
+                                {% if settings.enable_2fa %}Enabled{% else %}Disabled{% endif %}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-3">
+                <i class="bi bi-info-circle"></i>
+                <strong>Note:</strong> Security settings are configured in the .env file. Contact system administrator to modify these settings.
+            </div>
+        </div>
+
+        <!-- Feature Toggles -->
+        <div class="settings-card">
+            <h5 class="settings-section-title">
+                <i class="bi bi-toggles"></i>
+                OSINT Feature Toggles
+            </h5>
+
+            <div class="setting-item">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold mb-1">
+                            <i class="bi bi-envelope text-primary"></i> Email OSINT
+                        </label>
+                        <p class="text-muted mb-0">Email investigation and verification features</p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" disabled
+                                   {% if settings.email_osint %}checked{% endif %}>
+                            <label class="form-check-label">
+                                {% if settings.email_osint %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold mb-1">
+                            <i class="bi bi-telephone text-success"></i> Phone OSINT
+                        </label>
+                        <p class="text-muted mb-0">Phone number investigation and carrier lookup</p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" disabled
+                                   {% if settings.phone_osint %}checked{% endif %}>
+                            <label class="form-check-label">
+                                {% if settings.phone_osint %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold mb-1">
+                            <i class="bi bi-share text-info"></i> Social Media OSINT
+                        </label>
+                        <p class="text-muted mb-0">Social media profile discovery and monitoring</p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" disabled
+                                   {% if settings.social_media_osint %}checked{% endif %}>
+                            <label class="form-check-label">
+                                {% if settings.social_media_osint %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold mb-1">
+                            <i class="bi bi-globe text-warning"></i> Domain/IP OSINT
+                        </label>
+                        <p class="text-muted mb-0">Domain and IP address investigation tools</p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" disabled
+                                   {% if settings.domain_ip_osint %}checked{% endif %}>
+                            <label class="form-check-label">
+                                {% if settings.domain_ip_osint %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info mt-3">
+                <i class="bi bi-info-circle"></i>
+                <strong>Note:</strong> Feature toggles are configured in the .env file. Contact system administrator to enable/disable features.
+            </div>
+        </div>
+
+        <!-- API Integration Settings -->
+        <div class="settings-card">
+            <h5 class="settings-section-title">
+                <i class="bi bi-plug-fill"></i>
+                API Integration Settings
+            </h5>
+
+            <div class="setting-item">
+                <div class="row">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold mb-1">
+                            <i class="bi bi-envelope-at"></i> Hunter.io API Key
+                        </label>
+                        <p class="text-muted mb-0">Used for email verification and breach checking</p>
+                    </div>
+                    <div class="col-md-4">
+                        {% if settings.hunter_api_key %}
+                        <div class="api-key-display text-success">
+                            <i class="bi bi-check-circle-fill"></i> Configured
+                        </div>
+                        {% else %}
+                        <div class="api-key-display text-warning">
+                            <i class="bi bi-exclamation-triangle-fill"></i> Not configured
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <div class="row">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold mb-1">
+                            <i class="bi bi-telephone-forward"></i> Numverify API Key
+                        </label>
+                        <p class="text-muted mb-0">Used for enhanced phone carrier and validation data</p>
+                    </div>
+                    <div class="col-md-4">
+                        {% if settings.numverify_api_key %}
+                        <div class="api-key-display text-success">
+                            <i class="bi bi-check-circle-fill"></i> Configured
+                        </div>
+                        {% else %}
+                        <div class="api-key-display text-warning">
+                            <i class="bi bi-exclamation-triangle-fill"></i> Not configured
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-warning mt-3">
+                <i class="bi bi-shield-exclamation"></i>
+                <strong>Security:</strong> API keys are stored securely in the .env file and are not displayed for security reasons.
+                To update API keys, edit the .env file directly and restart the application.
+            </div>
+        </div>
+
+        <!-- System Information -->
+        <div class="settings-card">
+            <h5 class="settings-section-title">
+                <i class="bi bi-info-circle-fill"></i>
+                System Information
+            </h5>
+
+            <div class="setting-item">
+                <div class="row">
+                    <div class="col-md-4 fw-bold">Application Version:</div>
+                    <div class="col-md-8">1.0.0</div>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <div class="row">
+                    <div class="col-md-4 fw-bold">Python Version:</div>
+                    <div class="col-md-8">
+                        <code>{{ python_version }}</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <div class="row">
+                    <div class="col-md-4 fw-bold">Flask Version:</div>
+                    <div class="col-md-8">
+                        <code>{{ flask_version }}</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <div class="row">
+                    <div class="col-md-4 fw-bold">Database:</div>
+                    <div class="col-md-8">SQLite</div>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <div class="row">
+                    <div class="col-md-4 fw-bold">Debug Mode:</div>
+                    <div class="col-md-8">
+                        <span class="badge bg-danger">Disabled</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuration File Location -->
+        <div class="alert alert-secondary">
+            <h6><i class="bi bi-file-earmark-code"></i> Configuration File</h6>
+            <p class="mb-2">All system settings are stored in: <code>/var/www/html/projects/CyberTrace/.env</code></p>
+            <p class="mb-0"><strong>To modify settings:</strong> Edit the .env file and restart the application using:</p>
+            <pre class="bg-dark text-white p-2 mt-2 mb-0"><code>pkill -f "python run.py"
+cd /var/www/html/projects/CyberTrace
+source venv/bin/activate
+nohup python run.py > /tmp/cybertracer_app.log 2>&1 &</code></pre>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Display Python and Flask versions
+    document.addEventListener('DOMContentLoaded', function() {
+        // These would be populated from backend in production
+    });
+</script>
+{% endblock %}

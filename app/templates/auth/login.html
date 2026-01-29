@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #000663 0%, #000850 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .login-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    }
+    .login-logo {
+        width: 100px;
+        height: auto;
+        margin-bottom: 1rem;
+    }
+    .btn-login {
+        background: #000663;
+        border: none;
+        padding: 0.75rem;
+        font-weight: 500;
+    }
+    .btn-login:hover {
+        background: #008000;
+    }
+</style>
+{% endblock %}
+
+{% block unauthenticated_content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card login-card shadow">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <img src="{{ url_for('static', filename='img/zp_logo.jpg') }}" alt="Zambia Police Logo" class="login-logo">
+                        <h3 class="mt-2" style="color: #000663;">{{ app_name }}</h3>
+                        <p class="text-muted">{{ organization }}</p>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('auth.login') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <div class="mb-3">
+                            <label for="badge_number" class="form-label">
+                                <i class="bi bi-person-badge"></i> Badge Number
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="badge_number"
+                                   name="badge_number"
+                                   placeholder="ZPS0001"
+                                   required
+                                   autofocus>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="bi bi-key"></i> Password
+                            </label>
+                            <input type="password"
+                                   class="form-control"
+                                   id="password"
+                                   name="password"
+                                   required>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox"
+                                   class="form-check-input"
+                                   id="remember"
+                                   name="remember">
+                            <label class="form-check-label" for="remember">
+                                Remember me
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-login btn-primary w-100">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-4">
+                        <small class="text-muted">
+                            <i class="bi bi-shield-lock"></i> Authorized Personnel Only
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    All activities are logged and monitored
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

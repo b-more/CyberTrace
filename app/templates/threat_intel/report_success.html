@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Submitted - Zambia Police Service</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 20px;
+        }
+        .success-card {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            background: #28a745;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 50px;
+            color: white;
+            animation: scaleIn 0.5s ease-out;
+        }
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+        .checkmark {
+            animation: checkmark 0.5s ease-in-out 0.5s forwards;
+            stroke-dasharray: 50;
+            stroke-dashoffset: 50;
+        }
+        @keyframes checkmark {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-card">
+            <div class="p-5 text-center">
+                <!-- Success Icon -->
+                <div class="success-icon">
+                    <i class="bi bi-check-lg"></i>
+                </div>
+
+                <!-- Success Message -->
+                <h2 class="text-success mb-3">Report Submitted Successfully!</h2>
+                <p class="lead mb-4">Thank you for helping protect Zambia from scammers</p>
+
+                <!-- What Happens Next -->
+                <div class="card bg-light mb-4">
+                    <div class="card-body text-start">
+                        <h6 class="text-primary mb-3">
+                            <i class="bi bi-clock-history"></i> What Happens Next?
+                        </h6>
+                        <ol class="mb-0">
+                            <li class="mb-2">
+                                <strong>Your report is under review</strong> by our cybercrime investigators
+                            </li>
+                            <li class="mb-2">
+                                <strong>We'll verify the threat</strong> and add it to our national database
+                            </li>
+                            <li class="mb-2">
+                                <strong>Other investigators will be alerted</strong> to watch for this scammer
+                            </li>
+                            <li class="mb-0">
+                                <strong>If you provided contact info</strong>, we may reach out for more details
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h3 class="mb-0"><i class="bi bi-people"></i></h3>
+                                <p class="mb-0 small">You're helping protect millions of Zambians</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h3 class="mb-0"><i class="bi bi-shield-check"></i></h3>
+                                <p class="mb-0 small">Your report strengthens our defenses</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Actions -->
+                <div class="alert alert-info text-start">
+                    <h6><i class="bi bi-lightbulb"></i> Protect Yourself:</h6>
+                    <ul class="mb-0 small">
+                        <li>Never share your PIN or password with anyone</li>
+                        <li>Don't click on suspicious links</li>
+                        <li>Verify requests by calling official numbers</li>
+                        <li>Report suspicious activity immediately</li>
+                    </ul>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('threat_intel.public_report') }}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Report Another Threat
+                    </a>
+                    <a href="/" class="btn btn-outline-secondary">
+                        <i class="bi bi-house"></i> Return to Home
+                    </a>
+                </div>
+
+                <!-- Contact Info -->
+                <hr class="my-4">
+                <p class="text-muted small mb-1">
+                    <i class="bi bi-telephone"></i> Emergency: 991 | 999
+                </p>
+                <p class="text-muted small mb-1">
+                    <i class="bi bi-envelope"></i> cybercrime@zambiapolice.gov.zm
+                </p>
+                <p class="text-muted small">
+                    <i class="bi bi-building"></i> Zambia Police Service - Serving with Pride
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

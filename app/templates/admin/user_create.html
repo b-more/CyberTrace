@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}Create User{% endblock %}
+{% block page_title %}Create New User{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .form-section-title {
+        color: var(--zps-primary);
+        font-weight: 600;
+        margin-top: 1.5rem;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--zps-green);
+    }
+
+    .required-field::after {
+        content: " *";
+        color: red;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <div class="form-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h4 class="mb-1">
+                        <i class="bi bi-person-plus" style="color: var(--zps-primary);"></i>
+                        Create New User
+                    </h4>
+                    <p class="text-muted mb-0">Add a new user to the CyberTrace system</p>
+                </div>
+                <a href="{{ url_for('admin.list_users') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+
+            <form method="POST" action="{{ url_for('admin.create_user') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <!-- Personal Information -->
+                <h5 class="form-section-title">
+                    <i class="bi bi-person"></i> Personal Information
+                </h5>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="badge_number" class="form-label required-field">Badge Number</label>
+                        <input type="text" class="form-control" id="badge_number" name="badge_number"
+                               required placeholder="e.g., 12345">
+                        <small class="text-muted">Unique police badge number</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="full_name" class="form-label required-field">Full Name</label>
+                        <input type="text" class="form-control" id="full_name" name="full_name"
+                               required placeholder="e.g., John Phiri">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="rank" class="form-label required-field">Rank</label>
+                        <select class="form-select" id="rank" name="rank" required>
+                            <option value="">Select Rank</option>
+                            <option value="Constable">Constable</option>
+                            <option value="Sergeant">Sergeant</option>
+                            <option value="Inspector">Inspector</option>
+                            <option value="Chief Inspector">Chief Inspector</option>
+                            <option value="Superintendent">Superintendent</option>
+                            <option value="Chief Superintendent">Chief Superintendent</option>
+                            <option value="Assistant Commissioner">Assistant Commissioner</option>
+                            <option value="Deputy Commissioner">Deputy Commissioner</option>
+                            <option value="Commissioner">Commissioner</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="department" class="form-label required-field">Department</label>
+                        <select class="form-select" id="department" name="department" required>
+                            <option value="">Select Department</option>
+                            <option value="Cyber Crime Unit">Cyber Crime Unit</option>
+                            <option value="Criminal Investigations">Criminal Investigations</option>
+                            <option value="Intelligence">Intelligence</option>
+                            <option value="Forensics">Forensics</option>
+                            <option value="Operations">Operations</option>
+                            <option value="Administration">Administration</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="phone_number" class="form-label">Phone Number</label>
+                    <input type="tel" class="form-control" id="phone_number" name="phone_number"
+                           placeholder="+260 XXX XXX XXX">
+                    <small class="text-muted">Optional contact number</small>
+                </div>
+
+                <!-- Account Information -->
+                <h5 class="form-section-title">
+                    <i class="bi bi-shield-lock"></i> Account Information
+                </h5>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="username" class="form-label required-field">Username</label>
+                        <input type="text" class="form-control" id="username" name="username"
+                               required placeholder="e.g., jphiri">
+                        <small class="text-muted">Used for login</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="email" class="form-label required-field">Email Address</label>
+                        <input type="email" class="form-control" id="email" name="email"
+                               required placeholder="jphiri@zambiapolice.gov.zm">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="password" class="form-label required-field">Password</label>
+                        <input type="password" class="form-control" id="password" name="password"
+                               required minlength="8">
+                        <small class="text-muted">Minimum 8 characters</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="confirm_password" class="form-label required-field">Confirm Password</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                               required minlength="8">
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Password Policy:</strong> Passwords must be at least 8 characters long and should include
+                    a mix of uppercase, lowercase, numbers, and special characters.
+                </div>
+
+                <!-- Role and Permissions -->
+                <h5 class="form-section-title">
+                    <i class="bi bi-key"></i> Role and Permissions
+                </h5>
+
+                <div class="mb-3">
+                    <label for="role" class="form-label required-field">User Role</label>
+                    <select class="form-select" id="role" name="role" required onchange="updateRoleInfo()">
+                        <option value="">Select Role</option>
+                        <option value="admin">Administrator</option>
+                        <option value="senior_investigator">Senior Investigator</option>
+                        <option value="investigator">Investigator</option>
+                        <option value="analyst">Analyst</option>
+                    </select>
+                </div>
+
+                <div id="roleInfo" class="alert alert-light" style="display: none;">
+                    <strong>Role Description:</strong>
+                    <p id="roleDescription" class="mb-0 mt-2"></p>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="{{ url_for('admin.list_users') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Create User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const roleDescriptions = {
+        'admin': 'Full system access including user management, system settings, and all investigation features.',
+        'senior_investigator': 'Can create and manage cases, assign officers, conduct investigations, and view all cases.',
+        'investigator': 'Can conduct investigations and manage assigned cases. Cannot create new cases.',
+        'analyst': 'Limited access to view cases and conduct OSINT investigations. Cannot manage cases.'
+    };
+
+    function updateRoleInfo() {
+        const role = document.getElementById('role').value;
+        const roleInfo = document.getElementById('roleInfo');
+        const roleDescription = document.getElementById('roleDescription');
+
+        if (role && roleDescriptions[role]) {
+            roleDescription.textContent = roleDescriptions[role];
+            roleInfo.style.display = 'block';
+        } else {
+            roleInfo.style.display = 'none';
+        }
+    }
+
+    // Password confirmation validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            alert('Passwords do not match!');
+            document.getElementById('confirm_password').focus();
+        }
+    });
+
+    // Auto-generate username from full name
+    document.getElementById('full_name').addEventListener('blur', function() {
+        const username = document.getElementById('username');
+        if (!username.value) {
+            const fullName = this.value.trim();
+            if (fullName) {
+                // Generate username from first letter + last name
+                const parts = fullName.split(' ');
+                if (parts.length >= 2) {
+                    const suggested = (parts[0][0] + parts[parts.length - 1]).toLowerCase();
+                    username.value = suggested;
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

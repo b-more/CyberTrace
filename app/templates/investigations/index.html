@@ -1,0 +1,613 @@
+{% extends "base.html" %}
+
+{% block title %}OSINT Investigations{% endblock %}
+{% block page_title %}OSINT Investigation Tools{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-search"></i> OSINT Investigation Tools
+                    </h5>
+                    <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#helpModal">
+                        <i class="bi bi-question-circle"></i> Help
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="lead">
+                    <strong>Welcome to CyberTrace OSINT Investigation Platform</strong>
+                </p>
+                <p>
+                    Open Source Intelligence (OSINT) tools help you gather digital evidence from publicly available sources.
+                    Select an investigation tool below to begin collecting evidence for your case.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Investigation Tools Grid -->
+<div class="row">
+    <!-- Email OSINT -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card shadow-sm h-100 border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-envelope-at"></i> Email OSINT
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    Investigate email addresses to uncover:
+                </p>
+                <ul class="small">
+                    <li>Email validation and deliverability</li>
+                    <li>Data breaches (HaveIBeenPwned)</li>
+                    <li>Domain registration & WHOIS</li>
+                    <li>DNS security records (SPF, DMARC)</li>
+                    <li>Social media account discovery</li>
+                    <li>Risk assessment and scoring</li>
+                </ul>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('investigations.email_search') }}" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Single Email Investigation
+                    </a>
+                    <a href="{{ url_for('investigations.bulk_email_investigation') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-list-ul"></i> Bulk Email Investigation
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer bg-light">
+                <small class="text-muted">
+                    <i class="bi bi-clock"></i> 5-15 seconds per email
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phone Number OSINT -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card shadow-sm h-100 border-secondary">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-phone"></i> Phone Number OSINT
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    Investigate phone numbers to discover:
+                </p>
+                <ul class="small">
+                    <li>Number validation and formatting</li>
+                    <li>Carrier and network information</li>
+                    <li>Phone type (mobile/landline/VoIP)</li>
+                    <li>Geographic location and timezone</li>
+                    <li>Fraud risk indicators</li>
+                    <li>Premium rate detection</li>
+                </ul>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('investigations.phone_search') }}" class="btn btn-secondary">
+                        <i class="bi bi-search"></i> Phone Investigation
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer bg-light">
+                <small class="text-muted">
+                    <i class="bi bi-clock"></i> Instant results
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- IP Address OSINT -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card shadow-sm h-100 border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-globe"></i> IP Address OSINT
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    Investigate IP addresses to discover:
+                </p>
+                <ul class="small">
+                    <li>Geolocation (country, city, coordinates)</li>
+                    <li>Internet Service Provider (ISP)</li>
+                    <li>Organization/company ownership</li>
+                    <li>ASN (Autonomous System Number)</li>
+                    <li>Blacklist status and reputation</li>
+                    <li>Open ports and services</li>
+                </ul>
+                <div class="d-grid">
+                    <button class="btn btn-info" disabled>
+                        <i class="bi bi-wrench"></i> Coming Soon
+                    </button>
+                </div>
+            </div>
+            <div class="card-footer bg-light">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i> Feature in development
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Username OSINT -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card shadow-sm h-100 border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-circle"></i> Username OSINT
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    Search usernames across platforms:
+                </p>
+                <ul class="small">
+                    <li>Social media profile discovery</li>
+                    <li>Forum and community accounts</li>
+                    <li>Gaming platform profiles</li>
+                    <li>Professional networks</li>
+                    <li>Content platforms (YouTube, Medium)</li>
+                    <li>Cross-platform identity mapping</li>
+                </ul>
+                <div class="d-grid">
+                    <button class="btn btn-success" disabled>
+                        <i class="bi bi-wrench"></i> Coming Soon
+                    </button>
+                </div>
+            </div>
+            <div class="card-footer bg-light">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i> Feature in development
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Domain/Website OSINT -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card shadow-sm h-100 border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="bi bi-globe2"></i> Domain/Website OSINT
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    Investigate domains and websites:
+                </p>
+                <ul class="small">
+                    <li>WHOIS registration information</li>
+                    <li>DNS records and configuration</li>
+                    <li>SSL certificate details</li>
+                    <li>Website hosting and server info</li>
+                    <li>Historical data (Wayback Machine)</li>
+                    <li>Security and malware reports</li>
+                </ul>
+                <div class="d-grid">
+                    <button class="btn btn-warning" disabled>
+                        <i class="bi bi-wrench"></i> Coming Soon
+                    </button>
+                </div>
+            </div>
+            <div class="card-footer bg-light">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i> Feature in development
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Header Analyzer -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card shadow-sm h-100 border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-envelope-open"></i> Email Header Analyzer
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    Analyze email headers for:
+                </p>
+                <ul class="small">
+                    <li>Email authentication (SPF, DKIM, DMARC)</li>
+                    <li>Sender IP address and location</li>
+                    <li>Email route and hops</li>
+                    <li>Spoofing and phishing detection</li>
+                    <li>Message ID and timestamp analysis</li>
+                    <li>Security warning indicators</li>
+                </ul>
+                <div class="d-grid">
+                    <button class="btn btn-danger" disabled>
+                        <i class="bi bi-wrench"></i> Coming Soon
+                    </button>
+                </div>
+            </div>
+            <div class="card-footer bg-light">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i> Feature in development
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h6 class="mb-0"><i class="bi bi-link-45deg"></i> Quick Links</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="{{ url_for('cases.list_cases') }}" class="btn btn-outline-primary btn-sm w-100 mb-2">
+                            <i class="bi bi-folder2-open"></i> View Cases
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ url_for('cases.create_case') }}" class="btn btn-outline-success btn-sm w-100 mb-2">
+                            <i class="bi bi-plus-circle"></i> Create New Case
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary btn-sm w-100 mb-2">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="helpModalLabel">
+                    <i class="bi bi-book"></i> OSINT Investigations User Guide
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Welcome Message -->
+                <div class="alert alert-info">
+                    <h6 class="alert-heading"><i class="bi bi-info-circle"></i> Welcome to OSINT Investigations!</h6>
+                    <p class="mb-0">This guide will help you understand and use CyberTrace OSINT tools to gather digital evidence for criminal investigations. Even if you are new to digital investigations, this step-by-step guide will help you succeed.</p>
+                </div>
+
+                <!-- What is OSINT -->
+                <h5 class="text-primary"><i class="bi bi-lightbulb"></i> What is OSINT?</h5>
+                <p><strong>OSINT (Open Source Intelligence)</strong> is the process of collecting information from publicly available sources to use as evidence in investigations.</p>
+
+                <div class="card mb-3 bg-light">
+                    <div class="card-body">
+                        <h6 class="card-title"><strong>Why Use OSINT Tools?</strong></h6>
+                        <ul class="mb-0 small">
+                            <li><strong>Legal:</strong> All information comes from public sources (no hacking or illegal access)</li>
+                            <li><strong>Fast:</strong> Automated tools gather information in seconds instead of hours</li>
+                            <li><strong>Comprehensive:</strong> Check multiple databases and platforms simultaneously</li>
+                            <li><strong>Evidence Quality:</strong> Results are documented with timestamps and hashes for court use</li>
+                            <li><strong>Case Integration:</strong> All findings automatically linked to your case file</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Before You Start -->
+                <h5 class="text-primary"><i class="bi bi-clipboard-check"></i> Before You Start Any Investigation</h5>
+
+                <div class="card mb-3 border-warning">
+                    <div class="card-header bg-warning">
+                        <h6 class="mb-0"><strong>IMPORTANT: You MUST Have a Case First!</strong></h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="small mb-2"><strong>Every investigation must be linked to an official case.</strong> Here is what to do:</p>
+                        <ol class="small mb-0">
+                            <li><strong>Check if you have a case:</strong> Go to "Cases" in the menu. Do you see your case?</li>
+                            <li><strong>If NO case exists:</strong> Click "Create New Case" and fill in the information</li>
+                            <li><strong>If case exists but you cannot see it:</strong> Ask the Lead Investigator to add you to the case team</li>
+                            <li><strong>After you have a case:</strong> Return to Investigations and select your case when running any OSINT tool</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Available Tools -->
+                <h5 class="text-primary"><i class="bi bi-tools"></i> Available Investigation Tools</h5>
+
+                <!-- Email OSINT -->
+                <div class="card mb-3">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="bi bi-envelope-at"></i> 1. EMAIL OSINT (Currently Available)</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>What it does:</strong> Investigates email addresses to find out who owns them and if they have been involved in data breaches or cybercrimes.</p>
+
+                        <p class="small"><strong>When to use this tool:</strong></p>
+                        <ul class="small">
+                            <li>Fraud cases where suspect used an email address</li>
+                            <li>Phishing or scam investigations</li>
+                            <li>Identity theft cases</li>
+                            <li>Cybercrime investigations</li>
+                            <li>Any case involving email communication</li>
+                        </ul>
+
+                        <p class="small"><strong>What information you will get:</strong></p>
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Information Type</th>
+                                    <th>What You Learn</th>
+                                </tr>
+                            </thead>
+                            <tbody class="small">
+                                <tr>
+                                    <td><strong>Email Validation</strong></td>
+                                    <td>Is this a real email that can receive messages?</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Data Breaches</strong></td>
+                                    <td>Has this email been found in any data breaches? Are passwords compromised?</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Domain Information</strong></td>
+                                    <td>Who registered the email domain? When? Where?</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Social Media Accounts</strong></td>
+                                    <td>Which social media accounts are connected to this email?</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Risk Score</strong></td>
+                                    <td>How suspicious is this email? (0-100 score)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <p class="small"><strong>Step-by-Step: How to Use Email OSINT</strong></p>
+                        <ol class="small">
+                            <li>Click "Single Email Investigation" button (or "Bulk" for multiple emails)</li>
+                            <li>Select your case from the dropdown list</li>
+                            <li>Enter the email address you want to investigate</li>
+                            <li>Click "Start Investigation" and wait 5-15 seconds</li>
+                            <li>Review the results - you will see all information organized in sections</li>
+                            <li>Download the PDF report for your case file</li>
+                            <li>Click "View" buttons to check social media profiles manually</li>
+                        </ol>
+
+                        <div class="alert alert-success small">
+                            <strong><i class="bi bi-book"></i> Need more help?</strong> Click the "Help" button on the Email OSINT page for detailed instructions with examples.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phone Number OSINT -->
+                <div class="card mb-3">
+                    <div class="card-header bg-secondary text-white">
+                        <h6 class="mb-0"><i class="bi bi-phone"></i> 2. PHONE NUMBER OSINT (Coming Soon)</h6>
+                    </div>
+                    <div class="card-body small">
+                        <p><strong>What it will do:</strong> Investigate phone numbers to find carrier information, location, owner details, and linked social media accounts.</p>
+                        <p class="mb-0"><strong>Use for:</strong> Phone scams, threatening calls, fraud involving mobile numbers, identity verification.</p>
+                    </div>
+                </div>
+
+                <!-- IP Address OSINT -->
+                <div class="card mb-3">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0"><i class="bi bi-globe"></i> 3. IP ADDRESS OSINT (Coming Soon)</h6>
+                    </div>
+                    <div class="card-body small">
+                        <p><strong>What it will do:</strong> Investigate IP addresses to find location, ISP, organization, and reputation/blacklist status.</p>
+                        <p class="mb-0"><strong>Use for:</strong> Cyber attacks, hacking investigations, tracking online activities, identifying server locations.</p>
+                    </div>
+                </div>
+
+                <!-- Other Tools -->
+                <div class="card mb-3">
+                    <div class="card-header bg-dark text-white">
+                        <h6 class="mb-0"><i class="bi bi-wrench"></i> MORE TOOLS COMING SOON</h6>
+                    </div>
+                    <div class="card-body small">
+                        <p class="mb-0">Additional OSINT tools in development: Username Search, Domain Investigation, Email Header Analysis, and more. Check back for updates!</p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Best Practices -->
+                <h5 class="text-primary"><i class="bi bi-star"></i> Best Practices for OSINT Investigations</h5>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success">✓ DO:</h6>
+                        <ul class="small">
+                            <li>Always create or select a case before investigating</li>
+                            <li>Document everything - download PDF reports</li>
+                            <li>Verify social media accounts manually before using as evidence</li>
+                            <li>Take screenshots of important findings</li>
+                            <li>Note the date and time of your investigation</li>
+                            <li>Save the evidence hash for chain of custody</li>
+                            <li>Cross-reference information from multiple sources</li>
+                            <li>Follow legal procedures and authorization requirements</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-danger">✗ DON'T:</h6>
+                        <ul class="small">
+                            <li>Run investigations without linking to a case</li>
+                            <li>Interact with suspect's social media accounts (no liking, commenting)</li>
+                            <li>Share investigation results with unauthorized persons</li>
+                            <li>Rely on a single source of information</li>
+                            <li>Forget to download reports before closing the page</li>
+                            <li>Use OSINT tools for personal/non-work purposes</li>
+                            <li>Skip manual verification of automated results</li>
+                            <li>Exceed rate limits by running too many investigations</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Understanding Results -->
+                <h5 class="text-primary"><i class="bi bi-clipboard-data"></i> Understanding Investigation Results</h5>
+
+                <div class="card mb-3 bg-light">
+                    <div class="card-body">
+                        <h6><strong>All investigation results include:</strong></h6>
+                        <ul class="small mb-0">
+                            <li><strong>Investigation Summary:</strong> Quick overview of key findings</li>
+                            <li><strong>Detailed Results:</strong> Complete information organized by category</li>
+                            <li><strong>Risk Assessment:</strong> Automated scoring of suspicious indicators</li>
+                            <li><strong>Evidence Hash:</strong> SHA-256 hash proving data integrity for legal use</li>
+                            <li><strong>Timestamp:</strong> Exact date and time of investigation</li>
+                            <li><strong>Case Link:</strong> Automatic connection to your case file</li>
+                            <li><strong>Investigator Info:</strong> Your details as the officer who ran the investigation</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Workflow Example -->
+                <h5 class="text-primary"><i class="bi bi-diagram-3"></i> Complete Investigation Workflow Example</h5>
+
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <strong>Example Case: Email Fraud Investigation</strong>
+                    </div>
+                    <div class="card-body">
+                        <p class="small"><strong>Scenario:</strong> A citizen reports receiving fraudulent emails from "john.scammer@fakebank.com" asking for personal information.</p>
+
+                        <h6 class="mt-3"><strong>Investigation Steps:</strong></h6>
+                        <ol class="small">
+                            <li><strong>Create Case</strong>
+                                <ul>
+                                    <li>Go to Cases → Create New Case</li>
+                                    <li>Title: "Email Phishing Investigation - Fake Bank Scam"</li>
+                                    <li>Type: Fraud, Priority: High</li>
+                                    <li>Save → Get case number ZPS-2025-0042</li>
+                                </ul>
+                            </li>
+                            <li><strong>Run Email OSINT</strong>
+                                <ul>
+                                    <li>Go to Investigations → Email OSINT</li>
+                                    <li>Select case ZPS-2025-0042</li>
+                                    <li>Enter: john.scammer@fakebank.com</li>
+                                    <li>Click Start Investigation</li>
+                                </ul>
+                            </li>
+                            <li><strong>Review Results</strong>
+                                <ul>
+                                    <li>Risk Score: 85/100 (HIGH RISK - Red flag!)</li>
+                                    <li>Email is valid but domain registered 2 days ago (suspicious!)</li>
+                                    <li>No SPF/DMARC security (can be easily spoofed)</li>
+                                    <li>Found 2 social media accounts</li>
+                                    <li>Disposable email service detected</li>
+                                </ul>
+                            </li>
+                            <li><strong>Document Findings</strong>
+                                <ul>
+                                    <li>Download PDF report</li>
+                                    <li>Visit social media accounts, take screenshots</li>
+                                    <li>Note evidence hash: sha256:abc123...</li>
+                                    <li>Add notes to case file</li>
+                                </ul>
+                            </li>
+                            <li><strong>Next Actions</strong>
+                                <ul>
+                                    <li>Report to supervisor with high-risk findings</li>
+                                    <li>Request warrant if needed</li>
+                                    <li>Run additional OSINT on related emails/domains</li>
+                                    <li>Coordinate with cybercrime unit</li>
+                                </ul>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Troubleshooting -->
+                <h5 class="text-primary"><i class="bi bi-wrench"></i> Troubleshooting Common Issues</h5>
+
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Problem</th>
+                            <th>Solution</th>
+                        </tr>
+                    </thead>
+                    <tbody class="small">
+                        <tr>
+                            <td>Cannot see any cases to select</td>
+                            <td>You need to create a case first, or ask to be added to an existing case by the Lead Investigator.</td>
+                        </tr>
+                        <tr>
+                            <td>Investigation fails or shows errors</td>
+                            <td>Wait 2 minutes and try again. Check your internet connection. Verify input format is correct.</td>
+                        </tr>
+                        <tr>
+                            <td>Rate limit error</td>
+                            <td>You have run too many investigations too quickly. Wait 2-3 minutes before next investigation.</td>
+                        </tr>
+                        <tr>
+                            <td>Some results show "Not Available"</td>
+                            <td>Normal - not all information exists for every email/phone/IP. Use what is available.</td>
+                        </tr>
+                        <tr>
+                            <td>PDF download not working</td>
+                            <td>Check your browser pop-up blocker. Try a different browser. Contact IT support if problem persists.</td>
+                        </tr>
+                        <tr>
+                            <td>Social media link does not work</td>
+                            <td>The account may have been deleted or privacy settings changed. Document this in your notes.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <hr>
+
+                <!-- Legal & Privacy -->
+                <h5 class="text-primary"><i class="bi bi-shield-check"></i> Legal & Privacy Considerations</h5>
+
+                <div class="alert alert-warning">
+                    <h6 class="alert-heading"><strong>Important Legal Notes:</strong></h6>
+                    <ul class="small mb-0">
+                        <li><strong>Authorization:</strong> Only conduct investigations for official police work with proper authorization</li>
+                        <li><strong>Public Sources Only:</strong> OSINT tools only access publicly available information - no hacking or illegal access</li>
+                        <li><strong>Privacy Laws:</strong> Follow Zambia data protection and privacy laws</li>
+                        <li><strong>Evidence Handling:</strong> All evidence must follow proper chain of custody procedures</li>
+                        <li><strong>Documentation:</strong> Keep detailed records of all investigations and findings</li>
+                        <li><strong>Audit Logs:</strong> All system activities are automatically logged and audited</li>
+                    </ul>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <a href="{{ url_for('investigations.download_investigations_guide') }}"
+                   class="btn btn-success me-auto"
+                   target="_blank">
+                    <i class="bi bi-file-pdf"></i> Download PDF Guide
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

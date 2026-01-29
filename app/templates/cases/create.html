@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Create New Case{% endblock %}
+{% block page_title %}Create New Case{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-plus-circle"></i> Create New Case
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Creating a New Case</strong><br>
+                    Fill in all required information below. A unique case number will be automatically generated.
+                    You will be assigned as the Lead Investigator for this case.
+                </div>
+
+                <form method="POST" action="{{ url_for('cases.create_case') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                    <div class="mb-3">
+                        <label for="title" class="form-label">
+                            <i class="bi bi-file-text"></i> Case Title <span class="text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               class="form-control"
+                               id="title"
+                               name="title"
+                               placeholder="Brief description of the case"
+                               required
+                               maxlength="255"
+                               autofocus>
+                        <small class="form-text text-muted">
+                            Example: "Email Fraud - John Doe" or "Cybercrime Investigation - ABC Company"
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">
+                            <i class="bi bi-card-text"></i> Case Description <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control"
+                                  id="description"
+                                  name="description"
+                                  rows="6"
+                                  required
+                                  placeholder="Detailed description of the case including what happened, when it occurred, who reported it, and any initial evidence..."></textarea>
+                        <small class="form-text text-muted">
+                            Include all relevant details: What happened? When? Who reported it? What evidence do you have?
+                        </small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="case_type" class="form-label">
+                                    <i class="bi bi-tag"></i> Case Type <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="case_type" name="case_type" required>
+                                    <option value="cybercrime" selected>Cybercrime</option>
+                                    <option value="fraud">Fraud</option>
+                                    <option value="identity_theft">Identity Theft</option>
+                                    <option value="financial_crime">Financial Crime</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="priority" class="form-label">
+                                    <i class="bi bi-exclamation-triangle"></i> Priority Level <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="priority" name="priority" required>
+                                    <option value="low">Low - Minor incidents</option>
+                                    <option value="medium" selected>Medium - Standard investigation</option>
+                                    <option value="high">High - Serious crime, time-sensitive</option>
+                                    <option value="critical">Critical - Immediate danger, ongoing crime</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-shield-check"></i>
+                        <strong>Important Notes:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>A unique case number (e.g., ZPS-2025-0001) will be automatically generated</li>
+                            <li>You will be set as the Lead Investigator</li>
+                            <li>Case status will be set to "Open"</li>
+                            <li>All actions are logged for audit purposes</li>
+                            <li>You can add team members and additional details after creation</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-check-circle"></i> Create Case
+                        </button>
+                        <a href="{{ url_for('cases.list_cases') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Cases
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

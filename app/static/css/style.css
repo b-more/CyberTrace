@@ -1,0 +1,34 @@
+/* CyberTrace OSINT Platform - Custom Styles */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.card {
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.btn {
+    border-radius: 4px;
+}
+
+/* Login page */
+.card-body.p-5 {
+    border-radius: 8px;
+}
+
+/* Footer */
+footer {
+    border-top: 1px solid #dee2e6;
+}
+
+/* Alert styling */
+.alert {
+    border-radius: 4px;
+}

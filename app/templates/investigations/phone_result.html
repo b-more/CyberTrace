@@ -1,0 +1,2457 @@
+{% extends "base.html" %}
+
+{% block title %}Phone Investigation Results{% endblock %}
+{% block page_title %}Phone Investigation Results{% endblock %}
+
+{% block content %}
+{% set results = investigation.raw_results %}
+{% set validation = results.get('validation', {}) %}
+{% set risk = results.get('risk_assessment', {}) %}
+
+<!-- Investigation Header -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-secondary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-phone"></i>
+                {% if validation.get('international_format') %}
+                {{ validation.get('international_format') }}
+                {% else %}
+                {{ investigation.target }}
+                {% endif %}
+            </h5>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('investigations.phone_osint_guide') }}" target="_blank" class="btn btn-light btn-sm">
+                    <i class="bi bi-question-circle"></i> Investigation Guide
+                </a>
+                {% if investigation.status == 'completed' %}
+                <span class="badge bg-success">Investigation Completed</span>
+                {% else %}
+                <span class="badge bg-danger">Investigation Failed</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p class="mb-1"><strong>Case:</strong> <a href="{{ url_for('cases.view_case', case_id=case.id) }}">{{ case.case_number }} - {{ case.title }}</a></p>
+                <p class="mb-1"><strong>Investigator:</strong> {{ investigation.investigator.full_name }} ({{ investigation.investigator.badge_number }})</p>
+                <p class="mb-1"><strong>Investigation ID:</strong> <code>{{ investigation.id }}</code></p>
+            </div>
+            <div class="col-md-6">
+                <p class="mb-1"><strong>Conducted:</strong> {{ investigation.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                <p class="mb-1"><strong>Execution Time:</strong> {{ "%.2f"|format(investigation.execution_time) }}s</p>
+                <p class="mb-1"><strong>API Calls Made:</strong> {{ investigation.api_calls_made }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Risk Assessment -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header
+                {% if risk.get('risk_score', 0) >= 70 %}bg-danger text-white
+                {% elif risk.get('risk_score', 0) >= 40 %}bg-warning
+                {% else %}bg-success text-white{% endif %}">
+                <h5 class="mb-0">
+                    <i class="bi bi-shield-exclamation"></i> Risk Assessment: {{ risk.get('assessment', 'UNKNOWN') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Risk Score: {{ risk.get('risk_score', 0) }}/100</h6>
+                        <div class="progress mb-3" style="height: 25px;">
+                            <div class="progress-bar
+                                {% if risk.get('risk_score', 0) >= 70 %}bg-danger
+                                {% elif risk.get('risk_score', 0) >= 40 %}bg-warning
+                                {% else %}bg-success{% endif %}"
+                                 role="progressbar"
+                                 style="width: {{ risk.get('risk_score', 0) }}%"
+                                 aria-valuenow="{{ risk.get('risk_score', 0) }}"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100">
+                                {{ risk.get('risk_score', 0) }}%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Risk Flags:</h6>
+                        {% if risk.get('flags') %}
+                        <ul>
+                            {% for flag in risk.get('flags', []) %}
+                            <li>{{ flag }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="text-muted">No risk flags identified</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if risk.get('recommendations') %}
+                <div class="alert alert-info mt-2 mb-0">
+                    <strong>Recommendations:</strong>
+                    <ul class="mb-0">
+                        {% for rec in risk.get('recommendations', []) %}
+                        <li>{{ rec }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Key Findings -->
+<div class="row mb-4">
+    <div class="col-md-2 col-6 mb-3">
+        <div class="card shadow text-center h-100">
+            <div class="card-body">
+                <h6 class="text-muted small">Phone Status</h6>
+                {% if validation.get('is_valid') %}
+                <h3 class="text-success"><i class="bi bi-check-circle-fill"></i></h3>
+                <p class="mb-0 small">Valid Number</p>
+                {% else %}
+                <h3 class="text-danger"><i class="bi bi-x-circle-fill"></i></h3>
+                <p class="mb-0 small">Invalid</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-6 mb-3">
+        <div class="card shadow text-center h-100">
+            <div class="card-body">
+                <h6 class="text-muted small">Number Type</h6>
+                <h3 class="
+                    {% if validation.get('number_type') == 'VoIP' %}text-danger
+                    {% elif validation.get('number_type') == 'Mobile' %}text-success
+                    {% else %}text-info{% endif %}">
+                    <i class="bi bi-{% if validation.get('number_type') == 'Mobile' %}phone{% elif validation.get('number_type') == 'VoIP' %}wifi{% else %}telephone{% endif %}"></i>
+                </h3>
+                <p class="mb-0 small">{{ validation.get('number_type', 'Unknown') }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-6 mb-3">
+        <div class="card shadow text-center h-100">
+            <div class="card-body">
+                <h6 class="text-muted small">Country</h6>
+                <h3 class="text-primary">
+                    <i class="bi bi-globe"></i>
+                </h3>
+                <p class="mb-0 small">{{ results.get('location', {}).get('country', 'Unknown') }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-6 mb-3">
+        <div class="card shadow text-center h-100">
+            <div class="card-body">
+                <h6 class="text-muted small">Social Media</h6>
+                <h3 class="text-info">{{ results.get('social_media', [])|length }}</h3>
+                <p class="mb-0 small">Platform(s)</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-6 mb-3">
+        <div class="card shadow text-center h-100">
+            <div class="card-body">
+                <h6 class="text-muted small">Mentions</h6>
+                <h3 class="text-warning">{{ results.get('online_mentions', {}).get('total_found', 0) }}</h3>
+                <p class="mb-0 small">Source(s)</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-6 mb-3">
+        <div class="card shadow text-center h-100">
+            <div class="card-body">
+                <h6 class="text-muted small">Risk Score</h6>
+                <h3 class="{% if risk.get('risk_score', 0) >= 70 %}text-danger
+                    {% elif risk.get('risk_score', 0) >= 40 %}text-warning
+                    {% else %}text-success{% endif %}">
+                    {{ risk.get('risk_score', 0) }}
+                </h3>
+                <p class="mb-0 small">out of 100</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Phone Validation Details -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0"><i class="bi bi-check2-square"></i> Phone Validation</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Valid Number:</strong></td>
+                        <td>
+                            {% if validation.get('is_valid') %}
+                            <span class="badge bg-success">Yes</span>
+                            {% else %}
+                            <span class="badge bg-danger">No</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Possible Number:</strong></td>
+                        <td>
+                            {% if validation.get('is_possible') %}
+                            <span class="badge bg-success">Yes</span>
+                            {% else %}
+                            <span class="badge bg-warning">No</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Number Type:</strong></td>
+                        <td>
+                            <span class="badge
+                                {% if validation.get('number_type') == 'VoIP' %}bg-danger
+                                {% elif validation.get('number_type') == 'Premium Rate' %}bg-warning
+                                {% elif validation.get('number_type') == 'Mobile' %}bg-success
+                                {% else %}bg-info{% endif %}">
+                                {{ validation.get('number_type', 'Unknown') }}
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Country Code:</strong></td>
+                        <td><code>+{{ validation.get('country_code', 'N/A') }}</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>National Number:</strong></td>
+                        <td><code>{{ validation.get('national_number', 'N/A') }}</code></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6 class="text-secondary">Number Formats</h6>
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>International:</strong></td>
+                        <td><code>{{ validation.get('international_format', 'N/A') }}</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>National:</strong></td>
+                        <td><code>{{ validation.get('national_format', 'N/A') }}</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>E.164:</strong></td>
+                        <td><code>{{ validation.get('e164_format', 'N/A') }}</code></td>
+                    </tr>
+                </table>
+
+                {% if validation.get('error') %}
+                <div class="alert alert-danger mb-0 mt-2">
+                    <strong>Error:</strong> {{ validation.get('error') }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Carrier Information -->
+{% set carrier_info = results.get('carrier', {}) %}
+{% set numverify = results.get('numverify', {}) %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-broadcast-pin"></i> Carrier Information
+            {% if numverify.get('success') %}
+            <span class="badge bg-success float-end">Enhanced by Numverify API</span>
+            {% endif %}
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if carrier_info.get('error') %}
+        <div class="alert alert-warning">{{ carrier_info.error }}</div>
+        {% else %}
+
+        <!-- Numverify Enhanced Data Alert -->
+        {% if numverify.get('success') %}
+        <div class="alert alert-success mb-3">
+            <i class="bi bi-check-circle"></i> <strong>Numverify API Verification:</strong>
+            Enhanced carrier data obtained from professional phone number validation service.
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-4">
+                <h6>Carrier/Network Provider</h6>
+                <p class="lead">
+                    {% if carrier_info.get('carrier') and carrier_info.get('carrier') != 'Unknown' %}
+                    <strong>{{ carrier_info.get('carrier') }}</strong>
+                    {% if carrier_info.get('source') %}
+                    <br><small class="text-muted">Source: {{ carrier_info.get('source') }}</small>
+                    {% endif %}
+                    {% else %}
+                    <span class="text-muted">Unknown Carrier</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-4">
+                <h6>Line Type</h6>
+                <p class="lead">
+                    {% if carrier_info.get('line_type') %}
+                    <strong>{{ carrier_info.get('line_type') }}</strong>
+                    {% else %}
+                    <strong>{{ carrier_info.get('network_type', 'Unknown') }}</strong>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-4">
+                <h6>Verification Status</h6>
+                <p class="lead">
+                    {% if numverify.get('success') %}
+                    <span class="badge bg-success">Verified by Numverify</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Basic Validation</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- Additional Numverify Data -->
+        {% if numverify.get('success') and numverify.get('data') %}
+        {% set nv_data = numverify.get('data') %}
+        <hr>
+        <h6 class="text-muted">Numverify Enhanced Details</h6>
+        <div class="row">
+            {% if nv_data.get('location') %}
+            <div class="col-md-6">
+                <small class="text-muted">Location:</small><br>
+                <strong>{{ nv_data.get('location') }}</strong>
+            </div>
+            {% endif %}
+            {% if nv_data.get('country_name') %}
+            <div class="col-md-6">
+                <small class="text-muted">Country:</small><br>
+                <strong>{{ nv_data.get('country_name') }} ({{ nv_data.get('country_code') }})</strong>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if carrier_info.get('carrier') == 'Unknown' %}
+        <div class="alert alert-warning mb-0">
+            <i class="bi bi-exclamation-triangle"></i> <strong>Warning:</strong>
+            Unable to determine carrier. This may indicate:
+            <ul class="mb-0 mt-2">
+                <li>VoIP or virtual number</li>
+                <li>Foreign number with limited data</li>
+                <li>Recently ported number</li>
+                <li>Invalid or inactive number</li>
+            </ul>
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<!-- Location Information -->
+{% set location_info = results.get('location', {}) %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Location Information</h5>
+    </div>
+    <div class="card-body">
+        {% if location_info.get('error') %}
+        <div class="alert alert-warning">{{ location_info.error }}</div>
+        {% else %}
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Country:</strong></td>
+                        <td>
+                            <strong>{{ location_info.get('country', 'Unknown') }}</strong>
+                            {% if location_info.get('country') and location_info.get('country') != 'Zambia' %}
+                            <span class="badge bg-warning ms-2">Foreign</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Region/Location:</strong></td>
+                        <td>
+                            {% if location_info.get('location') %}
+                            {{ location_info.get('location') }}
+                            {% else %}
+                            <span class="text-muted">Not available</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6>Timezones</h6>
+                {% if location_info.get('timezones') %}
+                <ul class="mb-0">
+                    {% for tz in location_info.get('timezones', []) %}
+                    <li><code>{{ tz }}</code></li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted mb-0">No timezone information available</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if location_info.get('country') and location_info.get('country') != 'Zambia' %}
+        <div class="alert alert-info mt-3 mb-0">
+            <i class="bi bi-info-circle"></i> <strong>Note:</strong>
+            This is a foreign number from <strong>{{ location_info.get('country') }}</strong>.
+            Consider international cooperation protocols for investigation.
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<!-- Social Media Accounts -->
+{% set social_media = results.get('social_media', []) %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-share"></i> Social Media & Messaging Platforms
+            <span class="badge bg-light text-dark">{{ social_media|length }} Platform(s)</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if social_media %}
+        <div class="alert alert-info mb-3">
+            <i class="bi bi-info-circle"></i> <strong>Note:</strong>
+            These are potential accounts based on the phone number. Click links to verify manually
+            if the number is actually registered on each platform.
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead class="table-secondary">
+                    <tr>
+                        <th>Platform</th>
+                        <th>Status</th>
+                        <th>Confidence</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for account in social_media %}
+                    <tr>
+                        <td>
+                            <i class="bi bi-{{ account.icon }}"></i>
+                            <strong>{{ account.platform }}</strong>
+                        </td>
+                        <td>
+                            {% if account.found %}
+                            <span class="badge bg-info">Potential</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Not Found</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge
+                                {% if account.confidence == 'High' %}bg-success
+                                {% elif account.confidence == 'Medium' %}bg-warning
+                                {% else %}bg-secondary{% endif %}">
+                                {{ account.confidence }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ account.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-secondary">
+                                <i class="bi bi-box-arrow-up-right"></i> Verify
+                            </a>
+                        </td>
+                    </tr>
+                    {% if account.note %}
+                    <tr>
+                        <td colspan="4" class="small text-muted">
+                            <i class="bi bi-info-circle"></i> {{ account.note }}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="alert alert-warning mb-0 mt-3">
+            <strong>Investigation Steps:</strong>
+            <ol class="mb-0 small">
+                <li>Click "Verify" to open each platform</li>
+                <li>Check if number is registered and account exists</li>
+                <li>Screenshot profile information for evidence</li>
+                <li>Document findings in case notes</li>
+            </ol>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No social media platform checks available.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Online Mentions & Listings -->
+{% set online_mentions = results.get('online_mentions', {}) %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-search"></i> Online Mentions & Listings
+            <span class="badge bg-light text-dark">{{ online_mentions.get('total_found', 0) }} Source(s)</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if online_mentions.get('total_found', 0) > 0 %}
+
+        <!-- Scam/Spam Reports -->
+        {% if online_mentions.get('sources') %}
+        <h6 class="text-secondary"><i class="bi bi-shield-exclamation"></i> Scam & Spam Databases</h6>
+        <p class="small text-muted">Check these databases for reported scam/spam activity</p>
+        <div class="table-responsive mb-4">
+            <table class="table table-sm table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>Database</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for source in online_mentions.get('sources', []) %}
+                    <tr>
+                        <td><strong>{{ source.name }}</strong></td>
+                        <td><span class="badge bg-info">{{ source.type }}</span></td>
+                        <td><span class="badge bg-warning">{{ source.status }}</span></td>
+                        <td>
+                            <a href="{{ source.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-search"></i> Search
+                            </a>
+                        </td>
+                    </tr>
+                    {% if source.description %}
+                    <tr>
+                        <td colspan="4" class="small text-muted">{{ source.description }}</td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Business Listings (for Zambian numbers) -->
+        {% if online_mentions.get('business_listings') %}
+        <h6 class="text-secondary"><i class="bi bi-building"></i> Business Directories</h6>
+        <p class="small text-muted">Check if number is listed in Zambian business directories</p>
+        <div class="table-responsive mb-4">
+            <table class="table table-sm table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>Directory</th>
+                        <th>Type</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for listing in online_mentions.get('business_listings', []) %}
+                    <tr>
+                        <td><strong>{{ listing.name }}</strong></td>
+                        <td><span class="badge bg-success">{{ listing.type }}</span></td>
+                        <td>
+                            <a href="{{ listing.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-search"></i> Check Listing
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <div class="alert alert-info mb-0">
+            <i class="bi bi-lightbulb"></i> <strong>Investigation Tips:</strong>
+            <ul class="mb-0 small">
+                <li><strong>Scam Reports:</strong> Check if others have reported this number as suspicious</li>
+                <li><strong>Business Listings:</strong> Verify if number belongs to legitimate business</li>
+                <li><strong>Google Search:</strong> Use the Google search link to find any public mentions</li>
+                <li><strong>Screenshot Evidence:</strong> Capture and save any findings for case documentation</li>
+                <li><strong>Cross-Reference:</strong> Compare findings with other investigation data</li>
+            </ul>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No online mention sources configured for this investigation.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Enhanced Social Media Searches -->
+{% set enhanced_searches = results.get('enhanced_social_searches', {}) %}
+{% if enhanced_searches %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-gradient-primary text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-search"></i> Targeted Social Media Searches
+            <span class="badge bg-light text-dark">{{ results.get('metadata', {}).get('enhanced_searches_generated', 0) }} Enhanced Searches</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info mb-4">
+            <i class="bi bi-info-circle"></i> <strong>Fine-Tuned Search Queries:</strong>
+            These are specially crafted Google searches designed to find accurate information about this phone number on Facebook, LinkedIn, X (Twitter), and Instagram. Each search targets specific areas where contact information is commonly found.
+        </div>
+
+        <!-- Facebook Searches -->
+        {% if enhanced_searches.get('facebook') %}
+        <div class="mb-4">
+            <h6 class="text-primary border-bottom pb-2">
+                <i class="bi bi-facebook"></i> Facebook Enhanced Searches ({{ enhanced_searches.get('facebook')|length }})
+            </h6>
+            <div class="row">
+                {% for search in enhanced_searches.get('facebook') %}
+                <div class="col-md-6 mb-3">
+                    <div class="card border-primary">
+                        <div class="card-body p-3">
+                            <h6 class="card-title mb-2">
+                                <a href="{{ search.url|safe }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+                                    {{ search.name }} <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                            </h6>
+                            <p class="card-text small text-muted mb-0">{{ search.description }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- LinkedIn Searches -->
+        {% if enhanced_searches.get('linkedin') %}
+        <div class="mb-4">
+            <h6 class="text-primary border-bottom pb-2">
+                <i class="bi bi-linkedin"></i> LinkedIn Enhanced Searches ({{ enhanced_searches.get('linkedin')|length }})
+            </h6>
+            <div class="row">
+                {% for search in enhanced_searches.get('linkedin') %}
+                <div class="col-md-6 mb-3">
+                    <div class="card border-info">
+                        <div class="card-body p-3">
+                            <h6 class="card-title mb-2">
+                                <a href="{{ search.url|safe }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+                                    {{ search.name }} <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                            </h6>
+                            <p class="card-text small text-muted mb-0">{{ search.description }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- X (Twitter) Searches -->
+        {% if enhanced_searches.get('twitter') %}
+        <div class="mb-4">
+            <h6 class="text-primary border-bottom pb-2">
+                <i class="bi bi-twitter"></i> X (Twitter) Enhanced Searches ({{ enhanced_searches.get('twitter')|length }})
+            </h6>
+            <div class="row">
+                {% for search in enhanced_searches.get('twitter') %}
+                <div class="col-md-6 mb-3">
+                    <div class="card border-dark">
+                        <div class="card-body p-3">
+                            <h6 class="card-title mb-2">
+                                <a href="{{ search.url|safe }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+                                    {{ search.name }} <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                            </h6>
+                            <p class="card-text small text-muted mb-0">{{ search.description }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Instagram Searches -->
+        {% if enhanced_searches.get('instagram') %}
+        <div class="mb-4">
+            <h6 class="text-primary border-bottom pb-2">
+                <i class="bi bi-instagram"></i> Instagram Enhanced Searches ({{ enhanced_searches.get('instagram')|length }})
+            </h6>
+            <div class="row">
+                {% for search in enhanced_searches.get('instagram') %}
+                <div class="col-md-6 mb-3">
+                    <div class="card border-danger">
+                        <div class="card-body p-3">
+                            <h6 class="card-title mb-2">
+                                <a href="{{ search.url|safe }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+                                    {{ search.name }} <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                            </h6>
+                            <p class="card-text small text-muted mb-0">{{ search.description }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- OSINT Tools & Reverse Lookup -->
+        {% if enhanced_searches.get('osint_tools') %}
+        <div class="mb-4">
+            <h6 class="text-warning border-bottom pb-2">
+                <i class="bi bi-tools"></i> Professional OSINT Tools & Reverse Lookup ({{ enhanced_searches.get('osint_tools')|length }})
+            </h6>
+            <div class="row">
+                {% for search in enhanced_searches.get('osint_tools') %}
+                <div class="col-md-6 mb-3">
+                    <div class="card border-warning">
+                        <div class="card-body p-3">
+                            <h6 class="card-title mb-2">
+                                <a href="{{ search.url|safe }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+                                    {{ search.name }} <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                            </h6>
+                            <p class="card-text small text-muted mb-0">{{ search.description }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="alert alert-success mb-0">
+            <i class="bi bi-lightbulb"></i> <strong>Investigation Tips:</strong>
+            <ul class="mb-0 mt-2">
+                <li><strong>Direct Platform Searches:</strong> These open the actual platform (Facebook, LinkedIn, etc.) and search within it - more effective than Google</li>
+                <li><strong>OSINT Tools:</strong> Specialized databases like TrueCaller that aggregate social media and public records</li>
+                <li><strong>Login Required:</strong> Some platform searches require you to be logged in to see full results</li>
+                <li>Screenshot any relevant findings for evidence documentation</li>
+                <li>Cross-reference findings across multiple sources for verification</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Phoneinfoga Enhanced OSINT -->
+{% set phoneinfoga = results.get('phoneinfoga', {}) %}
+{% if phoneinfoga.get('total_dorks', 0) > 0 %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-search-heart"></i> Advanced Google Dorks (Phoneinfoga)
+            <span class="badge bg-warning text-dark">{{ phoneinfoga.get('total_dorks', 0) }} Searches</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info mb-3">
+            <i class="bi bi-info-circle"></i> <strong>Phoneinfoga Integration:</strong>
+            These are specialized Google search queries (dorks) automatically generated to find specific information
+            about this phone number across the internet. Click each link to search.
+        </div>
+
+        <!-- Account Verification Methods -->
+        <div class="alert alert-success mb-4">
+            <h6 class="mb-3"><i class="bi bi-shield-check"></i> Direct Account Verification Methods</h6>
+            <p class="small mb-3"><strong>Check if this number is registered on social media platforms:</strong></p>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered mb-3">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Platform</th>
+                            <th>Verification Method</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><i class="bi bi-whatsapp text-success"></i> <strong>WhatsApp</strong></td>
+                            <td class="small">Opens WhatsApp with this number. If registered, shows profile picture, name, about, and last seen</td>
+                            <td>
+                                <a href="https://wa.me/{{ clean_num }}" target="_blank" class="btn btn-success btn-sm">
+                                    <i class="bi bi-whatsapp"></i> Check WhatsApp
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><i class="bi bi-telegram text-info"></i> <strong>Telegram</strong></td>
+                            <td class="small">Opens Telegram chat. If registered, shows username, profile picture, and bio</td>
+                            <td>
+                                <a href="https://t.me/+{{ clean_num }}" target="_blank" class="btn btn-info btn-sm">
+                                    <i class="bi bi-telegram"></i> Check Telegram
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><i class="bi bi-facebook text-primary"></i> <strong>Facebook</strong></td>
+                            <td class="small">Use Facebook's "Find Friends" → Enter phone number (requires login to your Facebook account)</td>
+                            <td>
+                                <a href="https://www.facebook.com/find-friends/browser/" target="_blank" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-facebook"></i> Find Friends
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><i class="bi bi-instagram text-danger"></i> <strong>Instagram</strong></td>
+                            <td class="small">Go to Instagram login → "Forgot password" → Enter number. If registered, shows partial username</td>
+                            <td>
+                                <a href="https://www.instagram.com/accounts/password/reset/" target="_blank" class="btn btn-danger btn-sm">
+                                    <i class="bi bi-instagram"></i> Password Reset
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><i class="bi bi-twitter-x text-dark"></i> <strong>X (Twitter)</strong></td>
+                            <td class="small">Go to X login → "Forgot password" → Enter number. If registered, shows confirmation</td>
+                            <td>
+                                <a href="https://twitter.com/i/flow/password_reset" target="_blank" class="btn btn-dark btn-sm">
+                                    <i class="bi bi-twitter-x"></i> Password Reset
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><i class="bi bi-search text-success"></i> <strong>TrueCaller</strong></td>
+                            <td class="small">Crowd-sourced caller ID. Shows name, location, spam reports if number is in database</td>
+                            <td>
+                                <a href="https://www.truecaller.com/search/{{ validation.get('international_format', investigation.target).replace(' ', '') }}" target="_blank" class="btn btn-success btn-sm">
+                                    <i class="bi bi-search"></i> Check TrueCaller
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="alert alert-warning mb-0 small">
+                <i class="bi bi-exclamation-triangle"></i> <strong>Important Notes:</strong>
+                <ul class="mb-0 mt-2">
+                    <li><strong>WhatsApp & Telegram:</strong> Direct verification - instantly shows if account exists</li>
+                    <li><strong>Facebook:</strong> Requires you to be logged into your Facebook account, then use "Find Friends" feature</li>
+                    <li><strong>Instagram & X:</strong> Use password reset to verify (don't complete reset, just check if number is recognized)</li>
+                    <li><strong>Screenshot Evidence:</strong> Capture any findings for case documentation</li>
+                    <li><strong>Privacy:</strong> The account holder will NOT be notified when you check WhatsApp/Telegram</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Quick Access Search Links -->
+        <div class="alert alert-primary mb-4">
+            <h6 class="mb-3"><i class="bi bi-lightning-fill"></i> Quick Access - Google Searches</h6>
+            <p class="small mb-3">Search Google for this phone number across different platforms:</p>
+            <div class="row g-2">
+                {% set clean_num = validation.get('e164_format', investigation.target).replace('+', '').replace(' ', '').replace('-', '') %}
+                {% set intl_format = validation.get('international_format', investigation.target) %}
+                {% set nat_num = validation.get('national_number', '') | string %}
+                {% set country_code = validation.get('country_code', '') | string %}
+                {% set formatted_space = country_code + ' ' + nat_num[0:2] + ' ' + nat_num[2:] if nat_num and country_code else '' %}
+                <div class="col-md-3 col-6">
+                    <a href="https://www.google.com/search?q=%22{{ clean_num }}%22+OR+%22{{ formatted_space }}%22+OR+%22{{ nat_num }}%22+site:facebook.com" target="_blank" class="btn btn-primary w-100 btn-sm">
+                        <i class="bi bi-facebook"></i> Facebook
+                    </a>
+                </div>
+                <div class="col-md-3 col-6">
+                    <a href="https://www.google.com/search?q=%22{{ clean_num }}%22+OR+%22{{ formatted_space }}%22+OR+%22{{ nat_num }}%22+site:twitter.com" target="_blank" class="btn btn-dark w-100 btn-sm">
+                        <i class="bi bi-twitter-x"></i> X/Twitter
+                    </a>
+                </div>
+                <div class="col-md-3 col-6">
+                    <a href="https://www.google.com/search?q=%22{{ clean_num }}%22+OR+%22{{ formatted_space }}%22+OR+%22{{ nat_num }}%22+site:linkedin.com" target="_blank" class="btn btn-info w-100 btn-sm">
+                        <i class="bi bi-linkedin"></i> LinkedIn
+                    </a>
+                </div>
+                <div class="col-md-3 col-6">
+                    <a href="https://www.google.com/search?q=%22{{ clean_num }}%22+OR+%22{{ formatted_space }}%22+OR+%22{{ nat_num }}%22+site:instagram.com" target="_blank" class="btn btn-danger w-100 btn-sm">
+                        <i class="bi bi-instagram"></i> Instagram
+                    </a>
+                </div>
+                <div class="col-md-3 col-6">
+                    <a href="https://www.truecaller.com/search/{{ validation.get('international_format', investigation.target).replace(' ', '') }}" target="_blank" class="btn btn-success w-100 btn-sm">
+                        <i class="bi bi-search"></i> TrueCaller
+                    </a>
+                </div>
+                <div class="col-md-3 col-6">
+                    <a href="https://sync.me/search/?number={{ clean_num }}" target="_blank" class="btn btn-warning w-100 btn-sm text-dark">
+                        <i class="bi bi-person-circle"></i> Sync.me
+                    </a>
+                </div>
+                <div class="col-md-3 col-6">
+                    <a href="https://www.google.com/search?q=%22{{ clean_num }}%22+OR+%22{{ formatted_space }}%22+OR+%22{{ nat_num }}%22" target="_blank" class="btn btn-secondary w-100 btn-sm">
+                        <i class="bi bi-google"></i> Google
+                    </a>
+                </div>
+                <div class="col-md-3 col-6">
+                    <a href="https://www.whatsapp.com/send?phone={{ clean_num }}" target="_blank" class="btn btn-success w-100 btn-sm">
+                        <i class="bi bi-whatsapp"></i> WhatsApp
+                    </a>
+                </div>
+            </div>
+            <p class="small text-muted mt-3 mb-0">
+                <i class="bi bi-info-circle"></i> <strong>Tip:</strong> Most social platforms require you to be logged in. Open each link, sign in if needed, and review results.
+            </p>
+        </div>
+
+        <!-- Social Media Dorks -->
+        {% if phoneinfoga.get('google_dorks', {}).get('social_media') %}
+        <h6 class="text-dark mb-3"><i class="bi bi-share"></i> Social Media Searches ({{ phoneinfoga.get('google_dorks', {}).get('social_media', [])|length }})</h6>
+        <div class="mb-4">
+            {% for search in phoneinfoga.get('google_dorks', {}).get('social_media', []) %}
+            <div class="card mb-3 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h6 class="mb-1">
+                                {% if 'Facebook' in search.platform %}<i class="bi bi-facebook text-primary"></i>
+                                {% elif 'Twitter' in search.platform %}<i class="bi bi-twitter-x text-dark"></i>
+                                {% elif 'LinkedIn' in search.platform %}<i class="bi bi-linkedin" style="color: #0A66C2;"></i>
+                                {% elif 'Instagram' in search.platform %}<i class="bi bi-instagram" style="color: #E4405F;"></i>
+                                {% elif 'VK' in search.platform %}<i class="bi bi-share" style="color: #45668e;"></i>
+                                {% else %}<i class="bi bi-search"></i>{% endif %}
+                                {{ search.platform }}
+                            </h6>
+                            <p class="text-muted mb-0 small">{{ search.description }}</p>
+                        </div>
+                        <a href="{{ search.url|safe }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary">
+                            <i class="bi bi-search"></i> Search <i class="bi bi-box-arrow-up-right"></i>
+                        </a>
+                    </div>
+                    <div class="alert alert-info mb-0 small">
+                        <i class="bi bi-info-circle"></i> <strong>How to use:</strong> Click "Search" to run Google search, then review results for profiles, posts, or mentions of this number.
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Reputation Searches -->
+        {% if phoneinfoga.get('google_dorks', {}).get('reputation') %}
+        <h6 class="text-dark mb-3"><i class="bi bi-shield-exclamation"></i> Reputation & Spam Checks ({{ phoneinfoga.get('google_dorks', {}).get('reputation', [])|length }})</h6>
+        <div class="mb-4">
+            {% for search in phoneinfoga.get('google_dorks', {}).get('reputation', []) %}
+            <div class="card mb-2 border-warning">
+                <div class="card-body py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="flex-grow-1">
+                            <strong><i class="bi bi-flag text-warning"></i> {{ search.platform }}</strong>
+                            <p class="mb-0 small text-muted">{{ search.description }}</p>
+                        </div>
+                        <a href="{{ search.url|safe }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-warning">
+                            <i class="bi bi-search"></i> Check <i class="bi bi-box-arrow-up-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Disposable Numbers -->
+        {% if phoneinfoga.get('google_dorks', {}).get('disposable') %}
+        <h6 class="text-dark mb-3"><i class="bi bi-trash"></i> Disposable Number Checks ({{ phoneinfoga.get('google_dorks', {}).get('disposable', [])|length }})</h6>
+        <div class="mb-4">
+            {% for search in phoneinfoga.get('google_dorks', {}).get('disposable', []) %}
+            <div class="card mb-2 border-danger">
+                <div class="card-body py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="flex-grow-1">
+                            <strong><i class="bi bi-exclamation-triangle text-danger"></i> {{ search.platform }}</strong>
+                            <p class="mb-0 small text-muted">{{ search.description }}</p>
+                        </div>
+                        <a href="{{ search.url|safe }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-danger">
+                            <i class="bi bi-search"></i> Check <i class="bi bi-box-arrow-up-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Individuals -->
+        {% if phoneinfoga.get('google_dorks', {}).get('individuals') %}
+        <h6 class="text-dark mb-3"><i class="bi bi-person-circle"></i> Personal Info Searches ({{ phoneinfoga.get('google_dorks', {}).get('individuals', [])|length }})</h6>
+        <div class="mb-4">
+            {% for search in phoneinfoga.get('google_dorks', {}).get('individuals', []) %}
+            <div class="card mb-2 border-info">
+                <div class="card-body py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="flex-grow-1">
+                            <strong><i class="bi bi-person text-info"></i> {{ search.platform }}</strong>
+                            <p class="mb-0 small text-muted">{{ search.description }}</p>
+                        </div>
+                        <a href="{{ search.url|safe }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-info">
+                            <i class="bi bi-search"></i> Search <i class="bi bi-box-arrow-up-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- General Web Searches -->
+        {% if phoneinfoga.get('google_dorks', {}).get('general') %}
+        <h6 class="text-dark mb-3"><i class="bi bi-globe"></i> General Web Searches ({{ phoneinfoga.get('google_dorks', {}).get('general', [])|length }})</h6>
+        <div class="mb-4">
+            {% for search in phoneinfoga.get('google_dorks', {}).get('general', []) %}
+            <div class="card mb-2">
+                <div class="card-body py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="flex-grow-1">
+                            <strong><i class="bi bi-search"></i> {{ search.platform }}</strong>
+                            <p class="mb-0 small text-muted">{{ search.description }}</p>
+                        </div>
+                        <a href="{{ search.url|safe }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-secondary">
+                            <i class="bi bi-search"></i> Search <i class="bi bi-box-arrow-up-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="alert alert-success mb-0">
+            <i class="bi bi-lightbulb"></i> <strong>How to Use:</strong>
+            Click any button to automatically search Google. Screenshot relevant findings for evidence.
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Risk Indicators Detail -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Fraud Risk Indicators</h5>
+    </div>
+    <div class="card-body">
+        {% if risk.get('flags') %}
+        <div class="alert
+            {% if risk.get('risk_score', 0) >= 70 %}alert-danger
+            {% elif risk.get('risk_score', 0) >= 40 %}alert-warning
+            {% else %}alert-info{% endif %} mb-3">
+            <strong>{{ risk.get('flags')|length }} Risk Indicator(s) Detected</strong>
+        </div>
+
+        <div class="accordion" id="riskAccordion">
+            {% for flag in risk.get('flags', []) %}
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="risk{{ loop.index }}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#riskCollapse{{ loop.index }}">
+                        <i class="bi bi-flag-fill text-danger me-2"></i>
+                        {{ flag }}
+                    </button>
+                </h2>
+                <div id="riskCollapse{{ loop.index }}" class="accordion-collapse collapse"
+                     data-bs-parent="#riskAccordion">
+                    <div class="accordion-body">
+                        {% if 'VoIP' in flag %}
+                        <p><strong>What it means:</strong> This number operates over the internet (VoIP/Voice over IP).</p>
+                        <p><strong>Why it's risky:</strong> VoIP numbers are easy to obtain anonymously, difficult to trace, and commonly used by scammers to hide their real location.</p>
+                        <p><strong>Action:</strong> Treat as high-priority suspect. Verify through additional methods.</p>
+                        {% elif 'Premium Rate' in flag %}
+                        <p><strong>What it means:</strong> This is a premium-rate phone number that charges high fees when called.</p>
+                        <p><strong>Why it's risky:</strong> Often used in billing fraud schemes where victims are tricked into calling expensive numbers.</p>
+                        <p><strong>Action:</strong> Investigate potential billing fraud or phone scam operation.</p>
+                        {% elif 'Unknown carrier' in flag %}
+                        <p><strong>What it means:</strong> The mobile network provider could not be identified.</p>
+                        <p><strong>Why it's risky:</strong> Makes investigation difficult. May be VoIP, foreign, or inactive number.</p>
+                        <p><strong>Action:</strong> Contact telecom authorities for carrier identification assistance.</p>
+                        {% elif 'Foreign number' in flag %}
+                        <p><strong>What it means:</strong> This number is registered in another country.</p>
+                        <p><strong>Why it's risky:</strong> Requires international cooperation. May be used to evade local law enforcement.</p>
+                        <p><strong>Action:</strong> Consider requesting Interpol assistance or international cooperation.</p>
+                        {% elif 'Invalid' in flag %}
+                        <p><strong>What it means:</strong> This phone number does not appear to be valid or is not in service.</p>
+                        <p><strong>Why it's risky:</strong> May be fake, disconnected, or incorrectly provided by suspect.</p>
+                        <p><strong>Action:</strong> Verify the number with original source. May indicate deception.</p>
+                        {% else %}
+                        <p><strong>Risk Indicator:</strong> {{ flag }}</p>
+                        <p><strong>Action:</strong> Review case details and consider enhanced verification procedures.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-success mb-0">
+            <i class="bi bi-check-circle-fill"></i> <strong>Good news!</strong>
+            No significant fraud indicators detected for this phone number.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Investigation Metadata -->
+{% set metadata = results.get('metadata', {}) %}
+<div class="card shadow mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-info-circle"></i> Investigation Metadata</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Investigation Duration:</strong></td>
+                        <td>{{ "%.3f"|format(metadata.get('investigation_duration', 0)) }} seconds</td>
+                    </tr>
+                    <tr>
+                        <td><strong>API Calls Made:</strong></td>
+                        <td>{{ metadata.get('api_calls_made', 0) }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Timestamp:</strong></td>
+                        <td>{{ metadata.get('timestamp', 'N/A') }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Case ID:</strong></td>
+                        <td><code>{{ metadata.get('case_id', case.id) }}</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Investigation Status:</strong></td>
+                        <td>
+                            {% if investigation.status == 'completed' %}
+                            <span class="badge bg-success">Completed</span>
+                            {% else %}
+                            <span class="badge bg-danger">{{ investigation.status|title }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Evidence Hash -->
+<div class="card shadow mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-file-lock"></i> Evidence Integrity</h5>
+    </div>
+    <div class="card-body">
+        <p><strong>Evidence Hash (SHA-256):</strong></p>
+        <pre class="bg-light p-2 border rounded"><code>{{ investigation.evidence_hash }}</code></pre>
+        <small class="text-muted">
+            This hash ensures the integrity of the investigation results for legal proceedings.
+            Any modification to the results will change this hash value.
+        </small>
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="card shadow">
+    <div class="card-body">
+        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+            <div>
+                <a href="{{ url_for('investigations.phone_search') }}" class="btn btn-secondary">
+                    <i class="bi bi-search"></i> New Investigation
+                </a>
+                <a href="{{ url_for('cases.view_case', case_id=case.id) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-folder"></i> View Case
+                </a>
+            </div>
+            <div>
+                <a href="{{ url_for('investigations.download_phone_pdf', investigation_id=investigation.id) }}"
+                   class="btn btn-danger">
+                    <i class="bi bi-file-pdf"></i> Download PDF Report
+                </a>
+                <button class="btn btn-success" onclick="window.print()">
+                    <i class="bi bi-printer"></i> Print Report
+                </button>
+                <button class="btn btn-info" onclick="downloadJSON()">
+                    <i class="bi bi-download"></i> Export JSON
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function downloadJSON() {
+    const data = {{ investigation.raw_results|tojson|safe }};
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'phone_investigation_{{ investigation.id }}.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+</script>
+
+<!-- Help Modal - Replaced with dedicated guide page at /investigations/phone-osint-guide -->
+<!-- Modal removed to use standalone investigation guide page -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true" style="display:none;">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-secondary text-white">
+                <h5 class="modal-title" id="helpModalLabel">
+                    <i class="bi bi-book"></i> Understanding Phone Investigation Results
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- TABLE OF CONTENTS -->
+                <div class="alert alert-primary">
+                    <h6 class="mb-2"><i class="bi bi-list-ul"></i> Complete Phone OSINT Investigation Guide</h6>
+                    <p class="mb-2 small">This comprehensive guide covers all aspects of phone number investigations using CyberTrace OSINT Platform.</p>
+                    <div class="row small">
+                        <div class="col-md-6">
+                            <strong>Quick Navigation:</strong>
+                            <ul class="mb-0">
+                                <li><a href="#guide-overview">Investigation Overview</a></li>
+                                <li><a href="#guide-workflow">Complete Investigation Workflow</a></li>
+                                <li><a href="#guide-verification">Social Media Account Verification</a></li>
+                                <li><a href="#guide-risk">Risk Assessment Understanding</a></li>
+                                <li><a href="#guide-validation">Phone Validation Details</a></li>
+                                <li><a href="#guide-carrier">Carrier Information Analysis</a></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                <li><a href="#guide-location">Location Data Interpretation</a></li>
+                                <li><a href="#guide-dorks">Using Google Dorks Effectively</a></li>
+                                <li><a href="#guide-noresults">Why Some Searches Return No Results</a></li>
+                                <li><a href="#guide-legal">Legal Requirements & Court Orders</a></li>
+                                <li><a href="#guide-evidence">Evidence Collection & Documentation</a></li>
+                                <li><a href="#guide-advanced">Advanced Investigation Techniques</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 1: INVESTIGATION OVERVIEW -->
+                <div id="guide-overview">
+                    <h5 class="text-secondary"><i class="bi bi-info-circle"></i> Section 1: Phone OSINT Investigation Overview</h5>
+
+                    <h6 class="mt-3">What is Phone OSINT?</h6>
+                    <p>Phone Open Source Intelligence (OSINT) is the process of gathering publicly available information about a phone number from various sources including:</p>
+                    <ul>
+                        <li><strong>Telecommunications databases</strong> - Carrier information, number validation, location data</li>
+                        <li><strong>Social media platforms</strong> - Facebook, Instagram, X/Twitter, LinkedIn, WhatsApp, Telegram</li>
+                        <li><strong>Public records</strong> - Business directories, scam reports, caller ID databases</li>
+                        <li><strong>Search engines</strong> - Google dorks to find mentions across the internet</li>
+                        <li><strong>Specialized databases</strong> - TrueCaller, Sync.me, spam reporting sites</li>
+                    </ul>
+
+                    <h6 class="mt-3">What This Investigation Provides</h6>
+                    <p>The CyberTrace Phone OSINT module automatically performs the following checks:</p>
+                    <ol>
+                        <li><strong>Number Validation</strong> - Verifies if the number is valid, properly formatted, and currently assigned</li>
+                        <li><strong>Carrier Identification</strong> - Identifies the telecommunications provider (Airtel, MTN, Zamtel, etc.)</li>
+                        <li><strong>Geographic Location</strong> - Determines registration country and region</li>
+                        <li><strong>Number Type Classification</strong> - Identifies if it's mobile, landline, VoIP, or premium rate</li>
+                        <li><strong>Risk Assessment</strong> - Calculates fraud risk score based on multiple indicators</li>
+                        <li><strong>Social Media Links</strong> - Generates direct verification links for all major platforms</li>
+                        <li><strong>Google Dorks</strong> - Creates 50+ specialized search queries via Phoneinfoga</li>
+                        <li><strong>Spam Database Checks</strong> - Links to scam reporting sites and caller ID databases</li>
+                    </ol>
+
+                    <h6 class="mt-3">Investigation Capabilities & Limitations</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>What We CAN Find</th>
+                                    <th>What We CANNOT Find</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <ul class="small mb-0">
+                                            <li>Number validity and format</li>
+                                            <li>Carrier/network provider</li>
+                                            <li>Registration country/region</li>
+                                            <li>Number type (mobile/VoIP/landline)</li>
+                                            <li>Public social media presence</li>
+                                            <li>Scam/spam reports</li>
+                                            <li>Business directory listings</li>
+                                            <li>Publicly posted information</li>
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        <ul class="small mb-0">
+                                            <li>Subscriber name (requires carrier request)</li>
+                                            <li>Subscriber address (requires carrier request)</li>
+                                            <li>ID/Passport number (requires carrier request)</li>
+                                            <li>Current real-time location (requires court order)</li>
+                                            <li>Call history/CDRs (requires court order)</li>
+                                            <li>SMS message content (requires court order)</li>
+                                            <li>Private social media posts</li>
+                                            <li>WhatsApp/Telegram chat content</li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="alert alert-warning small">
+                        <i class="bi bi-exclamation-triangle"></i> <strong>Important Legal Note:</strong> This tool only gathers publicly available information. For subscriber details, call records, SMS content, or real-time location tracking, you must obtain proper legal authorization through court orders or official carrier requests following Zambia Police Service protocols.
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- SECTION 2: COMPLETE INVESTIGATION WORKFLOW -->
+                <div id="guide-workflow">
+                    <h5 class="text-secondary"><i class="bi bi-diagram-3"></i> Section 2: Complete Investigation Workflow</h5>
+
+                    <h6 class="mt-3">Step-by-Step Investigation Process</h6>
+                    <p>Follow this systematic approach for every phone number investigation:</p>
+
+                    <div class="card mb-3 border-primary">
+                        <div class="card-header bg-primary text-white"><strong>STEP 1: Initial Assessment (First 2 Minutes)</strong></div>
+                        <div class="card-body small">
+                            <p><strong>Review Risk Assessment Section:</strong></p>
+                            <ul>
+                                <li>Check the Risk Score (0-100 scale)</li>
+                                <li>Read all Risk Flags carefully</li>
+                                <li>Note any HIGH RISK indicators (VoIP, Premium Rate, Foreign)</li>
+                                <li>Review Recommendations provided</li>
+                            </ul>
+                            <p><strong>Examine Phone Validation:</strong></p>
+                            <ul>
+                                <li>Verify number is valid and properly formatted</li>
+                                <li>Check number type (Mobile, Landline, VoIP)</li>
+                                <li>Note country code and registration location</li>
+                            </ul>
+                            <p><strong>Check Carrier Information:</strong></p>
+                            <ul>
+                                <li>Identify the telecommunications provider</li>
+                                <li>If "Unknown Carrier" - RED FLAG for potential VoIP/burner</li>
+                                <li>Known carriers (Airtel, MTN, Zamtel) = easier to trace</li>
+                            </ul>
+                            <p><strong>Action: Download PDF report immediately to preserve evidence</strong></p>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3 border-success">
+                        <div class="card-header bg-success text-white"><strong>STEP 2: Direct Social Media Verification (5-10 Minutes)</strong></div>
+                        <div class="card-body small">
+                            <p><strong>Start with the "Direct Account Verification Methods" section at the top of Phoneinfoga results.</strong></p>
+
+                            <p><strong>A. WhatsApp Check (HIGHEST PRIORITY):</strong></p>
+                            <ol>
+                                <li>Click "Check WhatsApp" button</li>
+                                <li>WhatsApp will open in browser or app</li>
+                                <li>If account exists, you'll immediately see:
+                                    <ul>
+                                        <li>Profile picture (screenshot this!)</li>
+                                        <li>Display name</li>
+                                        <li>"About" status message</li>
+                                        <li>Last seen timestamp (if not hidden)</li>
+                                    </ul>
+                                </li>
+                                <li>If no account: "This phone number is not registered on WhatsApp"</li>
+                                <li><strong>IMPORTANT: Suspect will NOT be notified that you checked</strong></li>
+                                <li>Screenshot everything for evidence</li>
+                            </ol>
+
+                            <p><strong>B. Telegram Check:</strong></p>
+                            <ol>
+                                <li>Click "Check Telegram" button</li>
+                                <li>If registered, shows:
+                                    <ul>
+                                        <li>Username (if set) - VERY VALUABLE</li>
+                                        <li>Profile picture</li>
+                                        <li>Bio/description</li>
+                                    </ul>
+                                </li>
+                                <li>Telegram usernames can be searched globally</li>
+                                <li>Screenshot everything</li>
+                            </ol>
+
+                            <p><strong>C. Facebook Verification (requires your login):</strong></p>
+                            <ol>
+                                <li>Click "Find Friends" button</li>
+                                <li>You'll be taken to Facebook (must be logged in)</li>
+                                <li>Go to "Add Contacts" or "Find Friends"</li>
+                                <li>Enter the phone number manually</li>
+                                <li>If account exists, Facebook will show the profile</li>
+                                <li>Screenshot profile page, bio, photos, friends list</li>
+                                <li>Note: Privacy settings may limit what you can see</li>
+                            </ol>
+
+                            <p><strong>D. Instagram Verification:</strong></p>
+                            <ol>
+                                <li>Click "Password Reset" button</li>
+                                <li>On Instagram login page, click "Forgot password?"</li>
+                                <li>Enter the phone number</li>
+                                <li>If registered, Instagram shows: "We sent a login link to j***n_k***a" (partial username)</li>
+                                <li>Note the partial username pattern</li>
+                                <li>DO NOT complete the password reset - just verify existence</li>
+                                <li>Try searching Instagram for usernames matching the pattern</li>
+                            </ol>
+
+                            <p><strong>E. X/Twitter Verification:</strong></p>
+                            <ol>
+                                <li>Similar process to Instagram</li>
+                                <li>Use password reset to verify</li>
+                                <li>Note any partial username revealed</li>
+                            </ol>
+
+                            <p><strong>F. TrueCaller Lookup:</strong></p>
+                            <ol>
+                                <li>Click "Check TrueCaller"</li>
+                                <li>If number is in database, shows:
+                                    <ul>
+                                        <li>Name (crowd-sourced)</li>
+                                        <li>Location</li>
+                                        <li>Spam reports</li>
+                                        <li>Number of times searched</li>
+                                    </ul>
+                                </li>
+                                <li>TrueCaller data is from user contributions, verify accuracy</li>
+                            </ol>
+
+                            <p><strong>Documentation Checklist:</strong></p>
+                            <ul>
+                                <li>✓ Screenshot WhatsApp profile (if exists)</li>
+                                <li>✓ Screenshot Telegram profile (if exists)</li>
+                                <li>✓ Screenshot Facebook profile and key information</li>
+                                <li>✓ Note Instagram/Twitter partial usernames</li>
+                                <li>✓ Screenshot TrueCaller results</li>
+                                <li>✓ Record exact date/time of each check</li>
+                                <li>✓ Save all screenshots to case evidence folder</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3 border-info">
+                        <div class="card-header bg-info text-white"><strong>STEP 3: Google Search Investigation (10-15 Minutes)</strong></div>
+                        <div class="card-body small">
+                            <p><strong>Use the "Quick Access - Google Searches" buttons:</strong></p>
+
+                            <p><strong>A. Facebook Google Search:</strong></p>
+                            <ul>
+                                <li>Searches Google for the number on Facebook using multiple format variations</li>
+                                <li>Finds posts, comments, or mentions even if profile is private</li>
+                                <li>Look for:
+                                    <ul>
+                                        <li>Public posts mentioning the number</li>
+                                        <li>Marketplace listings with contact number</li>
+                                        <li>Business pages</li>
+                                        <li>Comments on public posts</li>
+                                    </ul>
+                                </li>
+                            </ul>
+
+                            <p><strong>B. Twitter/X Google Search:</strong></p>
+                            <ul>
+                                <li>Finds tweets mentioning the phone number</li>
+                                <li>Look for scam reports from victims</li>
+                                <li>Public complaints or warnings</li>
+                            </ul>
+
+                            <p><strong>C. LinkedIn Search:</strong></p>
+                            <ul>
+                                <li>Professional profiles listing phone number</li>
+                                <li>Company pages with contact info</li>
+                                <li>Job postings</li>
+                            </ul>
+
+                            <p><strong>D. Instagram Search:</strong></p>
+                            <ul>
+                                <li>Bio descriptions with phone numbers</li>
+                                <li>Business accounts</li>
+                                <li>Posts mentioning the number</li>
+                            </ul>
+
+                            <p><strong>E. General Google Search:</strong></p>
+                            <ul>
+                                <li>Searches entire web for the number</li>
+                                <li>Finds:
+                                    <ul>
+                                        <li>Websites listing the number</li>
+                                        <li>Forum posts</li>
+                                        <li>Blog mentions</li>
+                                        <li>News articles</li>
+                                        <li>Data breach dumps</li>
+                                    </ul>
+                                </li>
+                            </ul>
+
+                            <p><strong>Pro Tips for Google Searches:</strong></p>
+                            <ul>
+                                <li>Open each search in a new tab</li>
+                                <li>Check first 3-5 pages of results (not just page 1)</li>
+                                <li>Click on promising results and explore</li>
+                                <li>Use browser's "Find" function (Ctrl+F) to locate number on pages</li>
+                                <li>Screenshot any relevant findings</li>
+                                <li>Save URLs of important pages</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3 border-warning">
+                        <div class="card-header bg-warning"><strong>STEP 4: Advanced Google Dorks (15-20 Minutes)</strong></div>
+                        <div class="card-body small">
+                            <p><strong>Use the categorized Phoneinfoga Google Dorks below the Quick Access section:</strong></p>
+
+                            <p><strong>A. Social Media Searches Category:</strong></p>
+                            <ul>
+                                <li>More specific Google searches for each platform</li>
+                                <li>Uses advanced search operators (site:, intext:, etc.)</li>
+                                <li>Each search card explains what it finds</li>
+                                <li>Click through ALL searches in this category</li>
+                            </ul>
+
+                            <p><strong>B. Reputation & Spam Checks Category:</strong></p>
+                            <ul>
+                                <li>Scam reporting databases (WHO CALLED ME, etc.)</li>
+                                <li>Spam complaint sites</li>
+                                <li>Look for:
+                                    <ul>
+                                        <li>Other victims' reports</li>
+                                        <li>Scam pattern descriptions</li>
+                                        <li>Number of reports</li>
+                                        <li>Dates of reported activity</li>
+                                    </ul>
+                                </li>
+                                <li>Screenshot all spam reports</li>
+                            </ul>
+
+                            <p><strong>C. Disposable Number Checks Category:</strong></p>
+                            <ul>
+                                <li>Checks if number appears on temporary SMS sites</li>
+                                <li>If found = MAJOR RED FLAG</li>
+                                <li>Means number is publicly available for receiving verification codes</li>
+                                <li>Commonly used by fraudsters</li>
+                            </ul>
+
+                            <p><strong>D. Personal Info Searches Category:</strong></p>
+                            <ul>
+                                <li>Searches people search engines</li>
+                                <li>Pastebin and data breach sites</li>
+                                <li>Reverse phone lookup databases</li>
+                            </ul>
+
+                            <p><strong>E. General Web Searches Category:</strong></p>
+                            <ul>
+                                <li>Broad searches across internet</li>
+                                <li>Includes document searches (PDF, DOC, XLS)</li>
+                                <li>May find number in leaked documents or reports</li>
+                            </ul>
+
+                            <p><strong>Important Notes:</strong></p>
+                            <ul>
+                                <li>Each search is specialized and may find different results</li>
+                                <li>Don't skip searches even if earlier ones found nothing</li>
+                                <li>Some searches work better for certain types of numbers</li>
+                                <li>Document which searches found results</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3 border-danger">
+                        <div class="card-header bg-danger text-white"><strong>STEP 5: Evidence Documentation (5 Minutes)</strong></div>
+                        <div class="card-body small">
+                            <p><strong>Before leaving this page:</strong></p>
+                            <ol>
+                                <li><strong>Download PDF Report:</strong>
+                                    <ul>
+                                        <li>Click "Download PDF Report" button</li>
+                                        <li>Saves complete investigation with ZPS branding</li>
+                                        <li>Includes evidence hash for integrity</li>
+                                        <li>Admissible in court proceedings</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Record Evidence Hash:</strong>
+                                    <ul>
+                                        <li>Copy the SHA-256 hash from "Evidence Integrity" section</li>
+                                        <li>Record in case notes</li>
+                                        <li>Proves data hasn't been tampered with</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Export JSON (Optional):</strong>
+                                    <ul>
+                                        <li>For technical analysis or integration</li>
+                                        <li>Contains all raw data</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Update Case Notes:</strong>
+                                    <ul>
+                                        <li>Navigate to case page</li>
+                                        <li>Add summary of findings</li>
+                                        <li>Upload screenshots as attachments</li>
+                                        <li>Note next investigation steps</li>
+                                    </ul>
+                                </li>
+                            </ol>
+
+                            <p><strong>Evidence Checklist:</strong></p>
+                            <ul>
+                                <li>✓ PDF report downloaded</li>
+                                <li>✓ Evidence hash recorded</li>
+                                <li>✓ All screenshots saved and labeled</li>
+                                <li>✓ URLs of important findings documented</li>
+                                <li>✓ Case notes updated</li>
+                                <li>✓ Evidence folder organized</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="card mb-3 border-secondary">
+                        <div class="card-header bg-secondary text-white"><strong>STEP 6: Next Investigation Actions</strong></div>
+                        <div class="card-body small">
+                            <p><strong>Based on findings, determine next steps:</strong></p>
+
+                            <p><strong>If HIGH RISK (Score 70+):</strong></p>
+                            <ul>
+                                <li>Escalate to senior investigator immediately</li>
+                                <li>Request carrier subscriber information (official letter)</li>
+                                <li>Consider requesting call detail records (court order)</li>
+                                <li>Alert other units if organized crime suspected</li>
+                                <li>Brief prosecutor on evidence for warrant applications</li>
+                            </ul>
+
+                            <p><strong>If Social Media Accounts Found:</strong></p>
+                            <ul>
+                                <li>Conduct deep profile analysis</li>
+                                <li>Screenshot entire profile and photo gallery</li>
+                                <li>Document friends/followers</li>
+                                <li>Note posts relevant to investigation</li>
+                                <li>Check for other linked accounts</li>
+                                <li>Consider preservation letter to platform</li>
+                            </ul>
+
+                            <p><strong>If Unknown Carrier or Foreign Number:</strong></p>
+                            <ul>
+                                <li>Contact ZICTA for carrier identification assistance</li>
+                                <li>For foreign numbers: initiate international cooperation</li>
+                                <li>Contact Interpol NCB if cross-border crime</li>
+                                <li>Request Mutual Legal Assistance (MLAT) if needed</li>
+                            </ul>
+
+                            <p><strong>If Minimal Online Presence:</strong></p>
+                            <ul>
+                                <li>Focus on carrier data requests</li>
+                                <li>Request subscriber registration details</li>
+                                <li>Cross-reference with other case evidence</li>
+                                <li>Interview witnesses who may know the number owner</li>
+                                <li>Check victim's phone for contacts/messages</li>
+                            </ul>
+
+                            <p><strong>If Disposable/VoIP Number:</strong></p>
+                            <ul>
+                                <li>Treat as high priority threat</li>
+                                <li>Document sophistication level of suspect</li>
+                                <li>Look for patterns across multiple cases</li>
+                                <li>May indicate organized operation</li>
+                                <li>Coordinate with cybercrime unit</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <h6 class="mt-4">Investigation Time Guidelines</h6>
+                    <table class="table table-sm table-bordered">
+                        <tr>
+                            <td><strong>Quick Assessment:</strong></td>
+                            <td>10-15 minutes (Steps 1-2)</td>
+                            <td>Emergency/high-priority cases</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Standard Investigation:</strong></td>
+                            <td>30-45 minutes (Steps 1-4)</td>
+                            <td>Most fraud/scam cases</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Comprehensive Investigation:</strong></td>
+                            <td>1-2 hours (All steps thoroughly)</td>
+                            <td>Major cases, organized crime</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <hr>
+
+                <!-- SECTION 3: SOCIAL MEDIA VERIFICATION DETAILS -->
+                <div id="guide-verification">
+                    <h5 class="text-secondary"><i class="bi bi-shield-check"></i> Section 3: Social Media Account Verification - Detailed Guide</h5>
+
+                    <p>This section provides in-depth instructions for verifying if a phone number is registered on social media platforms.</p>
+
+                    <h6 class="mt-3">Why Some Numbers Show Results and Others Don't</h6>
+                    <div class="alert alert-info small">
+                        <p><strong>Finding Google results does NOT necessarily mean:</strong></p>
+                        <ul class="mb-0">
+                            <li>The number belongs to a criminal</li>
+                            <li>The person posts their number publicly</li>
+                            <li>They are active on social media</li>
+                        </ul>
+                        <p class="mt-2"><strong>Finding NO Google results does NOT mean:</strong></p>
+                        <ul class="mb-0">
+                            <li>The number is innocent or legitimate</li>
+                            <li>No social media accounts exist</li>
+                            <li>The person is privacy-conscious</li>
+                        </ul>
+                        <p class="mt-2"><strong>Reality:</strong> Many legitimate people never post their numbers online. Many criminals use proper operational security (OPSEC) to avoid leaving digital traces. Use ALL verification methods, not just Google.</p>
+                    </div>
+
+                    <h6 class="mt-3">Platform-Specific Verification Techniques</h6>
+
+                    <div class="accordion" id="verificationAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#whatsappGuide">
+                                    <i class="bi bi-whatsapp text-success me-2"></i> <strong>WhatsApp Verification (Most Reliable)</strong>
+                                </button>
+                            </h2>
+                            <div id="whatsappGuide" class="accordion-collapse collapse show" data-bs-parent="#verificationAccordion">
+                                <div class="accordion-body small">
+                                    <p><strong>Method: Direct link opening</strong></p>
+                                    <p><strong>How it works:</strong></p>
+                                    <ol>
+                                        <li>Click "Check WhatsApp" button in verification table</li>
+                                        <li>Opens link: https://wa.me/260xxxxxxxxx</li>
+                                        <li>If WhatsApp is installed: Opens in app</li>
+                                        <li>If not installed: Opens WhatsApp Web</li>
+                                    </ol>
+
+                                    <p><strong>What you'll see if account EXISTS:</strong></p>
+                                    <ul>
+                                        <li><strong>Profile Picture:</strong> Current photo (if not hidden)</li>
+                                        <li><strong>Display Name:</strong> Name they set (may be fake)</li>
+                                        <li><strong>About/Status:</strong> Their status message</li>
+                                        <li><strong>Last Seen:</strong> When they were last online (if not hidden)</li>
+                                        <li>Button to start chat appears</li>
+                                    </ul>
+
+                                    <p><strong>What you'll see if account DOES NOT EXIST:</strong></p>
+                                    <ul>
+                                        <li>Message: "This phone number is not registered on WhatsApp"</li>
+                                        <li>Or: Blank profile with generic avatar</li>
+                                    </ul>
+
+                                    <p><strong>Privacy Settings Impact:</strong></p>
+                                    <table class="table table-sm table-bordered">
+                                        <tr>
+                                            <td><strong>Profile Picture:</strong></td>
+                                            <td>Can be hidden from non-contacts</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>About/Status:</strong></td>
+                                            <td>Can be hidden from non-contacts</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Last Seen:</strong></td>
+                                            <td>Can be hidden from everyone/non-contacts</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Account Existence:</strong></td>
+                                            <td>CANNOT be hidden - always verifiable</td>
+                                        </tr>
+                                    </table>
+
+                                    <p><strong>Investigation Value:</strong></p>
+                                    <ul>
+                                        <li>✓ 100% confirms if number has WhatsApp</li>
+                                        <li>✓ Profile picture extremely valuable for identification</li>
+                                        <li>✓ Display name may reveal real identity</li>
+                                        <li>✓ Last seen shows if number is actively used</li>
+                                        <li>✓ Suspect is NOT notified you checked</li>
+                                    </ul>
+
+                                    <p><strong>Evidence Collection:</strong></p>
+                                    <ol>
+                                        <li>Screenshot the entire WhatsApp profile screen</li>
+                                        <li>Zoom in and screenshot profile picture clearly</li>
+                                        <li>Screenshot status/about message</li>
+                                        <li>Note exact date and time of check</li>
+                                        <li>Save with filename: "WhatsApp_[number]_[date].png"</li>
+                                        <li>Do NOT initiate chat (suspect will see)</li>
+                                    </ol>
+
+                                    <p><strong>Advanced Technique:</strong></p>
+                                    <p>If you need to monitor activity without alerting suspect:</p>
+                                    <ul>
+                                        <li>Save number to phone contacts with code name</li>
+                                        <li>In WhatsApp, number appears in your contacts</li>
+                                        <li>Can see status updates without visiting profile</li>
+                                        <li>Can see when they change profile picture</li>
+                                        <li>Still NOT notified of your viewing</li>
+                                    </ul>
+
+                                    <div class="alert alert-warning mb-0">
+                                        <strong>CAUTION:</strong> Do NOT send messages. Suspect will see your number and know they're under investigation. Only use this for verification and evidence collection.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#telegramGuide">
+                                    <i class="bi bi-telegram text-info me-2"></i> <strong>Telegram Verification</strong>
+                                </button>
+                            </h2>
+                            <div id="telegramGuide" class="accordion-collapse collapse" data-bs-parent="#verificationAccordion">
+                                <div class="accordion-body small">
+                                    <p><strong>Method: Direct link opening</strong></p>
+                                    <p><strong>How it works:</strong></p>
+                                    <ol>
+                                        <li>Click "Check Telegram" button</li>
+                                        <li>Opens link: https://t.me/+260xxxxxxxxx</li>
+                                        <li>If Telegram installed: Opens in app</li>
+                                        <li>If not: Opens Telegram Web</li>
+                                    </ol>
+
+                                    <p><strong>What you'll see if account EXISTS:</strong></p>
+                                    <ul>
+                                        <li><strong>Username:</strong> @their_username (EXTREMELY VALUABLE)</li>
+                                        <li><strong>Display Name:</strong> Their chosen name</li>
+                                        <li><strong>Profile Picture:</strong> Current photo</li>
+                                        <li><strong>Bio:</strong> Their profile description</li>
+                                        <li><strong>Phone Number:</strong> May show "+260 97 ..." if not hidden</li>
+                                    </ul>
+
+                                    <p><strong>Why Telegram Username is Valuable:</strong></p>
+                                    <ul>
+                                        <li>Telegram usernames are globally unique</li>
+                                        <li>Can be searched on search engines</li>
+                                        <li>May appear in other online contexts</li>
+                                        <li>Can track suspect across platforms if reused</li>
+                                        <li>May reveal patterns (e.g., @john_k_2023)</li>
+                                    </ul>
+
+                                    <p><strong>If NO account:</strong></p>
+                                    <ul>
+                                        <li>Shows "User not found" or similar</li>
+                                        <li>Or prompts to send invitation</li>
+                                    </ul>
+
+                                    <p><strong>Privacy Settings:</strong></p>
+                                    <table class="table table-sm table-bordered">
+                                        <tr>
+                                            <td><strong>Phone Visibility:</strong></td>
+                                            <td>Can be hidden (show only username)</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Profile Picture:</strong></td>
+                                            <td>Can be hidden from non-contacts</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Last Seen:</strong></td>
+                                            <td>Can be hidden</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Username:</strong></td>
+                                            <td>Public if set</td>
+                                        </tr>
+                                    </table>
+
+                                    <p><strong>Evidence Collection:</strong></p>
+                                    <ol>
+                                        <li>Screenshot entire profile</li>
+                                        <li>Copy username exactly (case-sensitive)</li>
+                                        <li>Screenshot profile picture</li>
+                                        <li>Copy bio text</li>
+                                        <li>Search username on Google: "@username"</li>
+                                        <li>Check if username appears on other platforms</li>
+                                    </ol>
+
+                                    <p><strong>Advanced Investigation:</strong></p>
+                                    <ul>
+                                        <li>Search Telegram username on Google: site:t.me @username</li>
+                                        <li>May find public groups/channels they're in</li>
+                                        <li>Check if username used on other platforms</li>
+                                        <li>Variations: john_k, johnk, john.k, etc.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#facebookGuide">
+                                    <i class="bi bi-facebook text-primary me-2"></i> <strong>Facebook Verification</strong>
+                                </button>
+                            </h2>
+                            <div id="facebookGuide" class="accordion-collapse collapse" data-bs-parent="#verificationAccordion">
+                                <div class="accordion-body small">
+                                    <p><strong>Method: Find Friends feature (requires login)</strong></p>
+
+                                    <p><strong>Step-by-Step Process:</strong></p>
+                                    <ol>
+                                        <li>Click "Find Friends" button in verification table</li>
+                                        <li>Takes you to Facebook (must be logged in to YOUR account)</li>
+                                        <li>Click "Add Contacts" or similar option</li>
+                                        <li>Enter phone number: +260xxxxxxxxx</li>
+                                        <li>Facebook searches for account with that number</li>
+                                    </ol>
+
+                                    <p><strong>If account EXISTS:</strong></p>
+                                    <ul>
+                                        <li>Profile appears in results</li>
+                                        <li>Shows profile picture, name, mutual friends</li>
+                                        <li>Click profile to see more</li>
+                                    </ul>
+
+                                    <p><strong>What to Document from Profile:</strong></p>
+                                    <ul>
+                                        <li><strong>Basic Info:</strong> Name, username, profile URL</li>
+                                        <li><strong>Profile Picture:</strong> Screenshot current and past photos</li>
+                                        <li><strong>Cover Photo:</strong> May contain identifying info</li>
+                                        <li><strong>About Section:</strong> Work, education, location, relationship</li>
+                                        <li><strong>Photos:</strong> Browse photo albums</li>
+                                        <li><strong>Posts:</strong> Recent public posts</li>
+                                        <li><strong>Friends:</strong> Number of friends, mutual connections</li>
+                                        <li><strong>Check-ins:</strong> Location history</li>
+                                        <li><strong>Liked Pages:</strong> Interests, affiliations</li>
+                                    </ul>
+
+                                    <p><strong>Privacy Impact:</strong></p>
+                                    <div class="alert alert-warning small">
+                                        Facebook privacy settings heavily impact what you can see. If profile is fully private, you may only see name and profile picture. This is why Google searches are important - they may find public posts even from private profiles.
+                                    </div>
+
+                                    <p><strong>Alternative Methods:</strong></p>
+                                    <ol>
+                                        <li><strong>Direct Search:</strong> On Facebook, search "+260xxxxxxxxx" in search bar</li>
+                                        <li><strong>Upload Contacts:</strong> Save number to phone contacts, upload to Facebook</li>
+                                        <li><strong>Messenger:</strong> Try to start message with number (they'll appear if registered)</li>
+                                    </ol>
+
+                                    <p><strong>Evidence Collection:</strong></p>
+                                    <ul>
+                                        <li>Screenshot profile page</li>
+                                        <li>Screenshot About section</li>
+                                        <li>Screenshot photo albums (5-10 most relevant photos)</li>
+                                        <li>Screenshot posts related to case</li>
+                                        <li>Copy profile URL</li>
+                                        <li>Note friends count and any mutual connections</li>
+                                        <li>Export friend list if publicly visible</li>
+                                    </ul>
+
+                                    <p><strong>Legal Considerations:</strong></p>
+                                    <ul>
+                                        <li>Only document public information</li>
+                                        <li>Do NOT send friend request (suspect will know)</li>
+                                        <li>For private content: Facebook preservation request</li>
+                                        <li>For messages: Court order required</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#instagramGuide">
+                                    <i class="bi bi-instagram text-danger me-2"></i> <strong>Instagram Verification</strong>
+                                </button>
+                            </h2>
+                            <div id="instagramGuide" class="accordion-collapse collapse" data-bs-parent="#verificationAccordion">
+                                <div class="accordion-body small">
+                                    <p><strong>Method: Password reset verification</strong></p>
+
+                                    <p><strong>Step-by-Step Process:</strong></p>
+                                    <ol>
+                                        <li>Click "Password Reset" button</li>
+                                        <li>Opens Instagram login/forgot password page</li>
+                                        <li>Click "Forgot password?" link</li>
+                                        <li>Select "Phone" tab</li>
+                                        <li>Enter phone number: +260xxxxxxxxx</li>
+                                        <li>Click "Send Login Link"</li>
+                                    </ol>
+
+                                    <p><strong>If account EXISTS:</strong></p>
+                                    <div class="alert alert-success small">
+                                        Instagram shows message like: "We sent a login link to j***n_k***a"
+                                        <br>This reveals PARTIAL USERNAME - extremely valuable!
+                                    </div>
+
+                                    <p><strong>If NO account:</strong></p>
+                                    <ul>
+                                        <li>"The phone number you entered doesn't belong to an account"</li>
+                                        <li>Or: "User not found"</li>
+                                    </ul>
+
+                                    <p><strong>Using the Partial Username:</strong></p>
+                                    <ol>
+                                        <li><strong>Pattern Analysis:</strong> j***n_k***a = john_kabwe, jane_kalala, etc.</li>
+                                        <li><strong>Manual Search:</strong> Try common variations on Instagram search</li>
+                                        <li><strong>Google Search:</strong> site:instagram.com "john" "kabwe" "+260"</li>
+                                        <li><strong>Cross-reference:</strong> Compare with names from WhatsApp/Facebook</li>
+                                    </ol>
+
+                                    <p><strong>If You Find the Profile:</strong></p>
+                                    <ul>
+                                        <li>Screenshot profile page</li>
+                                        <li>Note: Posts count, followers, following</li>
+                                        <li>Screenshot bio</li>
+                                        <li>View public posts and stories</li>
+                                        <li>Check tagged photos</li>
+                                        <li>Note if account is verified</li>
+                                        <li>Check if business account (shows contact button)</li>
+                                    </ul>
+
+                                    <p><strong>Evidence Documentation:</strong></p>
+                                    <ol>
+                                        <li>Screenshot password reset confirmation with partial username</li>
+                                        <li>Screenshot Instagram profile once found</li>
+                                        <li>Screenshot 10-15 most relevant photos</li>
+                                        <li>Screenshot bio and highlights</li>
+                                        <li>Copy profile URL: instagram.com/username</li>
+                                        <li>Note posting frequency and patterns</li>
+                                    </ol>
+
+                                    <p><strong>IMPORTANT:</strong></p>
+                                    <div class="alert alert-danger small mb-0">
+                                        DO NOT complete the password reset! Stop after confirming account exists. Completing reset would:
+                                        <ul class="mb-0">
+                                            <li>Alert the account owner</li>
+                                            <li>Potentially lock them out</li>
+                                            <li>Reveal investigation</li>
+                                            <li>Compromise case</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#twitterGuide">
+                                    <i class="bi bi-twitter-x text-dark me-2"></i> <strong>X (Twitter) Verification</strong>
+                                </button>
+                            </h2>
+                            <div id="twitterGuide" class="accordion-collapse collapse" data-bs-parent="#verificationAccordion">
+                                <div class="accordion-body small">
+                                    <p><strong>Method: Password reset verification (similar to Instagram)</strong></p>
+
+                                    <p><strong>Process:</strong></p>
+                                    <ol>
+                                        <li>Click "Password Reset" button</li>
+                                        <li>On X login page, click "Forgot password?"</li>
+                                        <li>Enter phone number</li>
+                                        <li>If registered: Confirms account exists</li>
+                                        <li>May show partial username or email</li>
+                                    </ol>
+
+                                    <p><strong>Finding the Profile:</strong></p>
+                                    <ul>
+                                        <li>Use partial info to search X directly</li>
+                                        <li>Google: site:twitter.com "+260xxxxxxxxx"</li>
+                                        <li>Check if number appears in tweets</li>
+                                        <li>Look in profile bios</li>
+                                    </ul>
+
+                                    <p><strong>What to Document:</strong></p>
+                                    <ul>
+                                        <li>Username (@handle)</li>
+                                        <li>Display name</li>
+                                        <li>Bio/description</li>
+                                        <li>Profile and header images</li>
+                                        <li>Tweet history</li>
+                                        <li>Followers/following</li>
+                                        <li>Joined date</li>
+                                        <li>Verified status</li>
+                                    </ul>
+
+                                    <p><strong>Investigation Value:</strong></p>
+                                    <ul>
+                                        <li>Tweet history shows activities and patterns</li>
+                                        <li>Interactions reveal associates</li>
+                                        <li>Location tags in tweets</li>
+                                        <li>Retweets show interests/affiliations</li>
+                                        <li>Replies show communication patterns</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#truecallerGuide">
+                                    <i class="bi bi-search text-success me-2"></i> <strong>TrueCaller Lookup</strong>
+                                </button>
+                            </h2>
+                            <div id="truecallerGuide" class="accordion-collapse collapse" data-bs-parent="#verificationAccordion">
+                                <div class="accordion-body small">
+                                    <p><strong>What is TrueCaller?</strong></p>
+                                    <p>TrueCaller is a crowd-sourced phone directory. Users voluntarily upload their contacts, creating a massive database of phone numbers with associated names and information.</p>
+
+                                    <p><strong>How it works:</strong></p>
+                                    <ol>
+                                        <li>Click "Check TrueCaller" button</li>
+                                        <li>Opens TrueCaller search page</li>
+                                        <li>Shows results if number is in database</li>
+                                    </ol>
+
+                                    <p><strong>Information Provided (if found):</strong></p>
+                                    <ul>
+                                        <li><strong>Name:</strong> Most common name associated with number</li>
+                                        <li><strong>Location:</strong> City/region</li>
+                                        <li><strong>Carrier:</strong> Network provider</li>
+                                        <li><strong>Spam Score:</strong> How many users marked as spam</li>
+                                        <li><strong>Spam Type:</strong> Scam, telemarketing, fraud, etc.</li>
+                                        <li><strong>Comments:</strong> User reports about the number</li>
+                                        <li><strong>Search Count:</strong> How many times searched</li>
+                                    </ul>
+
+                                    <p><strong>Reliability Considerations:</strong></p>
+                                    <div class="alert alert-warning small">
+                                        <strong>TrueCaller data is crowd-sourced, not official:</strong>
+                                        <ul class="mb-0">
+                                            <li>Names may be nicknames or incorrect</li>
+                                            <li>Information may be outdated</li>
+                                            <li>Number may have changed owners</li>
+                                            <li>Verify with other sources</li>
+                                            <li>Use as investigative lead, not conclusive evidence</li>
+                                        </ul>
+                                    </div>
+
+                                    <p><strong>Investigation Value:</strong></p>
+                                    <ul>
+                                        <li><strong>High spam reports</strong> = likely scammer</li>
+                                        <li><strong>Name matches victim's claim</strong> = corroboration</li>
+                                        <li><strong>High search count</strong> = suspicious (many victims looking up)</li>
+                                        <li><strong>Comments section</strong> = may describe scam tactics</li>
+                                    </ul>
+
+                                    <p><strong>Evidence Collection:</strong></p>
+                                    <ol>
+                                        <li>Screenshot entire TrueCaller results page</li>
+                                        <li>Note spam score and type</li>
+                                        <li>Screenshot comments section</li>
+                                        <li>Copy any recurring patterns in reports</li>
+                                        <li>Note date of check</li>
+                                        <li>Cross-reference name with other findings</li>
+                                    </ol>
+
+                                    <p><strong>Alternative Databases:</strong></p>
+                                    <p>If TrueCaller has no results, try:</p>
+                                    <ul>
+                                        <li>Sync.me (similar crowd-sourced database)</li>
+                                        <li>GetContact</li>
+                                        <li>Showcaller</li>
+                                        <li>Local caller ID apps in Zambia</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Risk Assessment -->
+                <div id="guide-risk">
+                <h5 class="text-secondary"><i class="bi bi-shield-exclamation"></i> Section 4: Risk Assessment Understanding</h5>
+                <p>The <strong>Risk Assessment</strong> provides an overall fraud threat evaluation based on number characteristics.</p>
+
+                <h6 class="mt-3">Risk Score Ranges</h6>
+                <table class="table table-sm table-bordered">
+                    <tr class="table-success">
+                        <td><strong>0-39: LOW RISK</strong></td>
+                        <td>Standard phone number. Normal investigation procedures apply.</td>
+                    </tr>
+                    <tr class="table-warning">
+                        <td><strong>40-69: MODERATE RISK</strong></td>
+                        <td>Some concerning indicators present. Enhanced verification recommended.</td>
+                    </tr>
+                    <tr class="table-danger">
+                        <td><strong>70-100: HIGH RISK</strong></td>
+                        <td>Multiple serious fraud indicators. Prioritize investigation immediately.</td>
+                    </tr>
+                </table>
+
+                <p class="small"><strong>Risk Flags:</strong> Specific warnings that contributed to the risk score.</p>
+                <p class="small"><strong>Recommendations:</strong> Suggested investigative actions based on assessment.</p>
+
+                <hr>
+
+                <!-- Phone Validation -->
+                <h5 class="text-secondary"><i class="bi bi-check2-square"></i> Phone Validation Section</h5>
+                <p>Technical validation to determine if the phone number is legitimate and properly formatted.</p>
+
+                <h6 class="mt-3">Validation Fields Explained</h6>
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Valid Number:</strong></td>
+                        <td>Number follows proper international format and is currently assigned</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Possible Number:</strong></td>
+                        <td>Number format is possible for the country (may or may not be active)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Number Type:</strong></td>
+                        <td>Classification: Mobile, Fixed Line, VoIP, Premium Rate, etc.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Country Code:</strong></td>
+                        <td>International dialing code (e.g., +260 for Zambia)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>National Number:</strong></td>
+                        <td>Number as dialed within the country</td>
+                    </tr>
+                </table>
+
+                <h6 class="mt-3">Number Formats</h6>
+                <ul class="small">
+                    <li><strong>International Format:</strong> How to dial from abroad (e.g., +260 95 1234567)</li>
+                    <li><strong>National Format:</strong> How to dial within the country (e.g., 095 1234567)</li>
+                    <li><strong>E.164 Format:</strong> Standard format for databases (e.g., +260951234567)</li>
+                </ul>
+
+                <hr>
+
+                <!-- Number Types -->
+                <h5 class="text-secondary"><i class="bi bi-telephone"></i> Phone Number Types</h5>
+                <p>Understanding what type of phone number you are investigating:</p>
+
+                <table class="table table-sm table-bordered">
+                    <tr class="table-success">
+                        <td><strong>Mobile</strong></td>
+                        <td>Regular mobile phone. Most common type. Generally legitimate.</td>
+                    </tr>
+                    <tr class="table-info">
+                        <td><strong>Fixed Line</strong></td>
+                        <td>Landline phone. Tied to physical address. Easier to trace.</td>
+                    </tr>
+                    <tr class="table-warning">
+                        <td><strong>Fixed Line or Mobile</strong></td>
+                        <td>Could be either. System cannot determine specific type.</td>
+                    </tr>
+                    <tr class="table-danger">
+                        <td><strong>VoIP</strong></td>
+                        <td><strong>HIGH RISK:</strong> Internet-based phone. Easy to obtain anonymously. Hard to trace.</td>
+                    </tr>
+                    <tr class="table-danger">
+                        <td><strong>Premium Rate</strong></td>
+                        <td><strong>HIGH RISK:</strong> Expensive to call. Often used in billing fraud scams.</td>
+                    </tr>
+                    <tr class="table-warning">
+                        <td><strong>Toll Free</strong></td>
+                        <td>Free to call (e.g., 0800 numbers). May be legitimate business or scam.</td>
+                    </tr>
+                </table>
+
+                <hr>
+
+                <!-- Carrier Information -->
+                <h5 class="text-secondary"><i class="bi bi-broadcast-pin"></i> Carrier Information Section</h5>
+                <p>Shows the mobile network or telecommunications provider operating the number.</p>
+
+                <h6 class="mt-3">Why Carrier Matters</h6>
+                <ul class="small">
+                    <li><strong>Traceability:</strong> Known carriers cooperate with law enforcement</li>
+                    <li><strong>Subscriber Records:</strong> Carriers maintain registration details</li>
+                    <li><strong>Call Records:</strong> Carriers can provide call logs with court order</li>
+                    <li><strong>Location Data:</strong> Carriers track cell tower connections</li>
+                </ul>
+
+                <div class="alert alert-warning small">
+                    <strong>Unknown Carrier Warning:</strong> If carrier shows as "Unknown", this may indicate VoIP service, foreign provider, or inactive number. Requires additional investigation methods.
+                </div>
+
+                <h6 class="mt-3">Common Zambian Carriers</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="small mb-0">
+                            <li>Airtel Zambia</li>
+                            <li>MTN Zambia</li>
+                            <li>Zamtel</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Location Information -->
+                <h5 class="text-secondary"><i class="bi bi-geo-alt"></i> Location Information Section</h5>
+                <p>Geographic data associated with the phone number.</p>
+
+                <h6 class="mt-3">What Location Data Tells You</h6>
+                <ul class="small">
+                    <li><strong>Country:</strong> Where the number is registered (not current location)</li>
+                    <li><strong>Region/Location:</strong> General area code region (e.g., Lusaka, Copperbelt)</li>
+                    <li><strong>Timezones:</strong> Local time zones (helps schedule contact attempts)</li>
+                </ul>
+
+                <div class="alert alert-info small">
+                    <strong>Important Note:</strong> Location shown is based on number registration, NOT current physical location of the phone. Use carrier cell tower data for real-time location (requires court order).
+                </div>
+
+                <h6 class="mt-3">Foreign Numbers</h6>
+                <p class="small">If the number is from outside Zambia:</p>
+                <ul class="small">
+                    <li>Consider why a foreign number is involved in local crime</li>
+                    <li>May require international cooperation protocols</li>
+                    <li>Contact Interpol for cross-border investigations</li>
+                    <li>Verify if number is used by Zambian citizen abroad</li>
+                </ul>
+
+                <hr>
+
+                <!-- Fraud Risk Indicators -->
+                <h5 class="text-secondary"><i class="bi bi-exclamation-triangle"></i> Fraud Risk Indicators</h5>
+                <p>Detailed breakdown of each risk flag identified during investigation.</p>
+
+                <h6 class="mt-3">Key Fraud Indicators</h6>
+                <div class="card mb-2 border-danger">
+                    <div class="card-body">
+                        <h6 class="card-title text-danger"><strong>1. VoIP Numbers</strong></h6>
+                        <p class="card-text small mb-1">
+                            <strong>What it means:</strong> Number works over the internet instead of traditional phone network.<br>
+                            <strong>Why dangerous:</strong> Easy to create fake numbers, hard to trace, no physical location, can spoof caller ID.<br>
+                            <strong>Common in:</strong> Romance scams, advance fee fraud, phishing calls, impersonation fraud.<br>
+                            <strong>Action:</strong> Treat as high-priority suspect. Request additional verification.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card mb-2 border-warning">
+                    <div class="card-body">
+                        <h6 class="card-title text-warning"><strong>2. Premium Rate Numbers</strong></h6>
+                        <p class="card-text small mb-1">
+                            <strong>What it means:</strong> Calling this number charges high fees to the caller.<br>
+                            <strong>Why dangerous:</strong> Used in billing fraud where victims are tricked into calling expensive numbers.<br>
+                            <strong>Common in:</strong> "Call back" scams, competition fraud, false prize notifications.<br>
+                            <strong>Action:</strong> Investigate potential billing fraud operation.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card mb-2 border-warning">
+                    <div class="card-body">
+                        <h6 class="card-title text-warning"><strong>3. Unknown Carrier</strong></h6>
+                        <p class="card-text small mb-1">
+                            <strong>What it means:</strong> Cannot identify the telecommunications provider.<br>
+                            <strong>Why concerning:</strong> Makes tracing difficult. May be VoIP, foreign, or recently ported.<br>
+                            <strong>Action:</strong> Contact ZICTA or telecom authorities for carrier identification.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card mb-2 border-info">
+                    <div class="card-body">
+                        <h6 class="card-title text-info"><strong>4. Foreign Numbers</strong></h6>
+                        <p class="card-text small mb-1">
+                            <strong>What it means:</strong> Number registered in another country.<br>
+                            <strong>Why significant:</strong> Cross-border investigation required. May be evading local enforcement.<br>
+                            <strong>Common in:</strong> International fraud rings, money laundering, organized crime.<br>
+                            <strong>Action:</strong> Consider Interpol cooperation or mutual legal assistance.
+                        </p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Evidence Hash -->
+                <h5 class="text-secondary"><i class="bi bi-file-lock"></i> Evidence Hash Section</h5>
+                <p>SHA-256 cryptographic hash for evidence integrity and chain of custody.</p>
+
+                <h6 class="mt-3">Purpose</h6>
+                <ul class="small">
+                    <li>Proves investigation results have not been tampered with</li>
+                    <li>Maintains chain of custody for court proceedings</li>
+                    <li>Any modification creates a different hash (detects changes)</li>
+                    <li>Hash included in PDF reports for verification</li>
+                </ul>
+
+                <p class="small"><strong>Best Practice:</strong> Record the evidence hash in case documentation immediately.</p>
+
+                <hr>
+
+                <!-- Export Options -->
+                <h5 class="text-secondary"><i class="bi bi-download"></i> Export Options</h5>
+                <p>Three methods to export and document investigation results:</p>
+
+                <table class="table table-sm table-bordered">
+                    <tr>
+                        <td><strong>PDF Report</strong></td>
+                        <td>Professional court-ready report with ZPS branding and CONFIDENTIAL marking</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Print Report</strong></td>
+                        <td>Browser print function for quick paper copies</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Export JSON</strong></td>
+                        <td>Raw data in JSON format for technical analysis or integration</td>
+                    </tr>
+                </table>
+
+                <hr>
+
+                <!-- Best Practices -->
+                <h5 class="text-secondary"><i class="bi bi-star"></i> Best Practices for Phone Investigation</h5>
+                <ul class="small">
+                    <li><strong>Download PDF Immediately:</strong> Secure evidence before continuing</li>
+                    <li><strong>Note Evidence Hash:</strong> Record SHA-256 hash in case file</li>
+                    <li><strong>Verify with Carrier:</strong> For serious cases, request subscriber details from carrier</li>
+                    <li><strong>Check Call History:</strong> Request call data records (CDR) with court order</li>
+                    <li><strong>Cross-Reference Numbers:</strong> Compare with other investigation evidence</li>
+                    <li><strong>Monitor VoIP Carefully:</strong> VoIP numbers require enhanced verification</li>
+                    <li><strong>Document Foreign Numbers:</strong> Note international cooperation requirements</li>
+                    <li><strong>Follow Up on Flags:</strong> Address all identified risk indicators</li>
+                </ul>
+
+                <hr>
+
+                <!-- Next Steps -->
+                <h5 class="text-secondary"><i class="bi bi-signpost"></i> Recommended Next Steps</h5>
+                <ol class="small">
+                    <li>Download PDF report for case documentation</li>
+                    <li>Record evidence hash in case file</li>
+                    <li>If high risk, escalate to senior investigator</li>
+                    <li>Request carrier subscriber information (court order may be required)</li>
+                    <li>Request call data records (CDR) from carrier</li>
+                    <li>Cross-reference with other case evidence</li>
+                    <li>For foreign numbers, initiate international cooperation protocols</li>
+                    <li>Update case notes with key findings</li>
+                    <li>Consider additional OSINT tools if needed</li>
+                </ol>
+
+                <hr>
+
+                <!-- Legal Considerations -->
+                <h5 class="text-secondary"><i class="bi bi-gavel"></i> Legal & Privacy Considerations</h5>
+                <div class="alert alert-warning small">
+                    <strong>Important Legal Notes:</strong>
+                    <ul class="mb-0">
+                        <li>Subscriber information requests require proper legal authority</li>
+                        <li>Call data records (CDR) require court order</li>
+                        <li>Real-time location tracking requires judicial approval</li>
+                        <li>International numbers may require mutual legal assistance</li>
+                        <li>Always follow Zambia Police Service protocols</li>
+                        <li>Maintain proper chain of custody documentation</li>
+                    </ul>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

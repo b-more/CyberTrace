@@ -1,0 +1,798 @@
+{% extends "base.html" %}
+
+{% block title %}Email Investigation Results{% endblock %}
+{% block page_title %}Email Investigation Results{% endblock %}
+
+{% block content %}
+{% set results = investigation.raw_results %}
+{% set breaches = results.get('breaches', []) %}
+{% set breach_count = breaches|selectattr('name', 'defined')|reject('equalto', {'error': 'API_RATE_LIMIT'})|list|length %}
+
+<!-- Investigation Header -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-envelope-at"></i> {{ results.email }}
+            </h5>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#helpModal">
+                    <i class="bi bi-question-circle"></i> Help
+                </button>
+                {% if investigation.status == 'completed' %}
+                <span class="badge bg-success">Investigation Completed</span>
+                {% else %}
+                <span class="badge bg-danger">Investigation Failed</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p class="mb-1"><strong>Case:</strong> <a href="{{ url_for('cases.view_case', case_id=case.id) }}">{{ case.case_number }} - {{ case.title }}</a></p>
+                <p class="mb-1"><strong>Investigator:</strong> {{ investigation.investigator.full_name }} ({{ investigation.investigator.badge_number }})</p>
+                <p class="mb-1"><strong>Investigation ID:</strong> <code>{{ investigation.id }}</code></p>
+            </div>
+            <div class="col-md-6">
+                <p class="mb-1"><strong>Conducted:</strong> {{ investigation.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                <p class="mb-1"><strong>Execution Time:</strong> {{ "%.2f"|format(investigation.execution_time) }}s</p>
+                <p class="mb-1"><strong>API Calls Made:</strong> {{ investigation.api_calls_made }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Risk Assessment -->
+{% set reputation = results.get('reputation', {}) %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header
+                {% if reputation.get('risk_score', 0) >= 70 %}bg-danger text-white
+                {% elif reputation.get('risk_score', 0) >= 40 %}bg-warning
+                {% else %}bg-success text-white{% endif %}">
+                <h5 class="mb-0">
+                    <i class="bi bi-shield-exclamation"></i> Risk Assessment: {{ reputation.get('assessment', 'UNKNOWN') }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Risk Score: {{ reputation.get('risk_score', 0) }}/100</h6>
+                        <div class="progress mb-3" style="height: 25px;">
+                            <div class="progress-bar
+                                {% if reputation.get('risk_score', 0) >= 70 %}bg-danger
+                                {% elif reputation.get('risk_score', 0) >= 40 %}bg-warning
+                                {% else %}bg-success{% endif %}"
+                                 role="progressbar"
+                                 style="width: {{ reputation.get('risk_score', 0) }}%"
+                                 aria-valuenow="{{ reputation.get('risk_score', 0) }}"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100">
+                                {{ reputation.get('risk_score', 0) }}%
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Risk Flags:</h6>
+                        {% if reputation.get('flags') %}
+                        <ul>
+                            {% for flag in reputation.get('flags', []) %}
+                            <li>{{ flag }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="text-muted">No risk flags identified</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if reputation.get('recommendations') %}
+                <div class="alert alert-info mt-2 mb-0">
+                    <strong>Recommendations:</strong>
+                    <ul class="mb-0">
+                        {% for rec in reputation.get('recommendations', []) %}
+                        <li>{{ rec }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Key Findings -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Email Status</h6>
+                {% if results.is_valid %}
+                <h3 class="text-success"><i class="bi bi-check-circle-fill"></i></h3>
+                <p class="mb-0">Valid & Deliverable</p>
+                {% else %}
+                <h3 class="text-danger"><i class="bi bi-x-circle-fill"></i></h3>
+                <p class="mb-0">Invalid</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Data Breaches</h6>
+                <h3 class="{% if breach_count > 0 %}text-danger{% else %}text-success{% endif %}">
+                    {{ breach_count }}
+                </h3>
+                <p class="mb-0">Breaches Found</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Social Media</h6>
+                <h3 class="text-info">{{ results.get('social_media', [])|length }}</h3>
+                <p class="mb-0">Accounts Found</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Confidence Score</h6>
+                <h3 class="text-primary">{{ investigation.confidence_score }}%</h3>
+                <p class="mb-0">Overall</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Email Validation Details -->
+{% set validation = results.get('validation', {}) %}
+<div class="card shadow mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-check2-square"></i> Email Validation</h5>
+    </div>
+    <div class="card-body">
+        <table class="table table-sm">
+            <tr>
+                <td><strong>Syntax Valid:</strong></td>
+                <td>
+                    {% if validation.get('syntax_valid') %}
+                    <span class="badge bg-success">Yes</span>
+                    {% else %}
+                    <span class="badge bg-danger">No</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Domain Exists:</strong></td>
+                <td>
+                    {% if validation.get('domain_exists') %}
+                    <span class="badge bg-success">Yes</span>
+                    {% else %}
+                    <span class="badge bg-danger">No</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td><strong>MX Records:</strong></td>
+                <td>
+                    {% if validation.get('mx_records_exist') %}
+                    <span class="badge bg-success">Found</span>
+                    {% else %}
+                    <span class="badge bg-warning">Not Found</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Disposable Email:</strong></td>
+                <td>
+                    {% if validation.get('disposable') %}
+                    <span class="badge bg-danger">Yes</span>
+                    {% else %}
+                    <span class="badge bg-success">No</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Free Provider:</strong></td>
+                <td>
+                    {% if validation.get('free_provider') %}
+                    <span class="badge bg-info">Yes</span>
+                    {% else %}
+                    <span class="badge bg-secondary">No</span>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+        {% if validation.get('errors') %}
+        <div class="alert alert-danger mb-0">
+            <strong>Errors:</strong>
+            <ul class="mb-0">
+                {% for error in validation.get('errors', []) %}
+                <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Data Breaches -->
+<div class="card shadow mb-4">
+    <div class="card-header
+        {% if breach_count > 5 %}bg-danger text-white
+        {% elif breach_count > 0 %}bg-warning
+        {% else %}bg-success text-white{% endif %}">
+        <h5 class="mb-0">
+            <i class="bi bi-exclamation-triangle-fill"></i> Data Breaches ({{ breach_count }})
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if breach_count > 0 %}
+        <div class="alert alert-danger">
+            <strong>Warning:</strong> This email address has been found in {{ breach_count }} data breach(es).
+            The associated password(s) may be compromised.
+        </div>
+        <div class="accordion" id="breachAccordion">
+            {% for breach in breaches %}
+            {% if breach.get('name') and 'error' not in breach %}
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="breach{{ loop.index }}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#breachCollapse{{ loop.index }}">
+                        <strong>{{ breach.title }}</strong>
+                        {% if breach.is_verified %}
+                        <span class="badge bg-danger ms-2">Verified</span>
+                        {% endif %}
+                        {% if breach.is_sensitive %}
+                        <span class="badge bg-warning ms-2">Sensitive</span>
+                        {% endif %}
+                    </button>
+                </h2>
+                <div id="breachCollapse{{ loop.index }}" class="accordion-collapse collapse"
+                     data-bs-parent="#breachAccordion">
+                    <div class="accordion-body">
+                        <p><strong>Domain:</strong> {{ breach.domain }}</p>
+                        <p><strong>Breach Date:</strong> {{ breach.breach_date }}</p>
+                        <p><strong>Added to HIBP:</strong> {{ breach.added_date }}</p>
+                        <p><strong>Pwn Count:</strong> {{ "{:,}".format(breach.pwn_count) }} accounts affected</p>
+                        <p><strong>Description:</strong> {{ breach.description|safe }}</p>
+                        <p><strong>Compromised Data:</strong></p>
+                        <div>
+                            {% for data_class in breach.data_classes %}
+                            <span class="badge bg-secondary">{{ data_class }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-success mb-0">
+            <i class="bi bi-check-circle-fill"></i> <strong>Good news!</strong>
+            This email address has not been found in any known data breaches.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Domain Information -->
+{% set domain_info = results.get('domain_info', {}) %}
+<div class="card shadow mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-globe"></i> Domain Information</h5>
+    </div>
+    <div class="card-body">
+        {% if domain_info.get('error') %}
+        <div class="alert alert-warning">{{ domain_info.error }}</div>
+        {% else %}
+        <table class="table table-sm">
+            <tr>
+                <td><strong>Domain:</strong></td>
+                <td><code>{{ domain_info.domain }}</code></td>
+            </tr>
+            {% if domain_info.registrar %}
+            <tr>
+                <td><strong>Registrar:</strong></td>
+                <td>{{ domain_info.registrar }}</td>
+            </tr>
+            {% endif %}
+            {% if domain_info.creation_date %}
+            <tr>
+                <td><strong>Created:</strong></td>
+                <td>{{ domain_info.creation_date[:10] }}</td>
+            </tr>
+            {% endif %}
+            {% if domain_info.expiration_date %}
+            <tr>
+                <td><strong>Expires:</strong></td>
+                <td>{{ domain_info.expiration_date[:10] }}</td>
+            </tr>
+            {% endif %}
+            {% if domain_info.country %}
+            <tr>
+                <td><strong>Country:</strong></td>
+                <td>{{ domain_info.country }}</td>
+            </tr>
+            {% endif %}
+            {% if domain_info.name_servers %}
+            <tr>
+                <td><strong>Name Servers:</strong></td>
+                <td>
+                    {% for ns in domain_info.name_servers %}
+                    <code>{{ ns }}</code>{% if not loop.last %}, {% endif %}
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endif %}
+            {% if domain_info.status %}
+            <tr>
+                <td><strong>Status:</strong></td>
+                <td>
+                    {% for status in domain_info.status %}
+                    <span class="badge bg-info">{{ status }}</span>
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endif %}
+        </table>
+        {% endif %}
+    </div>
+</div>
+
+<!-- DNS Records -->
+{% set dns_records = results.get('dns_records', {}) %}
+<div class="card shadow mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-server"></i> DNS Records</h5>
+    </div>
+    <div class="card-body">
+        <!-- MX Records -->
+        <h6>MX Records (Mail Exchange)</h6>
+        {% if dns_records.get('mx') %}
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Priority</th>
+                    <th>Mail Server</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for mx in dns_records.mx %}
+                <tr>
+                    <td>{{ mx.priority }}</td>
+                    <td><code>{{ mx.server }}</code></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">No MX records found</p>
+        {% endif %}
+
+        <!-- SPF Record -->
+        <h6 class="mt-3">SPF Record (Sender Policy Framework)</h6>
+        {% if dns_records.get('spf') %}
+        <pre class="bg-light p-2 border rounded"><code>{{ dns_records.spf }}</code></pre>
+        <span class="badge bg-success">SPF Configured</span>
+        {% else %}
+        <p class="text-muted">No SPF record found</p>
+        <span class="badge bg-warning">SPF Not Configured</span>
+        {% endif %}
+
+        <!-- DMARC Record -->
+        <h6 class="mt-3">DMARC Record (Domain-based Message Authentication)</h6>
+        {% if dns_records.get('dmarc') %}
+        <pre class="bg-light p-2 border rounded"><code>{{ dns_records.dmarc }}</code></pre>
+        <span class="badge bg-success">DMARC Configured</span>
+        {% else %}
+        <p class="text-muted">No DMARC record found</p>
+        <span class="badge bg-warning">DMARC Not Configured</span>
+        {% endif %}
+
+        <!-- A Records -->
+        <h6 class="mt-3">A Records (IP Addresses)</h6>
+        {% if dns_records.get('a') %}
+        {% for ip in dns_records.a %}
+        <span class="badge bg-secondary"><code>{{ ip }}</code></span>
+        {% endfor %}
+        {% else %}
+        <p class="text-muted">No A records found</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Social Media Accounts -->
+{% set social_media = results.get('social_media', []) %}
+{% set found_accounts = social_media|selectattr('found')|list %}
+{% set not_found_accounts = social_media|rejectattr('found')|list %}
+<div class="card shadow mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-share"></i> Social Media Accounts
+            <span class="badge bg-primary">{{ found_accounts|length }} Found / {{ social_media|length }} Checked</span>
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if social_media %}
+
+        <!-- Found Accounts -->
+        {% if found_accounts %}
+        <h6 class="text-success"><i class="bi bi-check-circle-fill"></i> Accounts Found ({{ found_accounts|length }})</h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead class="table-success">
+                    <tr>
+                        <th>Platform</th>
+                        <th>Status</th>
+                        <th>Confidence</th>
+                        <th>Profile URL</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for account in found_accounts %}
+                    <tr>
+                        <td><strong>{{ account.platform }}</strong></td>
+                        <td><span class="badge bg-success">Found</span></td>
+                        <td><span class="badge bg-info">{{ account.confidence|title }}</span></td>
+                        <td>
+                            <code style="font-size: 0.85em;">{{ account.url[:50] }}{% if account.url|length > 50 %}...{% endif %}</code>
+                        </td>
+                        <td>
+                            <a href="{{ account.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary">
+                                <i class="bi bi-box-arrow-up-right"></i> Visit
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Not Found Accounts -->
+        {% if not_found_accounts %}
+        <h6 class="text-muted mt-4"><i class="bi bi-x-circle"></i> Not Found On ({{ not_found_accounts|length }})</h6>
+        <div class="d-flex flex-wrap gap-2">
+            {% for account in not_found_accounts %}
+            <span class="badge bg-secondary">{{ account.platform }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Info Alert -->
+        <div class="alert alert-info mt-3 mb-0">
+            <i class="bi bi-info-circle"></i> <strong>Note:</strong>
+            Social media discovery checks public availability of profiles. Some platforms may require manual verification.
+            Always verify account ownership through additional investigation methods.
+        </div>
+
+        {% else %}
+        <p class="text-muted mb-0">No social media accounts discovered</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Evidence Hash -->
+<div class="card shadow mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-file-lock"></i> Evidence Integrity</h5>
+    </div>
+    <div class="card-body">
+        <p><strong>Evidence Hash (SHA-256):</strong></p>
+        <pre class="bg-light p-2 border rounded"><code>{{ investigation.evidence_hash }}</code></pre>
+        <small class="text-muted">
+            This hash ensures the integrity of the investigation results for legal proceedings.
+            Any modification to the results will change this hash value.
+        </small>
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="card shadow">
+    <div class="card-body">
+        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+            <div>
+                <a href="{{ url_for('investigations.email_search') }}" class="btn btn-primary">
+                    <i class="bi bi-search"></i> New Investigation
+                </a>
+                <a href="{{ url_for('cases.view_case', case_id=case.id) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-folder"></i> View Case
+                </a>
+            </div>
+            <div>
+                <a href="{{ url_for('investigations.download_email_pdf', investigation_id=investigation.id) }}"
+                   class="btn btn-danger">
+                    <i class="bi bi-file-pdf"></i> Download PDF Report
+                </a>
+                <button class="btn btn-success" onclick="window.print()">
+                    <i class="bi bi-printer"></i> Print Report
+                </button>
+                <button class="btn btn-info" onclick="downloadJSON()">
+                    <i class="bi bi-download"></i> Export JSON
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function downloadJSON() {
+    const data = {{ investigation.raw_results|tojson|safe }};
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'email_investigation_{{ investigation.id }}.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+</script>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="helpModalLabel">
+                    <i class="bi bi-book"></i> Understanding Investigation Results
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Quick Overview -->
+                <h5 class="text-primary"><i class="bi bi-info-circle"></i> Results Page Overview</h5>
+                <p>This page shows comprehensive intelligence gathered about the email address <code>{{ results.email }}</code>. All information comes from public sources and APIs.</p>
+
+                <hr>
+
+                <!-- Risk Assessment -->
+                <h5 class="text-primary"><i class="bi bi-shield-exclamation"></i> Risk Assessment Section</h5>
+                <p>The <strong>Risk Assessment</strong> provides an overall threat evaluation based on multiple factors.</p>
+
+                <h6 class="mt-3">Risk Score Ranges</h6>
+                <table class="table table-sm table-bordered">
+                    <tr class="table-success">
+                        <td><strong>0-39: LOW RISK</strong></td>
+                        <td>Minimal suspicious indicators. Standard investigation procedures.</td>
+                    </tr>
+                    <tr class="table-warning">
+                        <td><strong>40-69: MODERATE RISK</strong></td>
+                        <td>Some concerning factors present. Enhanced scrutiny recommended.</td>
+                    </tr>
+                    <tr class="table-danger">
+                        <td><strong>70-100: HIGH RISK</strong></td>
+                        <td>Multiple serious risk indicators. Prioritize investigation immediately.</td>
+                    </tr>
+                </table>
+
+                <p class="small"><strong>Risk Flags:</strong> Listed warnings that contributed to the risk score.</p>
+                <p class="small"><strong>Recommendations:</strong> Suggested actions based on the risk assessment.</p>
+
+                <hr>
+
+                <!-- Data Breaches -->
+                <h5 class="text-primary"><i class="bi bi-exclamation-triangle"></i> Data Breaches Section</h5>
+                <p>Shows all known data breaches from <strong>HaveIBeenPwned</strong> database where this email was found.</p>
+
+                <h6 class="mt-3">How to Use Breach Information</h6>
+                <ul class="small">
+                    <li><strong>Click each breach</strong> to expand full details including description and compromised data</li>
+                    <li><strong>Verified Badge:</strong> Breach authenticity confirmed by HIBP</li>
+                    <li><strong>Sensitive Badge:</strong> Contains sensitive personal information (higher priority)</li>
+                    <li><strong>Pwn Count:</strong> Total accounts affected (shows scale)</li>
+                    <li><strong>Data Classes:</strong> Types of data exposed (e.g., passwords, emails, phone numbers)</li>
+                </ul>
+
+                <div class="alert alert-danger small">
+                    <strong>Critical:</strong> If "Passwords" appear in data classes, assume password has been cracked. Immediate password change recommended for suspect.
+                </div>
+
+                <h6 class="mt-3">Breach Timeline</h6>
+                <p class="small">Use breach dates to establish timeline of suspect's online activity and account creation dates.</p>
+
+                <hr>
+
+                <!-- Social Media -->
+                <h5 class="text-primary"><i class="bi bi-share"></i> Social Media Accounts Section</h5>
+                <p>Shows discovered accounts across 13+ social media platforms.</p>
+
+                <h6 class="mt-3">How to Verify Accounts</h6>
+                <ol class="small">
+                    <li><strong>Click "Visit" button</strong> to open profile in new tab</li>
+                    <li><strong>Check profile details:</strong> Name, photo, bio, location</li>
+                    <li><strong>Compare with investigation:</strong> Cross-reference with known suspect details</li>
+                    <li><strong>Screenshot evidence:</strong> Capture profile before it can be deleted</li>
+                    <li><strong>Document connections:</strong> Friends, followers, groups, interests</li>
+                </ol>
+
+                <h6 class="mt-3">Confidence Levels</h6>
+                <table class="table table-sm table-bordered">
+                    <tr class="table-success">
+                        <td><strong>HIGH</strong></td>
+                        <td>Account confirmed via API response. Very likely correct.</td>
+                    </tr>
+                    <tr class="table-warning">
+                        <td><strong>MEDIUM</strong></td>
+                        <td>Account exists but not directly verified. Manual check recommended.</td>
+                    </tr>
+                    <tr class="table-info">
+                        <td><strong>LOW</strong></td>
+                        <td>Possible match. Requires careful manual verification.</td>
+                    </tr>
+                </table>
+
+                <div class="alert alert-warning small">
+                    <strong>Important:</strong> Always manually verify account ownership. Username matches don't guarantee the same person owns all accounts.
+                </div>
+
+                <hr>
+
+                <!-- Email Validation -->
+                <h5 class="text-primary"><i class="bi bi-check2-square"></i> Email Validation Section</h5>
+                <p>Technical validation checks to determine if email is legitimate and deliverable.</p>
+
+                <h6 class="mt-3">Validation Fields Explained</h6>
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Syntax Valid:</strong></td>
+                        <td>Email follows proper format (localpart@domain.tld)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Domain Exists:</strong></td>
+                        <td>Domain is registered and active (DNS lookup)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>MX Records:</strong></td>
+                        <td>Mail servers configured (can receive email)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Disposable Email:</strong></td>
+                        <td>Temporary/throwaway email service (high suspicion indicator)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Free Provider:</strong></td>
+                        <td>Free email service (Gmail, Yahoo, etc.) vs. custom domain</td>
+                    </tr>
+                </table>
+
+                <div class="alert alert-warning small">
+                    <strong>Red Flag:</strong> Disposable email services are often used to hide identity or avoid tracking. Indicates suspect attempting anonymity.
+                </div>
+
+                <hr>
+
+                <!-- Domain Information -->
+                <h5 class="text-primary"><i class="bi bi-globe"></i> Domain Information Section</h5>
+                <p>WHOIS data about the email's domain from registration records.</p>
+
+                <h6 class="mt-3">Useful Investigative Data</h6>
+                <ul class="small">
+                    <li><strong>Creation Date:</strong> When domain was registered (timeline analysis)</li>
+                    <li><strong>Expiration Date:</strong> When domain expires (inactive soon?)</li>
+                    <li><strong>Registrar:</strong> Company managing the domain</li>
+                    <li><strong>Country:</strong> Domain registration country</li>
+                    <li><strong>Name Servers:</strong> DNS infrastructure (hosting provider clues)</li>
+                </ul>
+
+                <p class="small"><strong>Tip:</strong> Very recent domain creation + disposable email = suspicious activity</p>
+
+                <hr>
+
+                <!-- DNS Records -->
+                <h5 class="text-primary"><i class="bi bi-server"></i> DNS Records Section</h5>
+                <p>Technical DNS configuration showing email infrastructure and security.</p>
+
+                <h6 class="mt-3">Record Types</h6>
+                <ul class="small">
+                    <li><strong>MX Records:</strong> Mail servers handling email for this domain</li>
+                    <li><strong>SPF Record:</strong> Anti-spoofing protection (lists authorized mail servers)</li>
+                    <li><strong>DMARC Record:</strong> Email authentication policy</li>
+                    <li><strong>A Records:</strong> IP addresses where domain is hosted</li>
+                </ul>
+
+                <h6 class="mt-3">Security Assessment</h6>
+                <table class="table table-sm">
+                    <tr class="table-success">
+                        <td><strong>SPF + DMARC Configured</strong></td>
+                        <td>Domain has proper anti-spoofing protection</td>
+                    </tr>
+                    <tr class="table-warning">
+                        <td><strong>SPF Only</strong></td>
+                        <td>Some protection but not fully enforced</td>
+                    </tr>
+                    <tr class="table-danger">
+                        <td><strong>No SPF/DMARC</strong></td>
+                        <td>Domain vulnerable to email spoofing and phishing</td>
+                    </tr>
+                </table>
+
+                <hr>
+
+                <!-- Evidence Hash -->
+                <h5 class="text-primary"><i class="bi bi-file-lock"></i> Evidence Hash Section</h5>
+                <p>SHA-256 cryptographic hash ensuring data integrity for legal proceedings.</p>
+
+                <h6 class="mt-3">Purpose</h6>
+                <ul class="small">
+                    <li>Verifies investigation results haven't been modified</li>
+                    <li>Maintains chain of custody for court admissibility</li>
+                    <li>Any change to data creates different hash (detects tampering)</li>
+                    <li>Hash is included in PDF reports for verification</li>
+                </ul>
+
+                <p class="small"><strong>Best Practice:</strong> Note the evidence hash in your case files for reference.</p>
+
+                <hr>
+
+                <!-- Export Options -->
+                <h5 class="text-primary"><i class="bi bi-download"></i> Export Options</h5>
+                <p>Three ways to export and document investigation results:</p>
+
+                <table class="table table-sm table-bordered">
+                    <tr>
+                        <td><strong>PDF Report</strong></td>
+                        <td>Court-ready professional report with ZPS branding, investigator details, CONFIDENTIAL marking</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Print Report</strong></td>
+                        <td>Browser print function for quick paper copies</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Export JSON</strong></td>
+                        <td>Raw data in JSON format for technical analysis or integration</td>
+                    </tr>
+                </table>
+
+                <div class="alert alert-info small">
+                    <strong>Recommendation:</strong> Always download PDF report immediately after investigation for permanent documentation.
+                </div>
+
+                <hr>
+
+                <!-- Best Practices -->
+                <h5 class="text-primary"><i class="bi bi-star"></i> Best Practices for Using Results</h5>
+                <ul class="small">
+                    <li><strong>Download PDF First:</strong> Secure evidence before continuing investigation</li>
+                    <li><strong>Verify Social Media:</strong> Manually check all "Visit" links for account ownership</li>
+                    <li><strong>Screenshot Profiles:</strong> Capture social media evidence before deletion</li>
+                    <li><strong>Cross-Reference Data:</strong> Compare findings with other investigation sources</li>
+                    <li><strong>Note Evidence Hash:</strong> Record SHA-256 hash in case documentation</li>
+                    <li><strong>Check Breach Dates:</strong> Use for timeline analysis of suspect activity</li>
+                    <li><strong>Review Risk Flags:</strong> Address all identified risk indicators</li>
+                    <li><strong>Document Everything:</strong> Add notes to case file about all findings</li>
+                </ul>
+
+                <hr>
+
+                <!-- Next Steps -->
+                <h5 class="text-primary"><i class="bi bi-signpost"></i> Recommended Next Steps</h5>
+                <ol class="small">
+                    <li>Download PDF report for case file</li>
+                    <li>Review and verify all social media accounts</li>
+                    <li>Screenshot relevant social media profiles</li>
+                    <li>Analyze breach data for timeline correlation</li>
+                    <li>Cross-reference email with other case evidence</li>
+                    <li>If high risk, escalate to senior investigator</li>
+                    <li>Update case notes with key findings</li>
+                    <li>Consider additional OSINT tools if needed</li>
+                </ol>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

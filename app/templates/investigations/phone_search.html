@@ -1,0 +1,477 @@
+{% extends "base.html" %}
+
+{% block title %}Phone OSINT{% endblock %}
+{% block page_title %}Phone OSINT Investigation{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card shadow">
+            <div class="card-header bg-secondary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-phone"></i> Phone OSINT Investigation
+                    </h5>
+                    <a href="{{ url_for('investigations.phone_osint_guide') }}" target="_blank" class="btn btn-light btn-sm">
+                        <i class="bi bi-book"></i> Investigation Guide
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Phone Number Investigation Tool</strong><br>
+                    This tool investigates phone numbers for fraud and cybercrime cases. It provides:
+                    <ul class="mb-0 mt-2">
+                        <li>Phone number validation and formatting</li>
+                        <li>Carrier and network information</li>
+                        <li>Geographic location and timezone</li>
+                        <li>Number type (Mobile, Landline, VoIP, etc.)</li>
+                        <li>Risk assessment and fraud indicators</li>
+                    </ul>
+                </div>
+
+                <form method="POST" action="{{ url_for('investigations.phone_search') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                    <div class="mb-3">
+                        <label for="case_id" class="form-label">
+                            <i class="bi bi-folder"></i> Select Case <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="case_id" name="case_id" required>
+                            <option value="">-- Select a case --</option>
+                            {% for case in cases %}
+                            <option value="{{ case.id }}">
+                                {{ case.case_number }} - {{ case.title }} ({{ case.status|title }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="form-text text-muted">
+                            This investigation will be linked to the selected case
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="phone_number" class="form-label">
+                            <i class="bi bi-telephone"></i> Phone Number <span class="text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               class="form-control"
+                               id="phone_number"
+                               name="phone_number"
+                               placeholder="+260 97 1234567 or 0971234567"
+                               required
+                               autofocus>
+                        <small class="form-text text-muted">
+                            Enter phone number with or without country code (e.g., +260971234567, 0971234567, 260971234567)
+                        </small>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Important:</strong>
+                        <ul class="mb-0 mt-1">
+                            <li>All investigations are logged and audited</li>
+                            <li>Investigation typically takes 2-5 seconds</li>
+                            <li>Evidence hash will be generated for chain of custody</li>
+                            <li>Supported formats: International (+260...), National (097...), E.164</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-secondary btn-lg">
+                            <i class="bi bi-search"></i> Start Investigation
+                        </button>
+                        <a href="{{ url_for('investigations.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Investigations
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Recent Phone Investigations -->
+        <div class="card shadow mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-clock-history"></i> Recent Phone Investigations
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if recent_investigations %}
+                <div class="list-group">
+                    {% for inv in recent_investigations %}
+                    <a href="{{ url_for('investigations.view_phone_result', investigation_id=inv.id) }}"
+                       class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                <i class="bi bi-phone"></i> {{ inv.target_identifier }}
+                            </h6>
+                            <small class="text-muted">{{ inv.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                        <small class="text-muted">
+                            {% if inv.status == 'completed' %}
+                            <span class="badge bg-success">Completed</span>
+                            {% elif inv.status == 'failed' %}
+                            <span class="badge bg-danger">Failed</span>
+                            {% else %}
+                            <span class="badge bg-warning">{{ inv.status|title }}</span>
+                            {% endif %}
+                            | Execution time: {{ "%.2f"|format(inv.execution_time) }}s
+                        </small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No recent phone investigations</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-secondary text-white">
+                <h5 class="modal-title" id="helpModalLabel">
+                    <i class="bi bi-book"></i> Phone OSINT Investigation Guide
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Welcome Message -->
+                <div class="alert alert-info">
+                    <h6 class="alert-heading"><i class="bi bi-info-circle"></i> Welcome to Phone OSINT Investigation!</h6>
+                    <p class="mb-0">This guide will walk you through investigating phone numbers in fraud and cybercrime cases. You'll learn how to use the tool and understand the results, even if you're new to digital investigations.</p>
+                </div>
+
+                <!-- Quick Start -->
+                <h5 class="text-secondary"><i class="bi bi-rocket-takeoff"></i> Step-by-Step: How to Start an Investigation</h5>
+                
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title"><strong>STEP 1: Select a Case</strong></h6>
+                        <p class="card-text small">
+                            <strong>What to do:</strong> Look for the dropdown box labeled "Select Case" with a folder icon.<br>
+                            <strong>Why:</strong> Every investigation must be linked to an official case for proper documentation and legal compliance.<br>
+                            <strong>How:</strong> Click on the dropdown and select your active case from the list.<br>
+                            <strong>Important:</strong> If you don't see your case, contact your supervisor to request access or create a new case first.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title"><strong>STEP 2: Enter the Phone Number</strong></h6>
+                        <p class="card-text small">
+                            <strong>What to do:</strong> Find the text box labeled "Phone Number" with a phone icon.<br>
+                            <strong>How:</strong> Enter the phone number you want to investigate. Multiple formats accepted:<br>
+                        </p>
+                        <ul class="small">
+                            <li><strong>International format:</strong> +260971234567</li>
+                            <li><strong>National format:</strong> 0971234567</li>
+                            <li><strong>Without leading zero:</strong> 971234567</li>
+                            <li><strong>With spaces:</strong> +260 97 123 4567</li>
+                        </ul>
+                        <p class="card-text small">
+                            <strong>Tips:</strong> Copy directly from your case file to avoid typing errors. Remove any dashes or special characters.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title"><strong>STEP 3: Click "Start Investigation"</strong></h6>
+                        <p class="card-text small">
+                            <strong>What to do:</strong> Click the large gray button that says "Start Investigation".<br>
+                            <strong>What happens next:</strong> The system will automatically:
+                        </p>
+                        <ul class="small">
+                            <li>Validate the phone number format</li>
+                            <li>Identify the carrier/network provider</li>
+                            <li>Determine geographic location and country</li>
+                            <li>Identify number type (Mobile, Landline, VoIP, etc.)</li>
+                            <li>Calculate risk score and fraud indicators</li>
+                            <li>Generate timezone information</li>
+                        </ul>
+                        <p class="card-text small">
+                            <strong>Wait time:</strong> Usually 2-5 seconds. Much faster than email investigations!
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card mb-3 border-success">
+                    <div class="card-body">
+                        <h6 class="card-title text-success"><strong>STEP 4: Review Your Results</strong></h6>
+                        <p class="card-text small">
+                            <strong>What to do:</strong> After the investigation completes, you'll see a detailed report page.<br>
+                            <strong>Next actions:</strong>
+                        </p>
+                        <ul class="small">
+                            <li>Read the risk assessment at the top</li>
+                            <li>Check carrier and location information</li>
+                            <li>Note any fraud indicators or warnings</li>
+                            <li>Download PDF report for your case file</li>
+                            <li>Cross-reference with other evidence</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- What This Tool Does -->
+                <h5 class="text-secondary"><i class="bi bi-search"></i> What This Tool Investigates</h5>
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Investigation Area</th>
+                            <th>What You Will Learn</th>
+                        </tr>
+                    </thead>
+                    <tbody class="small">
+                        <tr>
+                            <td><strong>Phone Validation</strong></td>
+                            <td>Is this a valid phone number? Can it receive calls/SMS?</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Number Formatting</strong></td>
+                            <td>International format, national format, E.164 format for records</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Carrier Information</strong></td>
+                            <td>Which telecom company owns this number? (MTN, Airtel, Zamtel, etc.)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Geographic Location</strong></td>
+                            <td>Country, region, city associated with the number</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Number Type</strong></td>
+                            <td>Mobile, Landline, VoIP, Premium Rate, Toll Free, etc.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Timezone</strong></td>
+                            <td>Time zones where this number is registered (useful for coordination)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Risk Assessment</strong></td>
+                            <td>Overall threat score (0-100), risk flags, recommendations</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <hr>
+
+                <!-- Understanding Results -->
+                <h5 class="text-secondary"><i class="bi bi-clipboard-data"></i> Understanding Investigation Results</h5>
+
+                <h6 class="mt-3">Risk Score Interpretation</h6>
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Score Range</th>
+                            <th>Risk Level</th>
+                            <th>What It Means</th>
+                            <th>What You Should Do</th>
+                        </tr>
+                    </thead>
+                    <tbody class="small">
+                        <tr class="table-success">
+                            <td><strong>0-39</strong></td>
+                            <td><span class="badge bg-success">LOW RISK</span></td>
+                            <td>Valid local number, known carrier</td>
+                            <td>Standard investigation procedures</td>
+                        </tr>
+                        <tr class="table-warning">
+                            <td><strong>40-69</strong></td>
+                            <td><span class="badge bg-warning">MODERATE RISK</span></td>
+                            <td>Foreign number or VoIP service</td>
+                            <td>Enhanced verification required</td>
+                        </tr>
+                        <tr class="table-danger">
+                            <td><strong>70-100</strong></td>
+                            <td><span class="badge bg-danger">HIGH RISK</span></td>
+                            <td>Invalid, premium rate, or high fraud indicators</td>
+                            <td>Priority investigation! Report to supervisor</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h6 class="mt-3">Number Types Explained</h6>
+                <table class="table table-sm table-bordered">
+                    <tbody class="small">
+                        <tr>
+                            <td><strong>Mobile</strong></td>
+                            <td>Regular mobile phone number (most common)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fixed Line</strong></td>
+                            <td>Landline phone (business or home)</td>
+                        </tr>
+                        <tr class="table-warning">
+                            <td><strong>VoIP</strong></td>
+                            <td>Internet-based phone (Skype, WhatsApp calling) - OFTEN USED IN FRAUD!</td>
+                        </tr>
+                        <tr class="table-danger">
+                            <td><strong>Premium Rate</strong></td>
+                            <td>Expensive to call - SCAM INDICATOR! Often used in phone fraud</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Toll Free</strong></td>
+                            <td>Free to call (business customer service lines)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <hr>
+
+                <!-- Key Fraud Indicators -->
+                <h5 class="text-secondary"><i class="bi bi-exclamation-triangle"></i> Key Fraud Indicators to Watch</h5>
+
+                <div class="card mb-2 border-danger">
+                    <div class="card-body">
+                        <h6 class="card-title text-danger"><strong>1. VoIP Numbers</strong></h6>
+                        <p class="card-text small mb-1">
+                            <strong>What it means:</strong> Number works over the internet, not traditional phone network.<br>
+                            <strong>Why dangerous:</strong> Easy to create fake numbers, hard to trace, commonly used by scammers.<br>
+                            <strong>Action:</strong> Treat as high-priority suspect. Request additional verification.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card mb-2 border-danger">
+                    <div class="card-body">
+                        <h6 class="card-title text-danger"><strong>2. Premium Rate Numbers</strong></h6>
+                        <p class="card-text small mb-1">
+                            <strong>What it means:</strong> Calling this number costs extra money (like 900 numbers).<br>
+                            <strong>Why dangerous:</strong> Classic phone scam - victim pays high fees when calling back.<br>
+                            <strong>Action:</strong> Investigate billing fraud. Warn victims not to call back.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card mb-2 border-warning">
+                    <div class="card-body">
+                        <h6 class="card-title text-warning"><strong>3. Foreign Numbers</strong></h6>
+                        <p class="card-text small mb-1">
+                            <strong>What it means:</strong> Number registered in another country.<br>
+                            <strong>Why concerning:</strong> Harder to investigate, may require international cooperation.<br>
+                            <strong>Action:</strong> Document country of origin. Consider contacting international authorities.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card mb-2 border-warning">
+                    <div class="card-body">
+                        <h6 class="card-title text-warning"><strong>4. Unknown Carrier</strong></h6>
+                        <p class="card-text small mb-1">
+                            <strong>What it means:</strong> Cannot identify the telecom provider.<br>
+                            <strong>Why concerning:</strong> May be outdated database, new carrier, or spoofed number.<br>
+                            <strong>Action:</strong> Contact telecom regulatory authority for carrier identification.
+                        </p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Best Practices -->
+                <h5 class="text-secondary"><i class="bi bi-star"></i> Best Practices for Phone Investigations</h5>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success">✓ DO:</h6>
+                        <ul class="small">
+                            <li>Always link investigations to active cases</li>
+                            <li>Record all phone number formats (international, national)</li>
+                            <li>Download PDF reports immediately</li>
+                            <li>Note the evidence hash for chain of custody</li>
+                            <li>Cross-reference with call logs and SMS records</li>
+                            <li>Contact telecom providers for subscriber details (with warrant)</li>
+                            <li>Document investigation date and time</li>
+                            <li>Verify numbers manually by calling (with caution)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-danger">✗ DON'T:</h6>
+                        <ul class="small">
+                            <li>Call premium rate numbers (you'll be charged!)</li>
+                            <li>Call back suspicious VoIP numbers</li>
+                            <li>Share investigation results with unauthorized persons</li>
+                            <li>Forget to link investigation to case</li>
+                            <li>Rely only on automated results - verify manually</li>
+                            <li>Skip documenting foreign country codes</li>
+                            <li>Use personal phone to contact suspects</li>
+                            <li>Ignore risk warnings and fraud indicators</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Troubleshooting -->
+                <h5 class="text-secondary"><i class="bi bi-wrench"></i> Troubleshooting Common Issues</h5>
+
+                <table class="table table-sm table-bordered">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Issue</th>
+                            <th>Solution</th>
+                        </tr>
+                    </thead>
+                    <tbody class="small">
+                        <tr>
+                            <td>Investigation Failed</td>
+                            <td>Check phone number format. Try with country code (+260...). Remove spaces and dashes.</td>
+                        </tr>
+                        <tr>
+                            <td>"Invalid Number" result</td>
+                            <td>Number may be disconnected, never existed, or incorrectly formatted. Verify with source.</td>
+                        </tr>
+                        <tr>
+                            <td>No carrier information</td>
+                            <td>Normal for some international numbers. Contact telecom authority for details.</td>
+                        </tr>
+                        <tr>
+                            <td>Location shows wrong city</td>
+                            <td>Location is based on number prefix, not current location. Phone may have moved.</td>
+                        </tr>
+                        <tr>
+                            <td>No Cases Available</td>
+                            <td>Create a new case first or request case assignment from supervisor.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <hr>
+
+                <!-- Legal Notes -->
+                <h5 class="text-secondary"><i class="bi bi-shield-check"></i> Legal & Privacy Considerations</h5>
+
+                <div class="alert alert-warning">
+                    <h6 class="alert-heading"><strong>Important Legal Notes:</strong></h6>
+                    <ul class="small mb-0">
+                        <li><strong>Authorization Required:</strong> Only investigate numbers for official police work</li>
+                        <li><strong>Public Data Only:</strong> This tool uses publicly available phone number databases</li>
+                        <li><strong>Subscriber Info:</strong> Getting subscriber name/address requires court warrant</li>
+                        <li><strong>Call Records:</strong> Obtaining call logs requires proper legal authorization</li>
+                        <li><strong>Privacy Laws:</strong> Follow Zambia telecommunications and data protection laws</li>
+                        <li><strong>Audit Trail:</strong> All investigations are automatically logged</li>
+                    </ul>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <a href="{{ url_for('investigations.download_phone_osint_guide') }}"
+                   class="btn btn-success me-auto"
+                   target="_blank">
+                    <i class="bi bi-file-pdf"></i> Download PDF Guide
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,423 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard Overview{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: transform 0.2s, box-shadow 0.2s;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-card .card-body {
+        padding: 1.5rem;
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .stat-trend {
+        font-size: 0.875rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .quick-action-btn {
+        border: 2px dashed #dee2e6;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: block;
+        color: inherit;
+    }
+
+    .quick-action-btn:hover {
+        border-color: var(--zps-primary);
+        background: rgba(0, 6, 99, 0.02);
+        transform: translateY(-2px);
+        color: var(--zps-primary);
+    }
+
+    .quick-action-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--zps-primary), #000850);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .activity-timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+
+    .activity-item {
+        position: relative;
+        padding-bottom: 1.5rem;
+        border-left: 2px solid #e9ecef;
+        padding-left: 1.5rem;
+    }
+
+    .activity-item:last-child {
+        border-left: 2px solid transparent;
+    }
+
+    .activity-dot {
+        position: absolute;
+        left: -6px;
+        top: 0;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: white;
+        border: 3px solid;
+    }
+
+    .case-card {
+        border-left: 4px solid;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+
+    .case-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateX(4px);
+    }
+
+    .badge-status {
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.75rem;
+    }
+
+    .progress-ring {
+        width: 120px;
+        height: 120px;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 200px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Welcome Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="alert alert-primary border-0 shadow-sm" style="background: linear-gradient(135deg, var(--zps-primary), #000850); color: white;">
+            <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <h4 class="mb-1">
+                        <i class="bi bi-sun"></i>
+                        {% set hour = now.hour %}
+                        {% if hour < 12 %}Good Morning
+                        {% elif hour < 18 %}Good Afternoon
+                        {% else %}Good Evening{% endif %}, {{ current_user.full_name }}!
+                    </h4>
+                    <p class="mb-0 opacity-75">Welcome back to CyberTrace OSINT Platform. Here's your investigation overview.</p>
+                </div>
+                <div class="text-end">
+                    <small class="opacity-75">{{ now.strftime('%A, %B %d, %Y') }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-4">
+    <!-- Total Cases -->
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <i class="bi bi-folder text-white"></i>
+                </div>
+                <div class="stat-value" style="color: #667eea;">{{ stats.total_cases }}</div>
+                <div class="stat-label">Total Cases</div>
+                <div class="stat-trend">
+                    <i class="bi bi-arrow-up text-success"></i>
+                    <span class="text-success">All assigned cases</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Open Cases -->
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <i class="bi bi-folder2-open text-white"></i>
+                </div>
+                <div class="stat-value" style="color: #f5576c;">{{ stats.open_cases }}</div>
+                <div class="stat-label">Open Cases</div>
+                <div class="stat-trend">
+                    <i class="bi bi-exclamation-circle text-danger"></i>
+                    <span class="text-danger">Requires attention</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Investigating -->
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <i class="bi bi-search text-white"></i>
+                </div>
+                <div class="stat-value" style="color: #4facfe;">{{ stats.investigating_cases }}</div>
+                <div class="stat-label">Under Investigation</div>
+                <div class="stat-trend">
+                    <i class="bi bi-activity text-info"></i>
+                    <span class="text-info">Active investigations</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Investigations -->
+    <div class="col-md-3">
+        <div class="card stat-card">
+            <div class="card-body">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <i class="bi bi-clipboard-data text-white"></i>
+                </div>
+                <div class="stat-value" style="color: #43e97b;">{{ stats.total_investigations }}</div>
+                <div class="stat-label">Your Investigations</div>
+                <div class="stat-trend">
+                    <i class="bi bi-graph-up text-success"></i>
+                    <span class="text-success">{{ stats.investigations_this_week }} this week</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h5 class="mb-3"><i class="bi bi-lightning-charge"></i> Quick Actions</h5>
+    </div>
+    <div class="col-md-3">
+        <a href="{{ url_for('cases.create_case') }}" class="quick-action-btn">
+            <div class="quick-action-icon">
+                <i class="bi bi-plus-lg"></i>
+            </div>
+            <h6 class="mb-1">New Case</h6>
+            <small class="text-muted">Create a new investigation case</small>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{{ url_for('investigations.email_search') }}" class="quick-action-btn">
+            <div class="quick-action-icon">
+                <i class="bi bi-envelope"></i>
+            </div>
+            <h6 class="mb-1">Email OSINT</h6>
+            <small class="text-muted">Investigate email addresses</small>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{{ url_for('investigations.phone_search') }}" class="quick-action-btn">
+            <div class="quick-action-icon">
+                <i class="bi bi-telephone"></i>
+            </div>
+            <h6 class="mb-1">Phone OSINT</h6>
+            <small class="text-muted">Investigate phone numbers</small>
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{{ url_for('cases.list_cases') }}" class="quick-action-btn">
+            <div class="quick-action-icon">
+                <i class="bi bi-list-ul"></i>
+            </div>
+            <h6 class="mb-1">View All Cases</h6>
+            <small class="text-muted">Browse all investigation cases</small>
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Cases -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4" style="border-radius: 12px; border: none;">
+            <div class="card-header bg-white border-0" style="border-radius: 12px 12px 0 0; padding: 1.25rem 1.5rem;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-folder" style="color: var(--zps-primary);"></i> Recent Cases
+                    </h5>
+                    <a href="{{ url_for('cases.list_cases') }}" class="btn btn-sm btn-outline-primary">
+                        View All <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="card-body" style="padding: 0;">
+                {% if recent_cases %}
+                <div class="list-group list-group-flush">
+                    {% for case in recent_cases %}
+                    <a href="{{ url_for('cases.view_case', case_id=case.id) }}"
+                       class="list-group-item list-group-item-action border-0 py-3"
+                       style="border-left: 4px solid
+                       {% if case.status == 'open' %}#f5576c
+                       {% elif case.status == 'investigating' %}#4facfe
+                       {% elif case.status == 'closed' %}#43e97b
+                       {% else %}#6c757d{% endif %} !important;">
+                        <div class="d-flex w-100 justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <h6 class="mb-0 fw-bold">{{ case.case_number }}</h6>
+                                    <span class="badge badge-status" style="background:
+                                    {% if case.status == 'open' %}#ffe5e9; color: #f5576c
+                                    {% elif case.status == 'investigating' %}#e3f6ff; color: #4facfe
+                                    {% elif case.status == 'closed' %}#e8fdf3; color: #43e97b
+                                    {% else %}#f8f9fa; color: #6c757d{% endif %};">
+                                        {{ case.status | title }}
+                                    </span>
+                                </div>
+                                <p class="mb-1">{{ case.title }}</p>
+                                <small class="text-muted">
+                                    <i class="bi bi-tag"></i> {{ case.case_type | title }}
+                                    {% if case.priority %}
+                                    | <i class="bi bi-flag"></i> {{ case.priority | title }} Priority
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted d-block">
+                                    <i class="bi bi-calendar"></i> {{ case.created_at.strftime('%b %d, %Y') }}
+                                </small>
+                                <small class="text-muted d-block">
+                                    <i class="bi bi-clock"></i> {{ case.created_at.strftime('%H:%M') }}
+                                </small>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-folder2-open" style="font-size: 3rem; color: #dee2e6;"></i>
+                    <p class="text-muted mt-3 mb-0">No recent cases found</p>
+                    <a href="{{ url_for('cases.create_case') }}" class="btn btn-sm btn-primary mt-3">
+                        <i class="bi bi-plus-lg"></i> Create Your First Case
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Timeline & Quick Stats -->
+    <div class="col-lg-4">
+        <!-- Investigation Activity -->
+        <div class="card shadow-sm mb-4" style="border-radius: 12px; border: none;">
+            <div class="card-header bg-white border-0" style="border-radius: 12px 12px 0 0; padding: 1.25rem 1.5rem;">
+                <h5 class="mb-0">
+                    <i class="bi bi-activity" style="color: var(--zps-primary);"></i> Recent Activity
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_investigations %}
+                <div class="activity-timeline">
+                    {% for inv in recent_investigations[:5] %}
+                    <div class="activity-item">
+                        <div class="activity-dot" style="border-color:
+                        {% if inv.investigation_type == 'email' %}#667eea
+                        {% elif inv.investigation_type == 'phone' %}#43e97b
+                        {% else %}#4facfe{% endif %};"></div>
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <h6 class="mb-0" style="font-size: 0.875rem;">
+                                    {% if inv.investigation_type == 'email' %}
+                                    <i class="bi bi-envelope"></i> Email Investigation
+                                    {% elif inv.investigation_type == 'phone' %}
+                                    <i class="bi bi-telephone"></i> Phone Investigation
+                                    {% else %}
+                                    <i class="bi bi-search"></i> Investigation
+                                    {% endif %}
+                                </h6>
+                                <small class="text-muted">{{ inv.created_at.strftime('%H:%M') }}</small>
+                            </div>
+                            <small class="text-muted d-block">{{ inv.created_at.strftime('%b %d, %Y') }}</small>
+                            <small class="text-muted d-block mt-1">
+                                <i class="bi bi-folder"></i> Case: {{ inv.case.case_number if inv.case else 'N/A' }}
+                            </small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-activity" style="font-size: 2.5rem; color: #dee2e6;"></i>
+                    <p class="text-muted mt-3 mb-0">No recent activity</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Performance Card -->
+        <div class="card shadow-sm" style="border-radius: 12px; border: none; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <div class="card-body">
+                <h6 class="mb-3 opacity-75">This Month's Performance</h6>
+                <div class="mb-3">
+                    <h2 class="mb-0">{{ stats.investigations_this_month }}</h2>
+                    <small class="opacity-75">Investigations Conducted</small>
+                </div>
+                <div class="mb-3">
+                    <h3 class="mb-0">{{ stats.total_evidence }}</h3>
+                    <small class="opacity-75">Evidence Collected</small>
+                </div>
+                <hr style="border-color: rgba(255,255,255,0.2);">
+                <small class="opacity-75">
+                    <i class="bi bi-trophy"></i> Keep up the excellent work!
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

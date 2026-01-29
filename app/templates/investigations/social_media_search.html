@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Social Media OSINT{% endblock %}
+{% block page_title %}Social Media OSINT Investigation{% endblock %}
+
+{% block extra_css %}
+<style>
+    .investigation-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .platform-selector {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+        margin: 1.5rem 0;
+    }
+
+    .platform-card {
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .platform-card:hover {
+        border-color: var(--zps-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 36, 100, 0.15);
+    }
+
+    .platform-card.selected {
+        border-color: var(--zps-primary);
+        background: linear-gradient(135deg, rgba(0, 36, 100, 0.05), rgba(0, 171, 85, 0.05));
+    }
+
+    .platform-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .platform-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #333;
+    }
+
+    .platform-checkbox {
+        display: none;
+    }
+
+    .guide-section {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .guide-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .guide-list li {
+        padding: 0.5rem 0;
+        padding-left: 1.5rem;
+        position: relative;
+    }
+
+    .guide-list li:before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: var(--zps-green);
+        font-weight: bold;
+    }
+
+    .select-all-btn {
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 offset-lg-1">
+        <!-- Guide Section -->
+        <div class="guide-section">
+            <h5 class="mb-3">
+                <i class="bi bi-info-circle"></i> Social Media OSINT Investigation
+            </h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>What this tool does:</strong>
+                    <ul class="guide-list">
+                        <li>Search for profiles across 9+ social media platforms</li>
+                        <li>Generate direct links to user profiles</li>
+                        <li>Provide search URLs for finding mentions and content</li>
+                        <li>Access third-party profile viewers</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <strong>Supported Platforms:</strong>
+                    <ul class="guide-list">
+                        <li>Facebook, Twitter/X, Instagram, LinkedIn</li>
+                        <li>TikTok, YouTube, Reddit, GitHub</li>
+                        <li>Telegram and aggregator tools</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Investigation Form -->
+        <div class="investigation-card">
+            <h5 class="mb-4">
+                <i class="bi bi-search" style="color: var(--zps-primary);"></i>
+                Start Social Media Investigation
+            </h5>
+
+            <form method="POST" action="{{ url_for('investigations.social_media_search') }}" id="socialMediaForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <!-- Case Selection -->
+                <div class="mb-4">
+                    <label for="case_id" class="form-label fw-bold">
+                        <i class="bi bi-folder"></i> Select Case <span class="text-danger">*</span>
+                    </label>
+                    <select class="form-select" id="case_id" name="case_id" required>
+                        <option value="">Choose a case...</option>
+                        {% for case in cases %}
+                        <option value="{{ case.id }}">
+                            {{ case.case_number }} - {{ case.title }}
+                            {% if case.status != 'open' %}({{ case.status | title }}){% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Username Input -->
+                <div class="mb-4">
+                    <label for="username" class="form-label fw-bold">
+                        <i class="bi bi-person"></i> Username <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="username" name="username"
+                           placeholder="e.g., johndoe or @johndoe" required>
+                    <small class="text-muted">
+                        Enter username without @ symbol. Accepts letters, numbers, dots, underscores, and hyphens.
+                    </small>
+                </div>
+
+                <!-- Platform Selection -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-grid-3x3"></i> Select Platforms
+                    </label>
+                    <p class="text-muted mb-2">
+                        Select specific platforms to search, or leave all unselected to search all platforms.
+                    </p>
+                    <button type="button" class="btn btn-sm btn-outline-primary select-all-btn" onclick="toggleAllPlatforms()">
+                        <i class="bi bi-check-all"></i> Select All / Deselect All
+                    </button>
+
+                    <div class="platform-selector">
+                        {% for platform in platforms %}
+                        <div class="platform-card" onclick="togglePlatform('{{ platform.id }}')" id="card-{{ platform.id }}">
+                            <input type="checkbox" name="platforms" value="{{ platform.id }}"
+                                   id="platform-{{ platform.id }}" class="platform-checkbox">
+                            <div class="platform-icon">
+                                <i class="bi bi-{{ platform.icon }}" style="color: {{ platform.color }};"></i>
+                            </div>
+                            <div class="platform-name">{{ platform.name }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="mb-4">
+                    <label for="notes" class="form-label fw-bold">
+                        <i class="bi bi-journal-text"></i> Investigation Notes (Optional)
+                    </label>
+                    <textarea class="form-control" id="notes" name="notes" rows="3"
+                              placeholder="Add any relevant notes about this investigation..."></textarea>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('investigations.index') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Start Investigation
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Information Alert -->
+        <div class="alert alert-info mt-4">
+            <h6><i class="bi bi-shield-check"></i> Privacy & Legal Notice</h6>
+            <p class="mb-0">
+                This tool generates search links only. It does not automatically access or scrape social media platforms.
+                Ensure all investigations comply with the Computer Misuse and Cybercrime Act and relevant data protection regulations.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function togglePlatform(platformId) {
+        const checkbox = document.getElementById('platform-' + platformId);
+        const card = document.getElementById('card-' + platformId);
+
+        checkbox.checked = !checkbox.checked;
+
+        if (checkbox.checked) {
+            card.classList.add('selected');
+        } else {
+            card.classList.remove('selected');
+        }
+    }
+
+    function toggleAllPlatforms() {
+        const checkboxes = document.querySelectorAll('.platform-checkbox');
+        const cards = document.querySelectorAll('.platform-card');
+
+        // Check if all are selected
+        const allSelected = Array.from(checkboxes).every(cb => cb.checked);
+
+        // Toggle all
+        checkboxes.forEach((checkbox, index) => {
+            checkbox.checked = !allSelected;
+            if (!allSelected) {
+                cards[index].classList.add('selected');
+            } else {
+                cards[index].classList.remove('selected');
+            }
+        });
+    }
+
+    // Form validation
+    document.getElementById('socialMediaForm').addEventListener('submit', function(e) {
+        const username = document.getElementById('username').value.trim();
+        const caseId = document.getElementById('case_id').value;
+
+        if (!username) {
+            e.preventDefault();
+            alert('Please enter a username');
+            return false;
+        }
+
+        if (!caseId) {
+            e.preventDefault();
+            alert('Please select a case');
+            return false;
+        }
+    });
+</script>
+{% endblock %}

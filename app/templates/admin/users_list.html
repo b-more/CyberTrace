@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block title %}User Management{% endblock %}
+{% block page_title %}User Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .user-table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .user-table th {
+        background: linear-gradient(135deg, var(--zps-primary), #000850);
+        color: white;
+        font-weight: 600;
+        padding: 1rem;
+        border: none;
+    }
+
+    .user-table td {
+        padding: 1rem;
+        vertical-align: middle;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--zps-primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .stat-box {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        text-align: center;
+        transition: transform 0.2s;
+    }
+
+    .stat-box:hover {
+        transform: translateY(-4px);
+    }
+
+    .stat-box h3 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+        color: var(--zps-primary);
+    }
+
+    .stat-box small {
+        color: #6c757d;
+        text-transform: uppercase;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+
+    .badge-role {
+        padding: 0.35rem 0.75rem;
+        border-radius: 6px;
+        font-weight: 500;
+        font-size: 0.75rem;
+    }
+
+    .filter-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-action {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        border-radius: 6px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Statistics Row -->
+<div class="row g-4 mb-4">
+    <div class="col-md-2">
+        <div class="stat-box">
+            <h3>{{ stats.total_users }}</h3>
+            <small>Total Users</small>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-box">
+            <h3 class="text-success">{{ stats.active_users }}</h3>
+            <small>Active</small>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-box">
+            <h3 class="text-warning">{{ stats.inactive_users }}</h3>
+            <small>Inactive</small>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-box">
+            <h3 class="text-danger">{{ stats.locked_users }}</h3>
+            <small>Locked</small>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-box">
+            <h3 style="color: #667eea;">{{ stats.admins }}</h3>
+            <small>Admins</small>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="stat-box">
+            <h3 style="color: #4facfe;">{{ stats.investigators }}</h3>
+            <small>Investigators</small>
+        </div>
+    </div>
+</div>
+
+<!-- Filters and Actions -->
+<div class="filter-card">
+    <div class="row align-items-end">
+        <div class="col-md-3">
+            <label class="form-label fw-bold">Search</label>
+            <input type="text" class="form-control" id="searchInput" placeholder="Name, badge, email..." value="{{ search }}">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label fw-bold">Role</label>
+            <select class="form-select" id="roleFilter">
+                <option value="">All Roles</option>
+                <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admin</option>
+                <option value="senior_investigator" {% if role_filter == 'senior_investigator' %}selected{% endif %}>Senior Investigator</option>
+                <option value="investigator" {% if role_filter == 'investigator' %}selected{% endif %}>Investigator</option>
+                <option value="analyst" {% if role_filter == 'analyst' %}selected{% endif %}>Analyst</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label fw-bold">Status</label>
+            <select class="form-select" id="statusFilter">
+                <option value="">All Status</option>
+                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                <option value="locked" {% if status_filter == 'locked' %}selected{% endif %}>Locked</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-primary" onclick="applyFilters()">
+                <i class="bi bi-funnel"></i> Apply Filters
+            </button>
+            <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                <i class="bi bi-x-circle"></i> Clear
+            </button>
+        </div>
+        <div class="col-md-2 text-end">
+            <a href="{{ url_for('admin.create_user') }}" class="btn btn-success">
+                <i class="bi bi-plus-lg"></i> New User
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card user-table">
+    <table class="table table-hover mb-0">
+        <thead>
+            <tr>
+                <th style="width: 5%;">#</th>
+                <th style="width: 25%;">User</th>
+                <th style="width: 15%;">Role</th>
+                <th style="width: 15%;">Rank</th>
+                <th style="width: 15%;">Department</th>
+                <th style="width: 10%;">Status</th>
+                <th style="width: 15%;" class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if users %}
+                {% for user in users %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="user-avatar">{{ user.full_name[0] }}</div>
+                            <div>
+                                <div class="fw-bold">{{ user.full_name }}</div>
+                                <small class="text-muted">{{ user.badge_number }}</small>
+                                <br>
+                                <small class="text-muted">{{ user.email }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge badge-role" style="background:
+                        {% if user.role == 'admin' %}#667eea; color: white
+                        {% elif user.role == 'senior_investigator' %}#4facfe; color: white
+                        {% elif user.role == 'investigator' %}#43e97b; color: white
+                        {% else %}#f5576c; color: white{% endif %};">
+                            {{ user.role | replace('_', ' ') | title }}
+                        </span>
+                    </td>
+                    <td>{{ user.rank }}</td>
+                    <td>{{ user.department }}</td>
+                    <td>
+                        {% if user.is_locked %}
+                        <span class="badge bg-danger">
+                            <i class="bi bi-lock-fill"></i> Locked
+                        </span>
+                        {% elif user.is_active %}
+                        <span class="badge bg-success">
+                            <i class="bi bi-check-circle-fill"></i> Active
+                        </span>
+                        {% else %}
+                        <span class="badge bg-warning">
+                            <i class="bi bi-pause-circle-fill"></i> Inactive
+                        </span>
+                        {% endif %}
+
+                        {% if user.is_2fa_enabled %}
+                        <span class="badge bg-info" title="2FA Enabled">
+                            <i class="bi bi-shield-lock"></i>
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('admin.edit_user', user_id=user.id) }}"
+                               class="btn btn-outline-primary btn-action" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+
+                            {% if user.is_locked %}
+                            <form method="POST" action="{{ url_for('admin.unlock_user', user_id=user.id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-outline-success btn-action" title="Unlock">
+                                    <i class="bi bi-unlock"></i>
+                                </button>
+                            </form>
+                            {% else %}
+                            <form method="POST" action="{{ url_for('admin.toggle_user_status', user_id=user.id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-outline-warning btn-action"
+                                        title="{{ 'Deactivate' if user.is_active else 'Activate' }}">
+                                    <i class="bi bi-{{ 'pause' if user.is_active else 'play' }}-circle"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            <button type="button" class="btn btn-outline-danger btn-action"
+                                    title="Reset Password" onclick="resetPassword({{ user.id }}, '{{ user.full_name }}')">
+                                <i class="bi bi-key"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="7" class="text-center py-5">
+                        <i class="bi bi-people" style="font-size: 3rem; color: #dee2e6;"></i>
+                        <p class="text-muted mt-3 mb-0">No users found</p>
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reset User Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to reset the password for <strong id="resetUserName"></strong>?</p>
+                <p class="text-muted">The password will be reset to their badge number.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" id="resetPasswordForm" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Reset Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function applyFilters() {
+        const search = document.getElementById('searchInput').value;
+        const role = document.getElementById('roleFilter').value;
+        const status = document.getElementById('statusFilter').value;
+
+        let url = '{{ url_for("admin.list_users") }}?';
+        if (search) url += 'search=' + encodeURIComponent(search) + '&';
+        if (role) url += 'role=' + role + '&';
+        if (status) url += 'status=' + status;
+
+        window.location.href = url;
+    }
+
+    function clearFilters() {
+        window.location.href = '{{ url_for("admin.list_users") }}';
+    }
+
+    function resetPassword(userId, userName) {
+        document.getElementById('resetUserName').textContent = userName;
+        document.getElementById('resetPasswordForm').action =
+            '{{ url_for("admin.reset_user_password", user_id=0) }}'.replace('0', userId);
+
+        const modal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
+        modal.show();
+    }
+
+    // Enter key to apply filters
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            applyFilters();
+        }
+    });
+</script>
+{% endblock %}

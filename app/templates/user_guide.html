@@ -1,0 +1,1022 @@
+{% extends "base.html" %}
+
+{% block title %}User Guide{% endblock %}
+{% block page_title %}CyberTrace User Guide{% endblock %}
+
+{% block extra_css %}
+<style>
+    .guide-section {
+        scroll-margin-top: 100px;
+    }
+    .guide-nav {
+        position: sticky;
+        top: 100px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+    }
+    .guide-nav .nav-link {
+        color: #000663;
+        padding: 0.5rem 1rem;
+        border-left: 3px solid transparent;
+    }
+    .guide-nav .nav-link:hover {
+        background-color: #f8f9fa;
+        border-left-color: #008000;
+    }
+    .guide-nav .nav-link.active {
+        background-color: #e8f4f8;
+        border-left-color: #000663;
+        font-weight: 600;
+    }
+    .guide-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .step-number {
+        background: #000663;
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 0.5rem;
+    }
+    .interpretation-card {
+        border-left: 4px solid #000663;
+        background: #f8f9fa;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 4px;
+    }
+    .risk-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+    .risk-low { background-color: #28a745; }
+    .risk-medium { background-color: #ffc107; }
+    .risk-high { background-color: #dc3545; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Sidebar Navigation -->
+    <div class="col-md-3">
+        <div class="card guide-nav">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase mb-3">Table of Contents</h6>
+                <nav class="nav flex-column">
+                    <a class="nav-link active" href="#getting-started">Getting Started</a>
+                    <a class="nav-link" href="#email-investigation">Email Investigation</a>
+                    <a class="nav-link" href="#bulk-investigation">Bulk Investigation</a>
+                    <a class="nav-link" href="#interpreting-results">Interpreting Results</a>
+                    <a class="nav-link" href="#risk-assessment">Risk Assessment</a>
+                    <a class="nav-link" href="#breach-data">Breach Data</a>
+                    <a class="nav-link" href="#social-media">Social Media Accounts</a>
+                    <a class="nav-link" href="#dns-records">DNS Records</a>
+                    <a class="nav-link" href="#email-validation">Email Validation</a>
+                    <a class="nav-link" href="#best-practices">Best Practices</a>
+                    <a class="nav-link" href="#legal-considerations">Legal Considerations</a>
+                    <a class="nav-link" href="#troubleshooting">Troubleshooting</a>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-md-9">
+        <div class="guide-content">
+
+            <!-- Getting Started -->
+            <section id="getting-started" class="guide-section mb-5">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="bi bi-rocket-takeoff"></i> Getting Started</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5>Welcome to CyberTrace</h5>
+                        <p>CyberTrace is a comprehensive OSINT (Open Source Intelligence) investigation platform designed for the Zambia Police Service Cybercrime Investigation Unit. This guide will help you effectively use the Email Investigation module to conduct thorough digital investigations.</p>
+
+                        <h6 class="mt-4">What is Email OSINT?</h6>
+                        <p>Email OSINT involves gathering intelligence about email addresses from publicly available sources. This includes:</p>
+                        <ul>
+                            <li><strong>Email Validation:</strong> Verifying if an email address is valid and deliverable</li>
+                            <li><strong>Data Breach Analysis:</strong> Checking if the email has been compromised in known data breaches</li>
+                            <li><strong>Domain Intelligence:</strong> Gathering information about the email's domain</li>
+                            <li><strong>Social Media Discovery:</strong> Finding associated social media accounts</li>
+                            <li><strong>DNS Records:</strong> Analyzing domain DNS configuration</li>
+                        </ul>
+
+                        <h6 class="mt-4">System Requirements</h6>
+                        <div class="alert alert-info">
+                            <ul class="mb-0">
+                                <li>Active case assignment to link investigations</li>
+                                <li>Proper user permissions (Investigator role or above)</li>
+                                <li>Stable internet connection for API calls</li>
+                                <li>Modern web browser (Chrome, Firefox, Edge recommended)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Email Investigation -->
+            <section id="email-investigation" class="guide-section mb-5">
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0"><i class="bi bi-envelope-at"></i> Conducting an Email Investigation</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5>Step-by-Step Guide</h5>
+
+                        <div class="mb-4">
+                            <h6><span class="step-number">1</span>Navigate to Email OSINT</h6>
+                            <p>From the sidebar menu, click on <strong>Email OSINT</strong> under the OSINT Tools section.</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6><span class="step-number">2</span>Select a Case</h6>
+                            <p>Choose an existing case to link this investigation to. All investigations must be associated with a case for proper documentation and chain of custody.</p>
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle"></i> <strong>Important:</strong>
+                                You can only select cases that are assigned to you or cases where you have access permissions.
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6><span class="step-number">3</span>Enter Email Address</h6>
+                            <p>Type or paste the email address you want to investigate. The system will validate the format before proceeding.</p>
+                            <ul>
+                                <li>Email must be in valid format (e.g., suspect@example.com)</li>
+                                <li>Special characters in email addresses are supported</li>
+                                <li>System will trim whitespace automatically</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6><span class="step-number">4</span>Submit Investigation</h6>
+                            <p>Click <strong>"Start Investigation"</strong> button. The investigation typically takes 5-15 seconds to complete, depending on API response times.</p>
+                            <div class="interpretation-card">
+                                <strong>What Happens During Investigation:</strong>
+                                <ol>
+                                    <li>Email syntax and format validation</li>
+                                    <li>Domain existence check via DNS lookup</li>
+                                    <li>MX record verification for email deliverability</li>
+                                    <li>HaveIBeenPwned API query for breach data (1.5 second rate limit)</li>
+                                    <li>WHOIS lookup for domain registration information</li>
+                                    <li>DNS record retrieval (SPF, DMARC, MX, A records)</li>
+                                    <li>Social media account discovery across 13+ platforms</li>
+                                    <li>Risk assessment calculation based on all findings</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6><span class="step-number">5</span>Review Results</h6>
+                            <p>Once complete, you'll be redirected to the results page showing comprehensive findings. Each section can be exported to PDF for reports.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bulk Investigation -->
+            <section id="bulk-investigation" class="guide-section mb-5">
+                <div class="card shadow">
+                    <div class="card-header" style="background-color: #000663; color: white;">
+                        <h4 class="mb-0"><i class="bi bi-envelope-fill"></i> Bulk Email Investigation</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5>Investigating Multiple Emails</h5>
+                        <p>The Bulk Email Investigation feature allows you to investigate up to 50 email addresses simultaneously.</p>
+
+                        <div class="mb-4">
+                            <h6><span class="step-number">1</span>Access Bulk Investigation</h6>
+                            <p>Click <strong>Bulk Email OSINT</strong> from the sidebar menu.</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6><span class="step-number">2</span>Select Case</h6>
+                            <p>Choose the case to associate all bulk investigations with.</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6><span class="step-number">3</span>Enter Email Addresses</h6>
+                            <p>Input email addresses in the text area. You can use two formats:</p>
+                            <ul>
+                                <li><strong>One per line:</strong>
+                                    <pre class="bg-light p-2 border rounded">suspect1@example.com
+suspect2@example.com
+suspect3@example.com</pre>
+                                </li>
+                                <li><strong>Comma-separated:</strong>
+                                    <pre class="bg-light p-2 border rounded">suspect1@example.com, suspect2@example.com, suspect3@example.com</pre>
+                                </li>
+                            </ul>
+                            <div class="alert alert-warning">
+                                <i class="bi bi-clock"></i> <strong>Time Estimate:</strong>
+                                Bulk investigations take approximately 5-15 seconds per email due to API rate limits.
+                                50 emails may take 5-12 minutes to complete.
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6><span class="step-number">4</span>Submit and Wait</h6>
+                            <p>Click <strong>"Start Bulk Investigation"</strong>. Do not close the browser window during processing.</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6><span class="step-number">5</span>Review Bulk Results</h6>
+                            <p>After completion, you'll see a summary table with:</p>
+                            <ul>
+                                <li>Email addresses investigated</li>
+                                <li>Status (completed/failed)</li>
+                                <li>Risk scores</li>
+                                <li>Breach counts</li>
+                                <li>Quick links to detailed results</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Interpreting Results -->
+            <section id="interpreting-results" class="guide-section mb-5">
+                <div class="card shadow">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="mb-0"><i class="bi bi-graph-up"></i> Interpreting Investigation Results</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5>Understanding the Results Page</h5>
+                        <p>The investigation results are organized into several key sections:</p>
+
+                        <h6 class="mt-4">1. Investigation Summary</h6>
+                        <p>At the top of the results page, you'll find quick statistics:</p>
+                        <ul>
+                            <li><strong>Email Status:</strong> Valid/Invalid indicator</li>
+                            <li><strong>Data Breaches:</strong> Total number of breaches found</li>
+                            <li><strong>Social Media:</strong> Number of accounts discovered</li>
+                            <li><strong>Confidence Score:</strong> Overall confidence in findings (0-100%)</li>
+                        </ul>
+
+                        <h6 class="mt-4">2. Key Sections</h6>
+                        <div class="interpretation-card">
+                            <strong>Risk Assessment Section:</strong>
+                            <p>Shows overall threat level with risk score, assessment, flags, and recommendations. See Risk Assessment section below for details.</p>
+                        </div>
+
+                        <div class="interpretation-card">
+                            <strong>Email Validation Section:</strong>
+                            <p>Technical validation results showing syntax, domain existence, MX records, disposable/free provider status.</p>
+                        </div>
+
+                        <div class="interpretation-card">
+                            <strong>Data Breaches Section:</strong>
+                            <p>Expandable accordion showing all breaches with full details. Click each breach to see description, date, compromised data types.</p>
+                        </div>
+
+                        <div class="interpretation-card">
+                            <strong>Domain Information Section:</strong>
+                            <p>WHOIS data including registrar, creation date, expiration, country, nameservers.</p>
+                        </div>
+
+                        <div class="interpretation-card">
+                            <strong>DNS Records Section:</strong>
+                            <p>Mail server configuration (MX), authentication records (SPF, DMARC), IP addresses (A records).</p>
+                        </div>
+
+                        <div class="interpretation-card">
+                            <strong>Social Media Accounts Section:</strong>
+                            <p>List of found accounts with clickable links. Separated into "Found" and "Not Found" for clarity.</p>
+                        </div>
+
+                        <div class="interpretation-card">
+                            <strong>Evidence Hash Section:</strong>
+                            <p>SHA-256 hash for legal integrity verification. This ensures results haven't been tampered with.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Risk Assessment -->
+            <section id="risk-assessment" class="guide-section mb-5">
+                <div class="card shadow">
+                    <div class="card-header bg-danger text-white">
+                        <h4 class="mb-0"><i class="bi bi-shield-exclamation"></i> Understanding Risk Assessment</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5>Risk Score Calculation</h5>
+                        <p>The risk score (0-100) is calculated based on multiple factors:</p>
+
+                        <h6 class="mt-4">Risk Score Ranges</h6>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Score Range</th>
+                                    <th>Assessment</th>
+                                    <th>Meaning</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="table-success">
+                                    <td><span class="risk-indicator risk-low"></span>0-39</td>
+                                    <td><strong>LOW RISK</strong></td>
+                                    <td>Email shows minimal suspicious indicators</td>
+                                    <td>Continue investigation with standard procedures</td>
+                                </tr>
+                                <tr class="table-warning">
+                                    <td><span class="risk-indicator risk-medium"></span>40-69</td>
+                                    <td><strong>MODERATE RISK</strong></td>
+                                    <td>Some concerning factors present</td>
+                                    <td>Enhanced scrutiny recommended, verify findings</td>
+                                </tr>
+                                <tr class="table-danger">
+                                    <td><span class="risk-indicator risk-high"></span>70-100</td>
+                                    <td><strong>HIGH RISK</strong></td>
+                                    <td>Multiple serious risk indicators</td>
+                                    <td>Immediate attention, prioritize investigation</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h6 class="mt-4">Risk Factors</h6>
+                        <p>The system evaluates these factors when calculating risk:</p>
+                        <ul>
+                            <li><strong>Data Breaches (+10 per breach):</strong> Each breach increases risk</li>
+                            <li><strong>Recent Breaches (+15):</strong> Breaches within last 2 years</li>
+                            <li><strong>Sensitive Breaches (+20):</strong> Breaches marked as sensitive</li>
+                            <li><strong>Multiple Breach Types (+10):</strong> Compromised across different data types</li>
+                            <li><strong>Disposable Email (+15):</strong> Temporary/throwaway email service</li>
+                            <li><strong>Missing Security Records (+10):</strong> No SPF or DMARC configured</li>
+                            <li><strong>Invalid Email (+30):</strong> Email doesn't exist or isn't deliverable</li>
+                        </ul>
+
+                        <h6 class="mt-4">Risk Flags</h6>
+                        <p>Common risk flags you may encounter:</p>
+                        <div class="list-group">
+                            <div class="list-group-item">
+                                <strong>"Multiple data breaches detected"</strong>
+                                <p class="mb-0 small">Email found in 2+ breaches. Credentials likely compromised.</p>
+                            </div>
+                            <div class="list-group-item">
+                                <strong>"Recent breach involvement"</strong>
+                                <p class="mb-0 small">Breach occurred within last 2 years. Active threat.</p>
+                            </div>
+                            <div class="list-group-item">
+                                <strong>"Sensitive data exposed"</strong>
+                                <p class="mb-0 small">Breach involved sensitive personal information.</p>
+                            </div>
+                            <div class="list-group-item">
+                                <strong>"Email from disposable provider"</strong>
+                                <p class="mb-0 small">Temporary email service used. Often indicates suspicious activity.</p>
+                            </div>
+                            <div class="list-group-item">
+                                <strong>"Domain lacks security records"</strong>
+                                <p class="mb-0 small">No SPF/DMARC configured. Vulnerable to spoofing.</p>
+                            </div>
+                            <div class="list-group-item">
+                                <strong>"Email validation failed"</strong>
+                                <p class="mb-0 small">Email doesn't exist or domain inactive.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Breach Data -->
+            <section id="breach-data" class="guide-section mb-5">
+                <div class="card shadow">
+                    <div class="card-header bg-warning">
+                        <h4 class="mb-0"><i class="bi bi-exclamation-triangle-fill"></i> Understanding Breach Data</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5>Data Breach Information</h5>
+                        <p>Breach data comes from the HaveIBeenPwned (HIBP) database, which tracks public data breaches worldwide.</p>
+
+                        <h6 class="mt-4">Breach Details Explained</h6>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Field</th>
+                                    <th>Description</th>
+                                    <th>Significance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Breach Name</strong></td>
+                                    <td>Name/title of the breached service</td>
+                                    <td>Identifies which service was compromised</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Domain</strong></td>
+                                    <td>Website domain of breached service</td>
+                                    <td>Shows the affected platform</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Breach Date</strong></td>
+                                    <td>When the breach occurred</td>
+                                    <td>Recent breaches are higher priority</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Pwn Count</strong></td>
+                                    <td>Total accounts affected in breach</td>
+                                    <td>Scale of the breach</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Verified</strong></td>
+                                    <td>HIBP has verified the breach authenticity</td>
+                                    <td>Verified breaches are confirmed legitimate</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Sensitive</strong></td>
+                                    <td>Contains sensitive personal information</td>
+                                    <td>Higher risk if marked sensitive</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Retired</strong></td>
+                                    <td>Breach removed from active HIBP database</td>
+                                    <td>Old/questionable breaches may be retired</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h6 class="mt-4">Compromised Data Classes</h6>
+                        <p>Each breach shows what types of data were exposed. Common data classes include:</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul>
+                                    <li><strong>Email addresses</strong> - Email leaked</li>
+                                    <li><strong>Passwords</strong> - Password hashes exposed</li>
+                                    <li><strong>Usernames</strong> - Account usernames</li>
+                                    <li><strong>Names</strong> - Real names</li>
+                                    <li><strong>Phone numbers</strong> - Contact numbers</li>
+                                    <li><strong>Dates of birth</strong> - Birth dates</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul>
+                                    <li><strong>Geographic locations</strong> - Address/location</li>
+                                    <li><strong>IP addresses</strong> - Connection IPs</li>
+                                    <li><strong>Security questions</strong> - Q&A pairs</li>
+                                    <li><strong>Payment info</strong> - Credit cards (partial)</li>
+                                    <li><strong>Social connections</strong> - Friends/contacts</li>
+                                    <li><strong>Private messages</strong> - Communications</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-danger mt-4">
+                            <i class="bi bi-shield-fill-exclamation"></i> <strong>Investigative Note:</strong>
+                            If passwords are in compromised data classes, assume the password has been cracked and is available to threat actors. Advise password changes immediately.
+                        </div>
+
+                        <h6 class="mt-4">How to Use Breach Data in Investigations</h6>
+                        <ol>
+                            <li><strong>Verify Identity:</strong> Cross-reference breach data with suspect's known accounts</li>
+                            <li><strong>Timeline Analysis:</strong> Breach dates can establish account creation timelines</li>
+                            <li><strong>Password Reuse:</strong> If multiple breaches, suspect likely reuses passwords</li>
+                            <li><strong>Account Linking:</strong> Same email in multiple services shows digital footprint</li>
+                            <li><strong>Data Correlation:</strong> Compromised data types may reveal additional information</li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Social Media -->
+            <section id="social-media" class="guide-section mb-5">
+                <div class="card shadow">
+                    <div class="card-header" style="background-color: #008000; color: white;">
+                        <h4 class="mb-0"><i class="bi bi-share"></i> Social Media Account Discovery</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5>Understanding Social Media Results</h5>
+                        <p>The system checks 13+ social media platforms for accounts associated with the email address or derived username.</p>
+
+                        <h6 class="mt-4">Platforms Checked</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <ul>
+                                    <li>GitHub</li>
+                                    <li>GitLab</li>
+                                    <li>LinkedIn</li>
+                                    <li>Twitter/X</li>
+                                    <li>Facebook</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-4">
+                                <ul>
+                                    <li>Instagram</li>
+                                    <li>Reddit</li>
+                                    <li>Pinterest</li>
+                                    <li>Tumblr</li>
+                                    <li>Medium</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-4">
+                                <ul>
+                                    <li>Gravatar</li>
+                                    <li>About.me</li>
+                                    <li>MySpace</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <h6 class="mt-4">Confidence Levels</h6>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Confidence</th>
+                                    <th>Meaning</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="table-success">
+                                    <td><strong>HIGH</strong></td>
+                                    <td>Account confirmed via API or strong indicators</td>
+                                    <td>High probability of account ownership</td>
+                                </tr>
+                                <tr class="table-warning">
+                                    <td><strong>MEDIUM</strong></td>
+                                    <td>Account exists but not directly verified</td>
+                                    <td>Manual verification recommended</td>
+                                </tr>
+                                <tr class="table-info">
+                                    <td><strong>LOW</strong></td>
+                                    <td>Possible match based on HTTP response</td>
+                                    <td>Requires careful verification</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h6 class="mt-4">How to Use Social Media Links</h6>
+                        <ol>
+                            <li><strong>Click "Visit" Button:</strong> Opens account in new tab</li>
+                            <li><strong>Verify Ownership:</strong> Check profile details match investigation subject</li>
+                            <li><strong>Document Findings:</strong> Screenshot relevant profile information</li>
+                            <li><strong>Cross-Reference:</strong> Compare information across different platforms</li>
+                            <li><strong>Check Activity:</strong> Recent posts, connections, interests</li>
+                        </ol>
+
+                        <div class="alert alert-warning mt-4">
+                            <i class="bi bi-exclamation-circle"></i> <strong>Important:</strong>
+                            Social media discovery is based on username matching and public availability. Always manually verify account ownership before drawing conclusions. Some platforms may show false positives if usernames are common.
+                        </div>
+
+                        <h6 class="mt-4">Investigative Tips</h6>
+                        <ul>
+                            <li>Check for username patterns across platforms (e.g., same username everywhere)</li>
+                            <li>Look for profile pictures - same photo across platforms confirms identity</li>
+                            <li>Examine bio/about sections for personal information</li>
+                            <li>Check follower/following lists for connections to other suspects</li>
+                            <li>Note account creation dates for timeline analysis</li>
+                            <li>Archive social media evidence before it can be deleted</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DNS Records -->
+            <section id="dns-records" class="guide-section mb-5">
+                <div class="card shadow">
+                    <div class="card-header bg-secondary text-white">
+                        <h4 class="mb-0"><i class="bi bi-server"></i> DNS Records Explanation</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5>Understanding DNS Records</h5>
+                        <p>DNS (Domain Name System) records provide technical information about the email domain's configuration.</p>
+
+                        <h6 class="mt-4">MX Records (Mail Exchange)</h6>
+                        <p><strong>What it is:</strong> Specifies mail servers that handle email for the domain.</p>
+                        <p><strong>Why it matters:</strong></p>
+                        <ul>
+                            <li>Confirms domain can receive email (valid email provider)</li>
+                            <li>Shows which email service is used (Gmail, Outlook, custom server)</li>
+                            <li>Priority numbers indicate failover order</li>
+                        </ul>
+                        <p><strong>Investigation Use:</strong> Identify email provider to potentially request legal assistance or understand infrastructure.</p>
+
+                        <h6 class="mt-4">SPF Record (Sender Policy Framework)</h6>
+                        <p><strong>What it is:</strong> Lists authorized mail servers for the domain.</p>
+                        <p><strong>Why it matters:</strong></p>
+                        <ul>
+                            <li>Prevents email spoofing</li>
+                            <li>Shows domain owner cares about security</li>
+                            <li>Missing SPF = domain vulnerable to impersonation</li>
+                        </ul>
+                        <div class="interpretation-card">
+                            <strong>Example SPF Record:</strong>
+                            <pre class="mb-0"><code>v=spf1 include:_spf.google.com ~all</code></pre>
+                            <p class="mb-0 mt-2 small"><strong>Meaning:</strong> Domain uses Google mail servers. "~all" means soft fail for other servers.</p>
+                        </div>
+
+                        <h6 class="mt-4">DMARC Record (Domain-based Message Authentication)</h6>
+                        <p><strong>What it is:</strong> Policy for handling failed authentication.</p>
+                        <p><strong>Why it matters:</strong></p>
+                        <ul>
+                            <li>Tells receiving servers what to do with suspicious emails</li>
+                            <li>Policies: none, quarantine, reject</li>
+                            <li>Missing DMARC = no enforcement of SPF/DKIM</li>
+                        </ul>
+                        <div class="interpretation-card">
+                            <strong>Example DMARC Record:</strong>
+                            <pre class="mb-0"><code>v=DMARC1; p=reject; rua=mailto:dmarc@example.com</code></pre>
+                            <p class="mb-0 mt-2 small"><strong>Meaning:</strong> Reject emails failing authentication, send reports to specified address.</p>
+                        </div>
+
+                        <h6 class="mt-4">A Records (IP Addresses)</h6>
+                        <p><strong>What it is:</strong> Maps domain name to IP address.</p>
+                        <p><strong>Why it matters:</strong></p>
+                        <ul>
+                            <li>Shows where domain is hosted</li>
+                            <li>Can geolocate server</li>
+                            <li>Multiple IPs indicate load balancing or CDN</li>
+                        </ul>
+
+                        <h6 class="mt-4">Security Assessment from DNS</h6>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Configuration</th>
+                                    <th>Security Level</th>
+                                    <th>Implication</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="table-success">
+                                    <td>SPF + DMARC Configured</td>
+                                    <td><strong>GOOD</strong></td>
+                                    <td>Domain has anti-spoofing protection</td>
+                                </tr>
+                                <tr class="table-warning">
+                                    <td>SPF Only</td>
+                                    <td><strong>MODERATE</strong></td>
+                                    <td>Some protection, but not enforced</td>
+                                </tr>
+                                <tr class="table-danger">
+                                    <td>No SPF/DMARC</td>
+                                    <td><strong>POOR</strong></td>
+                                    <td>Domain vulnerable to email spoofing</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Email Validation -->
+            <section id="email-validation" class="guide-section mb-5">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0"><i class="bi bi-check2-square"></i> Email Validation Details</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5>Validation Checks Performed</h5>
+
+                        <h6 class="mt-4">1. Syntax Valid</h6>
+                        <p>Checks if email follows proper format (localpart@domain.tld).</p>
+                        <ul>
+                            <li><strong>Valid:</strong> Proper email format</li>
+                            <li><strong>Invalid:</strong> Malformed email address</li>
+                        </ul>
+
+                        <h6 class="mt-4">2. Domain Exists</h6>
+                        <p>Verifies the domain (part after @) actually exists via DNS lookup.</p>
+                        <ul>
+                            <li><strong>Yes:</strong> Domain is registered and active</li>
+                            <li><strong>No:</strong> Domain doesn't exist or expired</li>
+                        </ul>
+
+                        <h6 class="mt-4">3. MX Records Exist</h6>
+                        <p>Checks if domain has mail servers configured.</p>
+                        <ul>
+                            <li><strong>Found:</strong> Domain can receive email</li>
+                            <li><strong>Not Found:</strong> Domain can't receive email (no mail servers)</li>
+                        </ul>
+
+                        <h6 class="mt-4">4. Disposable Email</h6>
+                        <p>Identifies if email is from a temporary/disposable email service.</p>
+                        <ul>
+                            <li><strong>Yes:</strong> From services like 10minutemail, guerrillamail, mailinator</li>
+                            <li><strong>No:</strong> From legitimate email provider</li>
+                        </ul>
+                        <div class="alert alert-warning">
+                            <strong>Investigative Note:</strong> Disposable emails are often used to hide identity or avoid tracking. High suspicion indicator.
+                        </div>
+
+                        <h6 class="mt-4">5. Free Provider</h6>
+                        <p>Detects if email is from free providers (Gmail, Yahoo, Outlook, etc.)</p>
+                        <ul>
+                            <li><strong>Yes:</strong> Free email service</li>
+                            <li><strong>No:</strong> Custom domain or paid service</li>
+                        </ul>
+
+                        <h6 class="mt-4">Validation Combinations</h6>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Scenario</th>
+                                    <th>Meaning</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="table-success">
+                                    <td>Syntax Valid + Domain Exists + MX Records</td>
+                                    <td><strong>Fully Valid Email</strong> - Can send/receive</td>
+                                </tr>
+                                <tr class="table-warning">
+                                    <td>Syntax Valid + Domain Exists + No MX</td>
+                                    <td><strong>Domain exists but no email</strong> - Website only</td>
+                                </tr>
+                                <tr class="table-danger">
+                                    <td>Syntax Valid + No Domain</td>
+                                    <td><strong>Fake Email</strong> - Domain doesn't exist</td>
+                                </tr>
+                                <tr class="table-danger">
+                                    <td>Disposable Email = Yes</td>
+                                    <td><strong>Temporary Account</strong> - Likely trying to hide identity</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Best Practices -->
+            <section id="best-practices" class="guide-section mb-5">
+                <div class="card shadow">
+                    <div class="card-header" style="background-color: #000663; color: white;">
+                        <h4 class="mb-0"><i class="bi bi-star-fill"></i> Best Practices</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5>Investigation Best Practices</h5>
+
+                        <h6 class="mt-4">1. Case Management</h6>
+                        <ul>
+                            <li>Always link investigations to proper cases</li>
+                            <li>Use descriptive case titles for easy reference</li>
+                            <li>Keep cases organized by suspect, crime type, or date</li>
+                        </ul>
+
+                        <h6 class="mt-4">2. Documentation</h6>
+                        <ul>
+                            <li>Download PDF reports immediately after investigation</li>
+                            <li>Save JSON exports for technical analysis</li>
+                            <li>Screenshot social media profiles before they can be deleted</li>
+                            <li>Note the evidence hash for legal proceedings</li>
+                        </ul>
+
+                        <h6 class="mt-4">3. Verification</h6>
+                        <ul>
+                            <li>Always manually verify social media account ownership</li>
+                            <li>Cross-reference findings with other investigation sources</li>
+                            <li>Don't rely solely on automated results</li>
+                            <li>Verify breach data against multiple sources when possible</li>
+                        </ul>
+
+                        <h6 class="mt-4">4. Privacy & Ethics</h6>
+                        <ul>
+                            <li>Only investigate with proper legal authorization</li>
+                            <li>Respect privacy laws and regulations</li>
+                            <li>Don't access private accounts without warrants</li>
+                            <li>Maintain chain of custody for all evidence</li>
+                        </ul>
+
+                        <h6 class="mt-4">5. Time Management</h6>
+                        <ul>
+                            <li>Use bulk investigations for multiple emails</li>
+                            <li>Be aware of API rate limits (1.5s per HIBP query)</li>
+                            <li>Don't close browser during bulk operations</li>
+                            <li>Schedule large bulk investigations during low-activity periods</li>
+                        </ul>
+
+                        <h6 class="mt-4">6. Report Generation</h6>
+                        <ul>
+                            <li>Generate PDF reports for official documentation</li>
+                            <li>Include all relevant sections in reports</li>
+                            <li>Verify evidence hash matches between PDF and database</li>
+                            <li>Store reports securely with proper access controls</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Legal Considerations -->
+            <section id="legal-considerations" class="guide-section mb-5">
+                <div class="card shadow border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h4 class="mb-0"><i class="bi bi-gavel"></i> Legal Considerations</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5>Legal & Compliance Guidelines</h5>
+
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-triangle-fill"></i> <strong>IMPORTANT:</strong>
+                            All investigations must comply with Zambian law and Police regulations. Unauthorized access to computer systems or accounts is illegal.
+                        </div>
+
+                        <h6 class="mt-4">Authorization Requirements</h6>
+                        <ul>
+                            <li>Valid case assignment before conducting investigations</li>
+                            <li>Proper supervisory approval for sensitive investigations</li>
+                            <li>Court orders or warrants for accessing private data</li>
+                            <li>Legal basis for collecting and storing investigation data</li>
+                        </ul>
+
+                        <h6 class="mt-4">Evidence Handling</h6>
+                        <ul>
+                            <li><strong>Chain of Custody:</strong> Document all evidence handling</li>
+                            <li><strong>Evidence Hash:</strong> SHA-256 hash ensures integrity</li>
+                            <li><strong>Timestamps:</strong> All investigations are timestamped</li>
+                            <li><strong>Investigator Identity:</strong> All actions logged with badge number</li>
+                            <li><strong>Audit Trail:</strong> Complete audit log maintained</li>
+                        </ul>
+
+                        <h6 class="mt-4">Admissibility in Court</h6>
+                        <p>CyberTrace evidence is designed to be court-admissible:</p>
+                        <ul>
+                            <li>PDF reports include investigator credentials</li>
+                            <li>Evidence hash verifies data integrity</li>
+                            <li>Timestamps establish when evidence was collected</li>
+                            <li>Audit logs show complete investigation history</li>
+                            <li>Sources clearly identified (HIBP, WHOIS, DNS)</li>
+                        </ul>
+
+                        <h6 class="mt-4">Data Privacy</h6>
+                        <ul>
+                            <li>Investigate only with legal authorization</li>
+                            <li>Protect investigation data from unauthorized access</li>
+                            <li>Don't share reports outside authorized personnel</li>
+                            <li>Mark all reports as CONFIDENTIAL</li>
+                            <li>Comply with data protection regulations</li>
+                        </ul>
+
+                        <h6 class="mt-4">Prohibited Actions</h6>
+                        <div class="alert alert-danger">
+                            <strong>DO NOT:</strong>
+                            <ul class="mb-0">
+                                <li>Attempt to access email accounts without authorization</li>
+                                <li>Contact suspects directly using discovered information</li>
+                                <li>Share investigation results on social media</li>
+                                <li>Use CyberTrace for personal investigations</li>
+                                <li>Modify or tamper with evidence data</li>
+                                <li>Investigate colleagues without proper authorization</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Troubleshooting -->
+            <section id="troubleshooting" class="guide-section mb-5">
+                <div class="card shadow">
+                    <div class="card-header bg-warning">
+                        <h4 class="mb-0"><i class="bi bi-wrench"></i> Troubleshooting</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5>Common Issues & Solutions</h5>
+
+                        <div class="mb-4">
+                            <h6>Investigation Failed / Error Messages</h6>
+                            <p><strong>Possible Causes:</strong></p>
+                            <ul>
+                                <li>API rate limit exceeded (HaveIBeenPwned: 1 request per 1.5 seconds)</li>
+                                <li>Network connectivity issues</li>
+                                <li>Invalid email address format</li>
+                                <li>Domain doesn't exist</li>
+                            </ul>
+                            <p><strong>Solutions:</strong></p>
+                            <ul>
+                                <li>Wait 2-3 minutes before retrying</li>
+                                <li>Verify email address is correct</li>
+                                <li>Check internet connection</li>
+                                <li>Contact system administrator if persistent</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6>Bulk Investigation Stuck / Not Completing</h6>
+                            <p><strong>Possible Causes:</strong></p>
+                            <ul>
+                                <li>Too many emails (>50)</li>
+                                <li>Browser timeout</li>
+                                <li>Network interruption</li>
+                            </ul>
+                            <p><strong>Solutions:</strong></p>
+                            <ul>
+                                <li>Reduce number of emails to 25-50 range</li>
+                                <li>Keep browser window open during processing</li>
+                                <li>Check partial results in case investigation page</li>
+                                <li>Re-run failed emails individually</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6>Social Media Links Not Working</h6>
+                            <p><strong>Possible Causes:</strong></p>
+                            <ul>
+                                <li>Account deleted after discovery</li>
+                                <li>Platform changed URL structure</li>
+                                <li>False positive detection</li>
+                            </ul>
+                            <p><strong>Solutions:</strong></p>
+                            <ul>
+                                <li>Manually search platform for username</li>
+                                <li>Check confidence level (LOW confidence = verify manually)</li>
+                                <li>Use multiple search methods</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6>PDF Report Generation Failed</h6>
+                            <p><strong>Possible Causes:</strong></p>
+                            <ul>
+                                <li>Server resource constraints</li>
+                                <li>Missing logo file</li>
+                                <li>Large result set</li>
+                            </ul>
+                            <p><strong>Solutions:</strong></p>
+                            <ul>
+                                <li>Retry PDF generation</li>
+                                <li>Use JSON export as alternative</li>
+                                <li>Contact system administrator</li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6>No Cases Available for Selection</h6>
+                            <p><strong>Possible Causes:</strong></p>
+                            <ul>
+                                <li>No cases assigned to you</li>
+                                <li>All your cases are closed</li>
+                                <li>Permission issues</li>
+                            </ul>
+                            <p><strong>Solutions:</strong></p>
+                            <ul>
+                                <li>Create a new case first</li>
+                                <li>Contact supervisor for case assignment</li>
+                                <li>Verify your user permissions</li>
+                            </ul>
+                        </div>
+
+                        <div class="alert alert-info mt-4">
+                            <i class="bi bi-headset"></i> <strong>Need Help?</strong>
+                            <p class="mb-0">Contact the Cybercrime Investigation Unit IT Support or your supervisor for additional assistance.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+</div>
+
+<script>
+// Smooth scrolling for navigation links
+document.querySelectorAll('.guide-nav .nav-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href');
+        const targetElement = document.querySelector(targetId);
+        if (targetElement) {
+            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            // Update active state
+            document.querySelectorAll('.guide-nav .nav-link').forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+        }
+    });
+});
+
+// Update active state on scroll
+window.addEventListener('scroll', function() {
+    const sections = document.querySelectorAll('.guide-section');
+    const navLinks = document.querySelectorAll('.guide-nav .nav-link');
+
+    let current = '';
+    sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.clientHeight;
+        if (pageYOffset >= sectionTop - 150) {
+            current = section.getAttribute('id');
+        }
+    });
+
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) {
+            link.classList.add('active');
+        }
+    });
+});
+</script>
+{% endblock %}
