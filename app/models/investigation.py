@@ -236,6 +236,53 @@ class Investigation(db.Model):
             if tx_count:
                 findings.append(f"{tx_count} transactions")
 
+        elif self.investigation_type == 'financial':
+            tx_count = self.processed_results.get('transaction_count', 0)
+            if tx_count:
+                findings.append(f"{tx_count} transactions analyzed")
+            mule_count = self.processed_results.get('mule_accounts_detected', 0)
+            if mule_count:
+                findings.append(f"{mule_count} suspected mule accounts")
+            total = self.processed_results.get('total_amount_traced')
+            if total:
+                findings.append(f"Total traced: ZMW {total:,.2f}")
+
+        elif self.investigation_type == 'sim_swap':
+            swap_count = self.processed_results.get('swap_count', 0)
+            if swap_count:
+                findings.append(f"{swap_count} SIM swap events detected")
+            risk = self.processed_results.get('risk_level')
+            if risk:
+                findings.append(f"Risk level: {risk}")
+
+        elif self.investigation_type == 'messaging':
+            msg_count = self.processed_results.get('message_count', 0)
+            if msg_count:
+                findings.append(f"{msg_count} messages analyzed")
+            links = self.processed_results.get('extracted_links', [])
+            if links:
+                findings.append(f"{len(links)} URLs extracted")
+            phones = self.processed_results.get('extracted_phones', [])
+            if phones:
+                findings.append(f"{len(phones)} phone numbers extracted")
+
+        elif self.investigation_type in ('image_forensics', 'document_forensics'):
+            if self.processed_results.get('manipulation_detected'):
+                findings.append("Potential manipulation detected")
+            if self.processed_results.get('gps_coordinates'):
+                findings.append("GPS coordinates found")
+            device = self.processed_results.get('device_info')
+            if device:
+                findings.append(f"Device: {device}")
+
+        elif self.investigation_type == 'social_preservation':
+            platform = self.processed_results.get('platform')
+            if platform:
+                findings.append(f"Content preserved from {platform}")
+            flags = self.processed_results.get('content_flags', [])
+            if flags:
+                findings.append(f"{len(flags)} content flags raised")
+
         return findings
 
     def to_dict(self, include_relationships=False):
@@ -287,7 +334,14 @@ class Investigation(db.Model):
             'breach',
             'crypto',
             'metadata',
-            'geolocation'
+            'geolocation',
+            'financial',
+            'sim_swap',
+            'messaging',
+            'image_forensics',
+            'document_forensics',
+            'social_preservation',
+            'correlation'
         ]
 
     @property

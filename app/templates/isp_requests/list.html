@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}ISP/Telco Requests{% endblock %}
+{% block page_title %}ISP/Telco Requests{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-primary">{{ stats.total|default(0) }}</h3>
+                <p class="mb-0"><i class="bi bi-file-text"></i> Total Requests</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-warning">{{ stats.pending|default(0) }}</h3>
+                <p class="mb-0"><i class="bi bi-hourglass-split"></i> Pending</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-danger">{{ stats.overdue|default(0) }}</h3>
+                <p class="mb-0"><i class="bi bi-exclamation-circle"></i> Overdue</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-success">{{ stats.fulfilled|default(0) }}</h3>
+                <p class="mb-0"><i class="bi bi-check-circle"></i> Fulfilled</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Requests Table -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-building"></i> ISP/Telco Data Requests</h5>
+            <a href="{{ url_for('isp_requests.create_request') }}" class="btn btn-light btn-sm"><i class="bi bi-plus-circle"></i> New Request</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <!-- Filter -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <select class="form-select form-select-sm" id="filterStatus">
+                    <option value="">All Statuses</option>
+                    <option value="draft">Draft</option>
+                    <option value="submitted">Submitted</option>
+                    <option value="acknowledged">Acknowledged</option>
+                    <option value="fulfilled">Fulfilled</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="overdue">Overdue</option>
+                </select>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Request #</th>
+                        <th>Case</th>
+                        <th>Provider</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>SLA Deadline</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for request in requests|default([]) %}
+                    <tr>
+                        <td><strong>{{ request.request_number }}</strong></td>
+                        <td><a href="{{ url_for('cases.view_case', case_id=request.case_id) }}">{{ request.case_number }}</a></td>
+                        <td>{{ request.provider_name }}</td>
+                        <td><span class="badge bg-info">{{ request.request_type }}</span></td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if request.status == 'fulfilled' else ('danger' if request.status in ['rejected', 'overdue'] else ('warning' if request.status == 'submitted' else 'secondary')) }}">
+                                {{ request.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if request.sla_deadline %}
+                            <span class="{{ 'text-danger fw-bold' if request.is_overdue else '' }}">{{ request.sla_deadline.strftime('%Y-%m-%d') }}</span>
+                            {% else %}
+                            N/A
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('isp_requests.view_request', request_id=request.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if not requests %}
+        <div class="text-center py-5">
+            <i class="bi bi-building display-1 text-muted"></i>
+            <h5 class="text-muted mt-3">No ISP requests yet</h5>
+            <a href="{{ url_for('isp_requests.create_request') }}" class="btn btn-primary mt-2"><i class="bi bi-plus-circle"></i> Create Request</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

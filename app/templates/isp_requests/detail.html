@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}ISP Request Detail{% endblock %}
+{% block page_title %}ISP Request Detail{% endblock %}
+
+{% block content %}
+<!-- Request Header -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-file-text"></i> Request {{ request.request_number }}</h5>
+            <span class="badge bg-{{ 'success' if request.status == 'fulfilled' else ('danger' if request.status in ['rejected', 'overdue'] else ('warning' if request.status == 'submitted' else 'secondary')) }} fs-6">
+                {{ request.status|title }}
+            </span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table table-sm">
+                    <tr><th style="width:40%">Case</th><td><a href="{{ url_for('cases.view_case', case_id=request.case_id) }}">{{ request.case_number }}</a></td></tr>
+                    <tr><th>Provider</th><td>{{ request.provider_name }}</td></tr>
+                    <tr><th>Request Type</th><td><span class="badge bg-info">{{ request.request_type|replace('_', ' ')|title }}</span></td></tr>
+                    <tr><th>Target</th><td><code>{{ request.target_identifier }}</code></td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table class="table table-sm">
+                    <tr><th style="width:40%">Legal Authority</th><td>{{ request.legal_authority }}</td></tr>
+                    <tr><th>Created</th><td>{{ request.created_at.strftime('%Y-%m-%d %H:%M') if request.created_at else 'N/A' }}</td></tr>
+                    <tr><th>Data Period</th><td>{{ request.date_from|default('N/A') }} to {{ request.date_to|default('N/A') }}</td></tr>
+                    <tr><th>SLA Deadline</th><td>
+                        {% if request.sla_deadline %}
+                        <span class="{{ 'text-danger fw-bold' if request.is_overdue else '' }}">{{ request.sla_deadline.strftime('%Y-%m-%d') }}</span>
+                        {% else %}N/A{% endif %}
+                    </td></tr>
+                </table>
+            </div>
+        </div>
+        <h6>Description / Justification</h6>
+        <div class="bg-light p-3 rounded">{{ request.description }}</div>
+    </div>
+</div>
+
+<!-- Status Timeline -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0"><i class="bi bi-clock-history"></i> Status Timeline</h6>
+    </div>
+    <div class="card-body">
+        {% for status_event in request.status_history|default([]) %}
+        <div class="d-flex mb-3">
+            <div class="flex-shrink-0">
+                <div class="bg-{{ 'success' if status_event.status == 'fulfilled' else 'primary' }} text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:36px;height:36px;">
+                    <i class="bi bi-{{ 'check' if status_event.status == 'fulfilled' else 'clock' }}"></i>
+                </div>
+            </div>
+            <div class="flex-grow-1 ms-3">
+                <strong>{{ status_event.status|title }}</strong> - {{ status_event.date }}
+                <p class="mb-0 small text-muted">{{ status_event.note|default('') }}</p>
+            </div>
+        </div>
+        {% endfor %}
+        {% if not request.status_history %}
+        <p class="text-muted mb-0">Request created. Awaiting submission.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Response Upload -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0"><i class="bi bi-cloud-upload"></i> Response / Data Upload</h6>
+    </div>
+    <div class="card-body">
+        {% if request.response_files %}
+        <ul class="list-group mb-3">
+            {% for file in request.response_files %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-file-earmark"></i> {{ file.filename }}</span>
+                <a href="{{ file.url }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-download"></i> Download</a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        <form method="POST" action="#" title="Coming soon" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="mb-3">
+                <input type="file" class="form-control" name="response_file" accept=".csv,.xlsx,.pdf,.zip,.doc,.docx">
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-upload"></i> Upload Response Data</button>
+        </form>
+    </div>
+</div>
+
+<!-- Notes -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0"><i class="bi bi-sticky"></i> Notes</h6>
+    </div>
+    <div class="card-body">
+        {% for note in request.notes|default([]) %}
+        <div class="border-bottom pb-2 mb-2">
+            <strong>{{ note.author }}</strong> <small class="text-muted">{{ note.date }}</small>
+            <p class="mb-0">{{ note.text }}</p>
+        </div>
+        {% endfor %}
+        <form method="POST" action="#" title="Coming soon">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="mb-2">
+                <textarea class="form-control" name="note_text" rows="2" placeholder="Add a note..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-plus-circle"></i> Add Note</button>
+        </form>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2">
+    <a href="{{ url_for('isp_requests.list_requests') }}" class="btn btn-primary"><i class="bi bi-arrow-left"></i> Back to Requests</a>
+    <a href="{{ url_for('cases.view_case', case_id=request.case_id) }}" class="btn btn-outline-secondary"><i class="bi bi-folder"></i> View Case</a>
+</div>
+{% endblock %}

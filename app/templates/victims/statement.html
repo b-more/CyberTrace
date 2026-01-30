@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Victim Statement{% endblock %}
+{% block page_title %}Record Victim Statement{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-pencil-square"></i> Record Statement: {{ victim.full_name }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> <strong>Record the victim's statement for the case file. Statements can be written, audio, or video format.</strong>
+                </div>
+
+                <!-- Victim Summary -->
+                <div class="bg-light p-3 rounded mb-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Victim:</strong> {{ victim.full_name }}</p>
+                            <p class="mb-0"><strong>NRC:</strong> {{ victim.nrc_number|default('N/A') }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Case:</strong> {{ victim.case_number }}</p>
+                            <p class="mb-0"><strong>Loss:</strong> {{ victim.loss_currency|default('ZMW') }} {{ victim.loss_amount|default(0)|round(2) }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ url_for('victims.add_statement', victim_id=victim.id) }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="mb-3">
+                        <label for="statement_text" class="form-label"><i class="bi bi-text-paragraph"></i> Statement Text <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="statement_text" name="statement_text" rows="10" placeholder="Enter the victim's statement here..." required>{{ victim.statement_text|default('') }}</textarea>
+                        <div class="form-text">Record the victim's account of events in their own words.</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="statement_format" class="form-label"><i class="bi bi-file-earmark"></i> Statement Format <span class="text-danger">*</span></label>
+                            <select class="form-select" id="statement_format" name="statement_format" required>
+                                <option value="written" {{ 'selected' if victim.statement_format == 'written' else '' }}>Written</option>
+                                <option value="audio" {{ 'selected' if victim.statement_format == 'audio' else '' }}>Audio Recording</option>
+                                <option value="video" {{ 'selected' if victim.statement_format == 'video' else '' }}>Video Recording</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="statement_date" class="form-label"><i class="bi bi-calendar"></i> Statement Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="statement_date" name="statement_date" value="{{ victim.statement_date|default('') }}" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="statement_file" class="form-label"><i class="bi bi-file-earmark-arrow-up"></i> Upload Statement File (Optional)</label>
+                        <input type="file" class="form-control" id="statement_file" name="statement_file" accept=".pdf,.doc,.docx,.mp3,.wav,.mp4,.avi,.mov">
+                        <div class="form-text">Upload audio/video recording or signed document. Max 200MB.</div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-save"></i> Save Statement</button>
+                        <a href="{{ url_for('victims.view_victim', victim_id=victim.id) }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to Victim Details</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

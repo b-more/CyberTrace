@@ -115,6 +115,17 @@ def register_blueprints(app):
     from app.routes.api import api_bp
     from app.routes.admin import admin_bp
     from app.routes.threat_intel import threat_intel_bp
+    from app.routes.domain_ip import domain_ip_bp
+    from app.routes.crypto import crypto_bp
+    from app.routes.financial import financial_bp
+    from app.routes.sim_swap import sim_swap_bp
+    from app.routes.messaging import messaging_bp
+    from app.routes.forensics import forensics_bp
+    from app.routes.social_preservation import social_pres_bp
+    from app.routes.correlation import correlation_bp
+    from app.routes.isp_requests import isp_requests_bp
+    from app.routes.victims import victims_bp
+    from app.routes.analytics import analytics_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
@@ -123,6 +134,17 @@ def register_blueprints(app):
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(threat_intel_bp)
+    app.register_blueprint(domain_ip_bp, url_prefix='/investigations')
+    app.register_blueprint(crypto_bp, url_prefix='/investigations/crypto')
+    app.register_blueprint(financial_bp, url_prefix='/investigations/financial')
+    app.register_blueprint(sim_swap_bp, url_prefix='/investigations/sim-swap')
+    app.register_blueprint(messaging_bp, url_prefix='/investigations/messaging')
+    app.register_blueprint(forensics_bp, url_prefix='/investigations/forensics')
+    app.register_blueprint(social_pres_bp, url_prefix='/investigations/social-preservation')
+    app.register_blueprint(correlation_bp, url_prefix='/intelligence/correlation')
+    app.register_blueprint(isp_requests_bp, url_prefix='/requests')
+    app.register_blueprint(victims_bp, url_prefix='/victims')
+    app.register_blueprint(analytics_bp, url_prefix='/analytics')
 
     # Register root route
     @app.route('/')
@@ -241,7 +263,16 @@ def register_context_processors(app):
                 'breach_checker': app.config['ENABLE_BREACH_CHECKER'],
                 'crypto_tracer': app.config['ENABLE_CRYPTO_TRACER'],
                 'metadata_extractor': app.config['ENABLE_METADATA_EXTRACTOR'],
-                'geolocation': app.config['ENABLE_GEOLOCATION']
+                'geolocation': app.config['ENABLE_GEOLOCATION'],
+                'financial_tracer': app.config['ENABLE_FINANCIAL_TRACER'],
+                'sim_swap_detection': app.config['ENABLE_SIM_SWAP_DETECTION'],
+                'messaging_forensics': app.config['ENABLE_MESSAGING_FORENSICS'],
+                'image_forensics': app.config['ENABLE_IMAGE_FORENSICS'],
+                'social_preservation': app.config['ENABLE_SOCIAL_PRESERVATION'],
+                'correlation_engine': app.config['ENABLE_CORRELATION_ENGINE'],
+                'isp_requests': app.config['ENABLE_ISP_REQUESTS'],
+                'victim_management': app.config['ENABLE_VICTIM_MANAGEMENT'],
+                'analytics_dashboard': app.config['ENABLE_ANALYTICS_DASHBOARD'],
             }
         }
 
@@ -289,6 +320,9 @@ def register_request_handlers(app):
 def init_db():
     """Initialize database - create all tables"""
     from app.models import user, case, investigation, evidence, audit_log, threat_intel
+    from app.models import financial_transaction, sim_swap, messaging_forensics
+    from app.models import image_forensics, social_preservation, correlation
+    from app.models import isp_request, victim
     db.create_all()
 
 

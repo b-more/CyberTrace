@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Crypto Wallet Trace Results{% endblock %}
+{% block page_title %}Crypto Wallet Trace Results{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-warning text-dark">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-currency-bitcoin"></i> {{ investigation.target_identifier }}</h5>
+            <span class="badge bg-{{ 'success' if investigation.status == 'completed' else 'danger' }}">{{ investigation.status|title }}</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Case:</strong> {{ investigation.case.case_number }}</p>
+                <p><strong>Investigator:</strong> {{ investigation.investigator.full_name }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Date:</strong> {{ investigation.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p><strong>Duration:</strong> {{ investigation.execution_time|round(2) if investigation.execution_time else 'N/A' }}s</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Wallet Summary -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h6 class="mb-0"><i class="bi bi-wallet2"></i> Wallet Summary</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3 text-center mb-3">
+                <h4 class="text-primary">{{ results.wallet.balance|default('0') }}</h4>
+                <p class="mb-0"><small>Current Balance</small></p>
+            </div>
+            <div class="col-md-3 text-center mb-3">
+                <h4 class="text-info">{{ results.wallet.tx_count|default(0) }}</h4>
+                <p class="mb-0"><small>Total Transactions</small></p>
+            </div>
+            <div class="col-md-3 text-center mb-3">
+                <h4 class="text-muted">{{ results.wallet.first_seen|default('N/A') }}</h4>
+                <p class="mb-0"><small>First Seen</small></p>
+            </div>
+            <div class="col-md-3 text-center mb-3">
+                <h4 class="text-muted">{{ results.wallet.last_seen|default('N/A') }}</h4>
+                <p class="mb-0"><small>Last Seen</small></p>
+            </div>
+        </div>
+        {% if results.wallet.exchange %}
+        <div class="alert alert-info mt-2">
+            <i class="bi bi-bank"></i> <strong>Exchange Identified:</strong>
+            <span class="badge bg-info text-white fs-6">{{ results.wallet.exchange }}</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Risk Score -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-{{ 'danger' if results.risk_score|default(0) > 70 else ('warning' if results.risk_score|default(0) > 40 else 'success') }} text-{{ 'dark' if results.risk_score|default(0) > 40 and results.risk_score|default(0) <= 70 else 'white' }}">
+        <h6 class="mb-0"><i class="bi bi-shield-exclamation"></i> Risk Assessment</h6>
+    </div>
+    <div class="card-body text-center">
+        <h2 class="text-{{ 'danger' if results.risk_score|default(0) > 70 else ('warning' if results.risk_score|default(0) > 40 else 'success') }}">
+            {{ results.risk_score|default(0) }}/100
+        </h2>
+        <p class="mb-0">
+            {% if results.risk_score|default(0) > 70 %}
+            <span class="badge bg-danger fs-6">HIGH RISK</span>
+            {% elif results.risk_score|default(0) > 40 %}
+            <span class="badge bg-warning text-dark fs-6">MEDIUM RISK</span>
+            {% else %}
+            <span class="badge bg-success fs-6">LOW RISK</span>
+            {% endif %}
+        </p>
+        {% if results.risk_factors %}
+        <ul class="list-unstyled mt-3 text-start">
+            {% for factor in results.risk_factors %}
+            <li><i class="bi bi-exclamation-triangle text-warning"></i> {{ factor }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Transaction Table -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h6 class="mb-0"><i class="bi bi-table"></i> Recent Transactions</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Amount</th>
+                        <th>TX Hash</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in results.transactions|default([]) %}
+                    <tr>
+                        <td>{{ tx.date }}</td>
+                        <td><span class="badge bg-{{ 'success' if tx.type == 'incoming' else 'danger' }}">{{ tx.type|title }}</span></td>
+                        <td><code title="{{ tx.from_address }}">{{ tx.from_address[:10] }}...</code></td>
+                        <td><code title="{{ tx.to_address }}">{{ tx.to_address[:10] }}...</code></td>
+                        <td>{{ tx.amount }} {{ tx.currency|default('') }}</td>
+                        <td><code title="{{ tx.hash }}">{{ tx.hash[:12] }}...</code></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Evidence Hash -->
+<div class="card shadow mb-4">
+    <div class="card-header"><h6 class="mb-0"><i class="bi bi-file-lock"></i> Evidence Integrity</h6></div>
+    <div class="card-body">
+        <pre class="bg-light p-2 rounded"><code>{{ investigation.evidence_hash }}</code></pre>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2">
+    <a href="{{ url_for('crypto.search') }}" class="btn btn-warning"><i class="bi bi-search"></i> New Wallet Trace</a>
+    <a href="{{ url_for('crypto.tx_graph', investigation_id=investigation.id) }}" class="btn btn-primary"><i class="bi bi-diagram-3"></i> View Transaction Graph</a>
+    <a href="#" title="Coming soon" class="btn btn-info text-white"><i class="bi bi-diagram-2"></i> Wallet Clusters</a>
+    <a href="{{ url_for('cases.view_case', case_id=investigation.case_id) }}" class="btn btn-outline-secondary"><i class="bi bi-folder"></i> View Case</a>
+</div>
+{% endblock %}

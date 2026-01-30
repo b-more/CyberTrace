@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Victim Management{% endblock %}
+{% block page_title %}Victim Management{% endblock %}
+
+{% block content %}
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-primary">{{ stats.total_victims|default(0) }}</h3>
+                <p class="mb-0"><i class="bi bi-people"></i> Total Victims</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-danger">ZMW {{ stats.total_losses|default(0)|round(2) }}</h3>
+                <p class="mb-0"><i class="bi bi-cash"></i> Total Losses</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-warning">{{ stats.pending_statements|default(0) }}</h3>
+                <p class="mb-0"><i class="bi bi-pencil-square"></i> Pending Statements</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-info">{{ stats.by_type|default({})|length }}</h3>
+                <p class="mb-0"><i class="bi bi-tags"></i> Loss Types</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Victims Table -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-people"></i> Victims Register</h5>
+            <a href="{{ url_for('victims.create_victim') }}" class="btn btn-light btn-sm"><i class="bi bi-plus-circle"></i> Add Victim</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Case</th>
+                        <th>Loss Amount</th>
+                        <th>Loss Type</th>
+                        <th>Statement</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for victim in victims|default([]) %}
+                    <tr>
+                        <td><strong>{{ victim.full_name }}</strong></td>
+                        <td><a href="{{ url_for('cases.view_case', case_id=victim.case_id) }}">{{ victim.case_number }}</a></td>
+                        <td>{{ victim.loss_currency|default('ZMW') }} {{ victim.loss_amount|default(0)|round(2) }}</td>
+                        <td><span class="badge bg-secondary">{{ victim.loss_type|default('N/A') }}</span></td>
+                        <td>
+                            {% if victim.statement_recorded %}
+                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Recorded</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('victims.view_victim', victim_id=victim.id) }}" class="btn btn-outline-primary"><i class="bi bi-eye"></i></a>
+                                <a href="{{ url_for('victims.add_statement', victim_id=victim.id) }}" class="btn btn-outline-secondary"><i class="bi bi-pencil-square"></i></a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if not victims %}
+        <div class="text-center py-5">
+            <i class="bi bi-people display-1 text-muted"></i>
+            <h5 class="text-muted mt-3">No victims registered yet</h5>
+            <a href="{{ url_for('victims.create_victim') }}" class="btn btn-primary mt-2"><i class="bi bi-plus-circle"></i> Add Victim</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

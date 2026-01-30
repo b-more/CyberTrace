@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Import Financial Data{% endblock %}
+{% block page_title %}Import Financial Data{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-arrow-up"></i> Import Financial Transaction Data</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> <strong>Upload transaction data from mobile money providers or banks. Ensure data is in CSV or Excel format following the structure below.</strong>
+                </div>
+
+                <!-- CSV Format Instructions -->
+                <h6 class="mt-4"><i class="bi bi-file-earmark-text"></i> Required CSV Format</h6>
+                <p class="text-muted">Your CSV file must include the following columns (headers in first row):</p>
+                <div class="table-responsive mb-4">
+                    <table class="table table-hover table-sm table-bordered">
+                        <thead class="table-success">
+                            <tr>
+                                <th>Column</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                                <th>Required</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>transaction_date</td><td>Date and time of transaction</td><td>2025-01-15 14:30:00</td><td><span class="badge bg-danger">Yes</span></td></tr>
+                            <tr><td>transaction_type</td><td>Type of transaction</td><td>Transfer / Deposit / Withdrawal</td><td><span class="badge bg-danger">Yes</span></td></tr>
+                            <tr><td>sender_account</td><td>Sender account/phone number</td><td>0971234567</td><td><span class="badge bg-danger">Yes</span></td></tr>
+                            <tr><td>sender_name</td><td>Name of sender</td><td>John Mwale</td><td><span class="badge bg-warning text-dark">Optional</span></td></tr>
+                            <tr><td>receiver_account</td><td>Receiver account/phone number</td><td>0969876543</td><td><span class="badge bg-danger">Yes</span></td></tr>
+                            <tr><td>receiver_name</td><td>Name of receiver</td><td>Mary Banda</td><td><span class="badge bg-warning text-dark">Optional</span></td></tr>
+                            <tr><td>amount</td><td>Transaction amount</td><td>1500.00</td><td><span class="badge bg-danger">Yes</span></td></tr>
+                            <tr><td>currency</td><td>Currency code</td><td>ZMW</td><td><span class="badge bg-warning text-dark">Optional</span></td></tr>
+                            <tr><td>reference</td><td>Transaction reference ID</td><td>TXN20250115001</td><td><span class="badge bg-warning text-dark">Optional</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Sample Data -->
+                <h6><i class="bi bi-table"></i> Sample Data</h6>
+                <div class="bg-light p-3 rounded mb-4">
+                    <pre class="mb-0"><code>transaction_date,transaction_type,sender_account,sender_name,receiver_account,receiver_name,amount,currency,reference
+2025-01-15 14:30:00,Transfer,0971234567,John Mwale,0969876543,Mary Banda,1500.00,ZMW,TXN20250115001
+2025-01-15 15:00:00,Deposit,AGENT001,MTN Agent Lusaka,0971234567,John Mwale,5000.00,ZMW,TXN20250115002
+2025-01-15 16:45:00,Withdrawal,0969876543,Mary Banda,AGENT045,Airtel Agent Kitwe,3000.00,ZMW,TXN20250115003</code></pre>
+                </div>
+
+                <!-- Upload Form -->
+                <hr>
+                <form method="POST" action="{{ url_for('financial.import_transactions') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="mb-3">
+                        <label for="case_id" class="form-label"><i class="bi bi-folder"></i> Select Case <span class="text-danger">*</span></label>
+                        <select class="form-select" id="case_id" name="case_id" required>
+                            <option value="">-- Select a case --</option>
+                            {% for case in cases %}
+                            <option value="{{ case.id }}">{{ case.case_number }} - {{ case.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="provider" class="form-label"><i class="bi bi-building"></i> Financial Provider <span class="text-danger">*</span></label>
+                        <select class="form-select" id="provider" name="provider" required>
+                            <option value="">-- Select provider --</option>
+                            <option value="mtn_momo">MTN MoMo</option>
+                            <option value="airtel_money">Airtel Money</option>
+                            <option value="zamtel_kwacha">Zamtel Kwacha</option>
+                            <option value="bank">Bank (Standard Format)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="import_file" class="form-label"><i class="bi bi-cloud-arrow-up"></i> Upload File <span class="text-danger">*</span></label>
+                        <div class="border border-2 border-dashed rounded p-5 text-center bg-light" id="dropZone" style="border-style: dashed !important; cursor: pointer;">
+                            <i class="bi bi-cloud-arrow-up display-4 text-success"></i>
+                            <p class="mt-2 mb-1"><strong>Drag and drop your file here</strong></p>
+                            <p class="text-muted mb-2">or click to browse</p>
+                            <input type="file" class="form-control" id="import_file" name="import_file" accept=".csv,.xlsx,.xls" required>
+                            <small class="text-muted">Accepted: CSV, XLSX, XLS (Max 50MB)</small>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg"><i class="bi bi-upload"></i> Import Data</button>
+                        <a href="{{ url_for('financial.index') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

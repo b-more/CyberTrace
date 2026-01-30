@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block title %}Domain Investigation Results{% endblock %}
+{% block page_title %}Domain Investigation Results{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-info text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-globe2"></i> {{ investigation.target_identifier }}</h5>
+            <span class="badge bg-{{ 'success' if investigation.status == 'completed' else 'danger' }}">{{ investigation.status|title }}</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Case:</strong> {{ investigation.case.case_number }}</p>
+                <p><strong>Investigator:</strong> {{ investigation.investigator.full_name }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Date:</strong> {{ investigation.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p><strong>Duration:</strong> {{ investigation.execution_time|round(2) if investigation.execution_time else 'N/A' }}s</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- WHOIS Information -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-info text-white">
+        <h6 class="mb-0"><i class="bi bi-person-vcard"></i> WHOIS Information</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <tbody>
+                    {% for key, value in results.whois|default({})|dictsort %}
+                    <tr>
+                        <th style="width:30%">{{ key|replace('_', ' ')|title }}</th>
+                        <td>{{ value }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- DNS Records -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-info text-white">
+        <h6 class="mb-0"><i class="bi bi-hdd-network"></i> DNS Records</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Record Type</th>
+                        <th>Value</th>
+                        <th>TTL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in results.dns_records|default([]) %}
+                    <tr>
+                        <td><span class="badge bg-secondary">{{ record.type }}</span></td>
+                        <td><code>{{ record.value }}</code></td>
+                        <td>{{ record.ttl|default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- SSL Certificates -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-info text-white">
+        <h6 class="mb-0"><i class="bi bi-shield-lock"></i> SSL Certificates</h6>
+    </div>
+    <div class="card-body">
+        <div class="accordion" id="sslAccordion">
+            {% for cert in results.ssl_certificates|default([]) %}
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="sslHead{{ loop.index }}">
+                    <button class="accordion-button {{ '' if loop.first else 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#sslCollapse{{ loop.index }}">
+                        <i class="bi bi-lock"></i>&nbsp; {{ cert.subject|default('Certificate ' ~ loop.index) }}
+                    </button>
+                </h2>
+                <div id="sslCollapse{{ loop.index }}" class="accordion-collapse collapse {{ 'show' if loop.first else '' }}" data-bs-parent="#sslAccordion">
+                    <div class="accordion-body">
+                        <table class="table table-sm">
+                            <tr><th>Issuer</th><td>{{ cert.issuer|default('N/A') }}</td></tr>
+                            <tr><th>Valid From</th><td>{{ cert.valid_from|default('N/A') }}</td></tr>
+                            <tr><th>Valid To</th><td>{{ cert.valid_to|default('N/A') }}</td></tr>
+                            <tr><th>Serial Number</th><td><code>{{ cert.serial_number|default('N/A') }}</code></td></tr>
+                            <tr><th>Fingerprint (SHA-256)</th><td><code>{{ cert.fingerprint|default('N/A') }}</code></td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Subdomains -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-info text-white">
+        <h6 class="mb-0"><i class="bi bi-diagram-2"></i> Discovered Subdomains</h6>
+    </div>
+    <div class="card-body">
+        {% if results.subdomains %}
+        <div class="row">
+            {% for subdomain in results.subdomains %}
+            <div class="col-md-4 mb-2">
+                <span class="badge bg-light text-dark border w-100 p-2"><i class="bi bi-globe"></i> {{ subdomain }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No subdomains discovered.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Typosquatting Alerts -->
+{% if results.typosquatting %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-danger text-white">
+        <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Typosquatting Alerts</h6>
+    </div>
+    <div class="card-body">
+        {% for typo in results.typosquatting %}
+        <div class="alert alert-warning">
+            <strong><i class="bi bi-exclamation-triangle"></i> {{ typo.domain }}</strong> - {{ typo.type|default('Similar domain detected') }}
+            {% if typo.registered %}<span class="badge bg-danger">Registered</span>{% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Wayback Machine Snapshots -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-info text-white">
+        <h6 class="mb-0"><i class="bi bi-clock-history"></i> Wayback Machine Snapshots</h6>
+    </div>
+    <div class="card-body">
+        {% if results.wayback_snapshots %}
+        <ul class="list-group">
+            {% for snapshot in results.wayback_snapshots %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clock"></i> {{ snapshot.timestamp }}</span>
+                <a href="{{ snapshot.url }}" target="_blank" class="btn btn-sm btn-outline-info"><i class="bi bi-box-arrow-up-right"></i> View Snapshot</a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted mb-0">No Wayback Machine snapshots found.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Evidence Hash -->
+<div class="card shadow mb-4">
+    <div class="card-header"><h6 class="mb-0"><i class="bi bi-file-lock"></i> Evidence Integrity</h6></div>
+    <div class="card-body">
+        <pre class="bg-light p-2 rounded"><code>{{ investigation.evidence_hash }}</code></pre>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2">
+    <a href="{{ url_for('domain_ip.domain_search') }}" class="btn btn-info text-white"><i class="bi bi-search"></i> New Domain Investigation</a>
+    <a href="{{ url_for('cases.view_case', case_id=investigation.case_id) }}" class="btn btn-outline-secondary"><i class="bi bi-folder"></i> View Case</a>
+</div>
+{% endblock %}

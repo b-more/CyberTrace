@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}SIM Events Timeline{% endblock %}
+{% block page_title %}SIM Events Timeline{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-danger text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-clock-history"></i> Full SIM Events Timeline: {{ investigation.target_identifier }}</h5>
+            <span class="badge bg-light text-dark">{{ events|default([])|length }} Events</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <p><strong>Case:</strong> {{ investigation.case.case_number }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Phone:</strong> {{ investigation.target_identifier }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSS Timeline -->
+<style>
+    .sim-timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+    .sim-timeline::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 3px;
+        height: 100%;
+        background: #dc3545;
+        top: 0;
+    }
+    .sim-timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+        width: 50%;
+    }
+    .sim-timeline-item:nth-child(odd) {
+        left: 0;
+        padding-right: 40px;
+        text-align: right;
+    }
+    .sim-timeline-item:nth-child(even) {
+        left: 50%;
+        padding-left: 40px;
+    }
+    .sim-timeline-item::after {
+        content: '';
+        position: absolute;
+        top: 15px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #dc3545;
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 2px #dc3545;
+    }
+    .sim-timeline-item:nth-child(odd)::after {
+        right: -8px;
+    }
+    .sim-timeline-item:nth-child(even)::after {
+        left: -8px;
+    }
+    .sim-timeline-item.suspicious::after {
+        background: #ffc107;
+        box-shadow: 0 0 0 2px #ffc107;
+    }
+    @media (max-width: 768px) {
+        .sim-timeline::before { left: 20px; }
+        .sim-timeline-item { width: 100%; left: 0 !important; padding-left: 50px !important; padding-right: 0 !important; text-align: left !important; }
+        .sim-timeline-item::after { left: 12px !important; right: auto !important; }
+    }
+</style>
+
+<div class="sim-timeline">
+    {% for event in events|default([]) %}
+    <div class="sim-timeline-item {{ 'suspicious' if event.suspicious else '' }}">
+        <div class="card shadow-sm {{ 'border-danger' if event.suspicious else '' }}">
+            <div class="card-header bg-{{ 'danger' if event.suspicious else 'light' }} {{ 'text-white' if event.suspicious else '' }} py-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <strong><i class="bi bi-sim"></i> {{ event.type|default('SIM Event') }}</strong>
+                    {% if event.suspicious %}
+                    <span class="badge bg-warning text-dark">Suspicious</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body py-2">
+                <p class="mb-1"><i class="bi bi-calendar"></i> {{ event.date }} {{ event.time|default('') }}</p>
+                <p class="mb-1">{{ event.description }}</p>
+                <small class="text-muted">
+                    IMSI: {{ event.imsi|default('N/A') }} |
+                    ICCID: {{ event.iccid|default('N/A') }} |
+                    Location: {{ event.location|default('N/A') }}
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not events %}
+<div class="text-center py-5">
+    <i class="bi bi-clock-history display-1 text-muted"></i>
+    <h4 class="text-muted mt-3">No SIM events found</h4>
+</div>
+{% endif %}
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2 mt-4">
+    <a href="{{ url_for('sim_swap.view_result', investigation_id=investigation.id) }}" class="btn btn-danger"><i class="bi bi-arrow-left"></i> Back to Results</a>
+    <a href="{{ url_for('sim_swap.search') }}" class="btn btn-primary"><i class="bi bi-search"></i> New Detection</a>
+    <a href="{{ url_for('cases.view_case', case_id=investigation.case_id) }}" class="btn btn-outline-secondary"><i class="bi bi-folder"></i> View Case</a>
+</div>
+{% endblock %}

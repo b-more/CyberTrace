@@ -315,9 +315,73 @@
             </a>
             {% endif %}
             {% if features.domain_ip_osint %}
-            <a class="nav-link" href="#">
+            <a class="nav-link {% if request.endpoint and 'domain_ip' in request.endpoint %}active{% endif %}" href="{{ url_for('domain_ip.domain_search') }}">
                 <i class="bi bi-globe"></i>
-                <span>Domain/IP</span>
+                <span>Domain/IP OSINT</span>
+            </a>
+            {% endif %}
+            {% if features.crypto_tracer %}
+            <a class="nav-link {% if request.endpoint and 'crypto' in request.endpoint %}active{% endif %}" href="{{ url_for('crypto.search') }}">
+                <i class="bi bi-currency-bitcoin"></i>
+                <span>Crypto Tracer</span>
+            </a>
+            {% endif %}
+            {% if features.financial_tracer %}
+            <a class="nav-link {% if request.endpoint and 'financial' in request.endpoint %}active{% endif %}" href="{{ url_for('financial.index') }}">
+                <i class="bi bi-cash-stack"></i>
+                <span>Financial Tracer</span>
+            </a>
+            {% endif %}
+            {% if features.sim_swap_detection %}
+            <a class="nav-link {% if request.endpoint and 'sim_swap' in request.endpoint %}active{% endif %}" href="{{ url_for('sim_swap.search') }}">
+                <i class="bi bi-sim"></i>
+                <span>SIM Swap Detection</span>
+            </a>
+            {% endif %}
+
+            <div class="sidebar-section-title">Evidence & Forensics</div>
+            {% if features.messaging_forensics %}
+            <a class="nav-link {% if request.endpoint and 'messaging' in request.endpoint %}active{% endif %}" href="{{ url_for('messaging.upload') }}">
+                <i class="bi bi-chat-dots"></i>
+                <span>Messaging Forensics</span>
+            </a>
+            {% endif %}
+            {% if features.image_forensics %}
+            <a class="nav-link {% if request.endpoint and 'forensics' in request.endpoint %}active{% endif %}" href="{{ url_for('forensics.upload') }}">
+                <i class="bi bi-image"></i>
+                <span>Image/Doc Forensics</span>
+            </a>
+            {% endif %}
+            {% if features.social_preservation %}
+            <a class="nav-link {% if request.endpoint and 'social_preservation' in request.endpoint %}active{% endif %}" href="{{ url_for('social_preservation.capture') }}">
+                <i class="bi bi-archive"></i>
+                <span>Evidence Preservation</span>
+            </a>
+            {% endif %}
+
+            <div class="sidebar-section-title">Intelligence</div>
+            {% if features.correlation_engine %}
+            <a class="nav-link {% if request.endpoint and 'correlation' in request.endpoint %}active{% endif %}" href="{{ url_for('correlation.dashboard') }}">
+                <i class="bi bi-diagram-3"></i>
+                <span>Case Correlation</span>
+            </a>
+            {% endif %}
+            {% if features.isp_requests %}
+            <a class="nav-link {% if request.endpoint and 'isp_requests' in request.endpoint %}active{% endif %}" href="{{ url_for('isp_requests.list_requests') }}">
+                <i class="bi bi-send"></i>
+                <span>ISP Requests</span>
+            </a>
+            {% endif %}
+            {% if features.victim_management %}
+            <a class="nav-link {% if request.endpoint and 'victims' in request.endpoint %}active{% endif %}" href="{{ url_for('victims.list_victims') }}">
+                <i class="bi bi-person-lines-fill"></i>
+                <span>Victim Management</span>
+            </a>
+            {% endif %}
+            {% if features.analytics_dashboard %}
+            <a class="nav-link {% if request.endpoint and 'analytics' in request.endpoint %}active{% endif %}" href="{{ url_for('analytics.dashboard') }}">
+                <i class="bi bi-graph-up"></i>
+                <span>Analytics</span>
             </a>
             {% endif %}
 

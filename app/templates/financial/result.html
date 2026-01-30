@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Financial Analysis Results{% endblock %}
+{% block page_title %}Financial Analysis Results{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-success text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-cash-stack"></i> {{ investigation.target_identifier }}</h5>
+            <span class="badge bg-{{ 'success' if investigation.status == 'completed' else 'danger' }}">{{ investigation.status|title }}</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Case:</strong> {{ investigation.case.case_number }}</p>
+                <p><strong>Investigator:</strong> {{ investigation.investigator.full_name }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Date:</strong> {{ investigation.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p><strong>Duration:</strong> {{ investigation.execution_time|round(2) if investigation.execution_time else 'N/A' }}s</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-primary">{{ results.total_transactions|default(0) }}</h3>
+                <p class="mb-0"><i class="bi bi-receipt"></i> Total Transactions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-success">ZMW {{ results.total_amount|default(0)|round(2) }}</h3>
+                <p class="mb-0"><i class="bi bi-cash"></i> Total Amount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-warning">{{ results.suspicious_count|default(0) }}</h3>
+                <p class="mb-0"><i class="bi bi-exclamation-triangle"></i> Suspicious Transactions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-danger">{{ results.mule_accounts|default([])|length }}</h3>
+                <p class="mb-0"><i class="bi bi-person-x"></i> Mule Accounts</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mule Account Alerts -->
+{% if results.mule_accounts %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-danger text-white">
+        <h6 class="mb-0"><i class="bi bi-exclamation-octagon"></i> Mule Account Alerts</h6>
+    </div>
+    <div class="card-body">
+        {% for mule in results.mule_accounts %}
+        <div class="alert alert-danger">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <strong><i class="bi bi-person-x"></i> {{ mule.account_number }}</strong> - {{ mule.account_name|default('Unknown') }}
+                </div>
+                <span class="badge bg-danger">Risk: {{ mule.risk_score|default('High') }}</span>
+            </div>
+            <small>Reason: {{ mule.reason|default('Suspicious transaction pattern detected') }}</small>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Transaction Table -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-success text-white">
+        <h6 class="mb-0"><i class="bi bi-table"></i> Transaction Details</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm" id="transactionTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date/Time</th>
+                        <th>Type</th>
+                        <th>Sender</th>
+                        <th>Receiver</th>
+                        <th>Amount (ZMW)</th>
+                        <th>Reference</th>
+                        <th>Flag</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in results.transactions|default([]) %}
+                    <tr class="{{ 'table-warning' if tx.suspicious else '' }}">
+                        <td>{{ tx.timestamp }}</td>
+                        <td>{{ tx.type }}</td>
+                        <td>{{ tx.sender }}</td>
+                        <td>{{ tx.receiver }}</td>
+                        <td>{{ tx.amount|round(2) }}</td>
+                        <td><small>{{ tx.reference }}</small></td>
+                        <td>
+                            {% if tx.suspicious %}
+                            <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle"></i> Suspicious</span>
+                            {% else %}
+                            <span class="badge bg-light text-muted">Normal</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Evidence Hash -->
+<div class="card shadow mb-4">
+    <div class="card-header"><h6 class="mb-0"><i class="bi bi-file-lock"></i> Evidence Integrity</h6></div>
+    <div class="card-body">
+        <pre class="bg-light p-2 rounded"><code>{{ investigation.evidence_hash }}</code></pre>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2">
+    <a href="{{ url_for('financial.index') }}" class="btn btn-success"><i class="bi bi-upload"></i> New Analysis</a>
+    <a href="{{ url_for('financial.view_graph', case_id=investigation.case_id) }}" class="btn btn-primary"><i class="bi bi-diagram-3"></i> View Transaction Graph</a>
+    <a href="{{ url_for('cases.view_case', case_id=investigation.case_id) }}" class="btn btn-outline-secondary"><i class="bi bi-folder"></i> View Case</a>
+</div>
+{% endblock %}

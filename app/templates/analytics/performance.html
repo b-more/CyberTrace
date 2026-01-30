@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Investigator Performance{% endblock %}
+{% block page_title %}Investigator Performance{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-people"></i> Investigator Performance Overview</h5>
+            <a href="{{ url_for('analytics.export_data') }}" class="btn btn-light btn-sm"><i class="bi bi-download"></i> Export</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Investigator</th>
+                        <th>Cases Assigned</th>
+                        <th>Cases Closed</th>
+                        <th>Avg Resolution Time</th>
+                        <th>Investigations Conducted</th>
+                        <th>Success Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in investigators|default([]) %}
+                    <tr>
+                        <td><strong>{{ inv.full_name }}</strong></td>
+                        <td>{{ inv.cases_assigned }}</td>
+                        <td>{{ inv.cases_closed }}</td>
+                        <td>{{ inv.avg_resolution_days|default(0)|round(1) }} days</td>
+                        <td>{{ inv.investigations_conducted }}</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress flex-grow-1" style="height:20px;">
+                                    <div class="progress-bar bg-{{ 'success' if inv.success_rate > 80 else ('warning' if inv.success_rate > 50 else 'danger') }}" style="width:{{ inv.success_rate }}%">
+                                        {{ inv.success_rate|round(1) }}%
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if not investigators %}
+        <div class="text-center py-5">
+            <i class="bi bi-people display-1 text-muted"></i>
+            <h5 class="text-muted mt-3">No performance data available yet</h5>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2">
+    <a href="{{ url_for('analytics.dashboard') }}" class="btn btn-primary"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+    <a href="{{ url_for('analytics.case_stats') }}" class="btn btn-outline-primary"><i class="bi bi-bar-chart-line"></i> Case Statistics</a>
+</div>
+{% endblock %}

@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Preservation Results{% endblock %}
+{% block page_title %}Preservation Results{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-secondary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-archive"></i> {{ investigation.target_identifier }}</h5>
+            <span class="badge bg-{{ 'success' if investigation.status == 'completed' else 'danger' }}">{{ investigation.status|title }}</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Case:</strong> {{ investigation.case.case_number }}</p>
+                <p><strong>Investigator:</strong> {{ investigation.investigator.full_name }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Date:</strong> {{ investigation.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p><strong>Duration:</strong> {{ investigation.execution_time|round(2) if investigation.execution_time else 'N/A' }}s</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Screenshot Display -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h6 class="mb-0"><i class="bi bi-camera"></i> Captured Screenshot</h6>
+    </div>
+    <div class="card-body text-center">
+        {% if results.screenshot_url %}
+        <img src="{{ results.screenshot_url }}" alt="Captured Screenshot" class="img-fluid rounded border" style="max-height:600px;">
+        {% else %}
+        <div class="bg-light p-5 rounded">
+            <i class="bi bi-camera display-1 text-muted"></i>
+            <p class="text-muted mt-2">Screenshot not available</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Captured Text -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h6 class="mb-0"><i class="bi bi-text-left"></i> Captured Text Content</h6>
+    </div>
+    <div class="card-body">
+        {% if results.captured_text %}
+        <div class="bg-light p-3 rounded" style="max-height:300px;overflow-y:auto;">
+            {{ results.captured_text }}
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No text content captured.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Author Information -->
+{% if results.author %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h6 class="mb-0"><i class="bi bi-person"></i> Author Information</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <tbody>
+                    <tr><th style="width:30%">Display Name</th><td>{{ results.author.display_name|default('N/A') }}</td></tr>
+                    <tr><th>Username</th><td>{{ results.author.username|default('N/A') }}</td></tr>
+                    <tr><th>Profile URL</th><td><a href="{{ results.author.profile_url }}" target="_blank">{{ results.author.profile_url|default('N/A') }}</a></td></tr>
+                    <tr><th>Account Created</th><td>{{ results.author.account_created|default('N/A') }}</td></tr>
+                    <tr><th>Followers</th><td>{{ results.author.followers|default('N/A') }}</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Engagement Metrics -->
+{% if results.engagement %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h6 class="mb-0"><i class="bi bi-bar-chart"></i> Engagement Metrics</h6>
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-md-3">
+                <h4 class="text-primary">{{ results.engagement.likes|default(0) }}</h4>
+                <p><i class="bi bi-hand-thumbs-up"></i> Likes</p>
+            </div>
+            <div class="col-md-3">
+                <h4 class="text-info">{{ results.engagement.shares|default(0) }}</h4>
+                <p><i class="bi bi-share"></i> Shares</p>
+            </div>
+            <div class="col-md-3">
+                <h4 class="text-success">{{ results.engagement.comments|default(0) }}</h4>
+                <p><i class="bi bi-chat"></i> Comments</p>
+            </div>
+            <div class="col-md-3">
+                <h4 class="text-warning">{{ results.engagement.views|default(0) }}</h4>
+                <p><i class="bi bi-eye"></i> Views</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Content Flags -->
+{% if results.content_flags %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-danger text-white">
+        <h6 class="mb-0"><i class="bi bi-flag"></i> Content Flags</h6>
+    </div>
+    <div class="card-body">
+        {% for flag in results.content_flags %}
+        <div class="alert alert-{{ flag.severity|default('warning') }}">
+            <strong><i class="bi bi-flag"></i> {{ flag.type }}</strong>
+            <p class="mb-1">{{ flag.description }}</p>
+            {% if flag.legal_reference %}
+            <small class="text-muted"><i class="bi bi-book"></i> Legal Reference: {{ flag.legal_reference }}</small>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Wayback Archive -->
+{% if results.wayback_url %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h6 class="mb-0"><i class="bi bi-clock-history"></i> Wayback Machine Archive</h6>
+    </div>
+    <div class="card-body">
+        <p>This content has been archived on the Wayback Machine:</p>
+        <a href="{{ results.wayback_url }}" target="_blank" class="btn btn-outline-secondary"><i class="bi bi-box-arrow-up-right"></i> View on Wayback Machine</a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Evidence Hash -->
+<div class="card shadow mb-4">
+    <div class="card-header"><h6 class="mb-0"><i class="bi bi-file-lock"></i> Evidence Integrity</h6></div>
+    <div class="card-body">
+        <pre class="bg-light p-2 rounded"><code>{{ investigation.evidence_hash }}</code></pre>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2">
+    <a href="{{ url_for('social_preservation.capture') }}" class="btn btn-secondary"><i class="bi bi-camera"></i> New Capture</a>
+    <a href="{{ url_for('social_preservation.archive_list', case_id=investigation.case_id) }}" class="btn btn-primary"><i class="bi bi-archive"></i> View All Archives</a>
+    <a href="{{ url_for('cases.view_case', case_id=investigation.case_id) }}" class="btn btn-outline-secondary"><i class="bi bi-folder"></i> View Case</a>
+</div>
+{% endblock %}

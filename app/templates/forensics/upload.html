@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Digital Forensics Analysis{% endblock %}
+{% block page_title %}Digital Forensics Analysis{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="bi bi-fingerprint"></i> Digital Forensics Analysis</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> <strong>Upload images or documents for forensic analysis including EXIF metadata extraction, GPS location, Error Level Analysis (ELA), OCR text extraction, and document metadata examination.</strong>
+                </div>
+                <form method="POST" action="{{ url_for('forensics.upload') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="mb-3">
+                        <label for="case_id" class="form-label"><i class="bi bi-folder"></i> Select Case <span class="text-danger">*</span></label>
+                        <select class="form-select" id="case_id" name="case_id" required>
+                            <option value="">-- Select a case --</option>
+                            {% for case in cases %}
+                            <option value="{{ case.id }}">{{ case.case_number }} - {{ case.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="forensic_file" class="form-label"><i class="bi bi-file-earmark-arrow-up"></i> Upload File <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control" id="forensic_file" name="forensic_file" accept=".jpg,.jpeg,.png,.gif,.tiff,.tif,.pdf,.docx,.xlsx" required>
+                        <div class="form-text">
+                            <strong>Images:</strong> JPG, PNG, GIF, TIFF |
+                            <strong>Documents:</strong> PDF, DOCX, XLSX |
+                            Max file size: 50MB
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi bi-gear"></i> Analysis Type</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="analysis_type" id="auto_detect" value="auto" checked>
+                            <label class="form-check-label" for="auto_detect">Auto-Detect (Recommended)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="analysis_type" id="image_analysis" value="image">
+                            <label class="form-check-label" for="image_analysis">Image Analysis (EXIF, ELA, GPS, OCR)</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="analysis_type" id="doc_analysis" value="document">
+                            <label class="form-check-label" for="doc_analysis">Document Analysis (Metadata, Text Extraction)</label>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-dark btn-lg"><i class="bi bi-cpu"></i> Analyze File</button>
+                        <a href="{{ url_for('investigations.index') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Create ISP Request{% endblock %}
+{% block page_title %}Create ISP/Telco Data Request{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-plus"></i> New ISP/Telco Data Request</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> <strong>Create a formal data request to an ISP or telecommunications provider. Ensure you have proper legal authority before submitting.</strong>
+                </div>
+                <form method="POST" action="{{ url_for('isp_requests.create_request') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="mb-3">
+                        <label for="case_id" class="form-label"><i class="bi bi-folder"></i> Select Case <span class="text-danger">*</span></label>
+                        <select class="form-select" id="case_id" name="case_id" required>
+                            <option value="">-- Select a case --</option>
+                            {% for case in cases %}
+                            <option value="{{ case.id }}">{{ case.case_number }} - {{ case.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="provider_name" class="form-label"><i class="bi bi-building"></i> Provider Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="provider_name" name="provider_name" placeholder="e.g., MTN Zambia, Airtel Zambia, Zamtel, Zambia Telecommunications" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="request_type" class="form-label"><i class="bi bi-list-check"></i> Request Type <span class="text-danger">*</span></label>
+                        <select class="form-select" id="request_type" name="request_type" required>
+                            <option value="">-- Select request type --</option>
+                            <option value="subscriber_info">Subscriber Information</option>
+                            <option value="call_records">Call Detail Records (CDR)</option>
+                            <option value="ip_logs">IP Address Logs</option>
+                            <option value="content_preservation">Content Preservation</option>
+                            <option value="content_disclosure">Content Disclosure</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="target_identifier" class="form-label"><i class="bi bi-crosshair"></i> Target Identifier <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="target_identifier" name="target_identifier" placeholder="Phone number, IP address, email, or account ID" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="legal_authority" class="form-label"><i class="bi bi-shield-check"></i> Legal Authority / Warrant Number <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="legal_authority" name="legal_authority" placeholder="e.g., Court Order #2025/HC/001, Section 29 of Cyber Security Act" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="date_from" class="form-label"><i class="bi bi-calendar-event"></i> Data Period From</label>
+                            <input type="date" class="form-control" id="date_from" name="date_from">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="date_to" class="form-label"><i class="bi bi-calendar-event"></i> Data Period To</label>
+                            <input type="date" class="form-control" id="date_to" name="date_to">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label"><i class="bi bi-text-paragraph"></i> Description / Justification <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="description" name="description" rows="4" placeholder="Describe the data being requested and the justification for the request..." required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sla_deadline" class="form-label"><i class="bi bi-alarm"></i> SLA Deadline</label>
+                        <input type="date" class="form-control" id="sla_deadline" name="sla_deadline">
+                        <div class="form-text">Expected response deadline from the provider.</div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-send"></i> Submit Request</button>
+                        <a href="{{ url_for('isp_requests.list_requests') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to Requests</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

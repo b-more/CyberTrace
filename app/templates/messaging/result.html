@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}Messaging Analysis Results{% endblock %}
+{% block page_title %}Messaging Analysis Results{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-chat-dots"></i> {{ investigation.target_identifier }}</h5>
+            <span class="badge bg-{{ 'success' if investigation.status == 'completed' else 'danger' }}">{{ investigation.status|title }}</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Case:</strong> {{ investigation.case.case_number }}</p>
+                <p><strong>Investigator:</strong> {{ investigation.investigator.full_name }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Date:</strong> {{ investigation.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p><strong>Duration:</strong> {{ investigation.execution_time|round(2) if investigation.execution_time else 'N/A' }}s</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chat Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-primary">{{ results.stats.message_count|default(0) }}</h3>
+                <p class="mb-0"><i class="bi bi-chat-left-text"></i> Messages</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-info">{{ results.stats.participants|default([])|length }}</h3>
+                <p class="mb-0"><i class="bi bi-people"></i> Participants</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-success">{{ results.stats.date_range_start|default('N/A') }}</h3>
+                <p class="mb-0"><i class="bi bi-calendar-event"></i> First Message</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-warning">{{ results.stats.date_range_end|default('N/A') }}</h3>
+                <p class="mb-0"><i class="bi bi-calendar-check"></i> Last Message</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Extracted Links -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0"><i class="bi bi-link-45deg"></i> Extracted Links ({{ results.links|default([])|length }})</h6>
+    </div>
+    <div class="card-body">
+        {% if results.links %}
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>URL</th>
+                        <th>Sender</th>
+                        <th>Date</th>
+                        <th>Flag</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for link in results.links %}
+                    <tr class="{{ 'table-danger' if link.suspicious else '' }}">
+                        <td><a href="{{ link.url }}" target="_blank" rel="noopener">{{ link.url|truncate(60) }}</a></td>
+                        <td>{{ link.sender|default('Unknown') }}</td>
+                        <td>{{ link.date|default('N/A') }}</td>
+                        <td>
+                            {% if link.suspicious %}
+                            <span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> Suspicious</span>
+                            {% else %}
+                            <span class="badge bg-light text-muted">Clean</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No links extracted.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Extracted Phone Numbers -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0"><i class="bi bi-telephone"></i> Extracted Phone Numbers ({{ results.phone_numbers|default([])|length }})</h6>
+    </div>
+    <div class="card-body">
+        {% if results.phone_numbers %}
+        <div class="row">
+            {% for phone in results.phone_numbers %}
+            <div class="col-md-4 mb-2">
+                <div class="card">
+                    <div class="card-body py-2">
+                        <i class="bi bi-phone"></i> <strong>{{ phone.number }}</strong>
+                        <br><small class="text-muted">Mentioned by: {{ phone.sender|default('Unknown') }} | Count: {{ phone.count|default(1) }}</small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No phone numbers extracted.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Keyword Highlights -->
+{% if results.keyword_matches %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h6 class="mb-0"><i class="bi bi-flag"></i> Keyword Highlights</h6>
+    </div>
+    <div class="card-body">
+        {% for keyword in results.keyword_matches %}
+        <div class="alert alert-warning py-2">
+            <strong>"{{ keyword.keyword }}"</strong> - Found {{ keyword.count }} time(s)
+            <br><small class="text-muted">Last occurrence: {{ keyword.context|default('N/A') }}</small>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Evidence Hash -->
+<div class="card shadow mb-4">
+    <div class="card-header"><h6 class="mb-0"><i class="bi bi-file-lock"></i> Evidence Integrity</h6></div>
+    <div class="card-body">
+        <pre class="bg-light p-2 rounded"><code>{{ investigation.evidence_hash }}</code></pre>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2">
+    <a href="{{ url_for('messaging.upload') }}" class="btn btn-primary"><i class="bi bi-upload"></i> New Upload</a>
+    <a href="{{ url_for('messaging.view_conversation', investigation_id=investigation.id) }}" class="btn btn-info text-white"><i class="bi bi-chat-square-text"></i> View Conversation</a>
+    <a href="{{ url_for('cases.view_case', case_id=investigation.case_id) }}" class="btn btn-outline-secondary"><i class="bi bi-folder"></i> View Case</a>
+</div>
+{% endblock %}

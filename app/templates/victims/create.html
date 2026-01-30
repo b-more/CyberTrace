@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Register Victim{% endblock %}
+{% block page_title %}Register New Victim{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-person-plus"></i> Register New Victim</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> <strong>Register a victim associated with a cybercrime case. All victim information is kept confidential and protected.</strong>
+                </div>
+                <form method="POST" action="{{ url_for('victims.create_victim') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                    <h6 class="text-primary border-bottom pb-2 mb-3"><i class="bi bi-folder"></i> Case Information</h6>
+                    <div class="mb-3">
+                        <label for="case_id" class="form-label"><i class="bi bi-folder"></i> Select Case <span class="text-danger">*</span></label>
+                        <select class="form-select" id="case_id" name="case_id" required>
+                            <option value="">-- Select a case --</option>
+                            {% for case in cases %}
+                            <option value="{{ case.id }}">{{ case.case_number }} - {{ case.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <h6 class="text-primary border-bottom pb-2 mb-3"><i class="bi bi-person"></i> Personal Information</h6>
+                    <div class="mb-3">
+                        <label for="victim_type" class="form-label">Victim Type <span class="text-danger">*</span></label>
+                        <select class="form-select" id="victim_type" name="victim_type" required>
+                            <option value="">-- Select type --</option>
+                            <option value="individual">Individual</option>
+                            <option value="business">Business/Organization</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="full_name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="full_name" name="full_name" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="nrc_number" class="form-label">NRC Number</label>
+                            <input type="text" class="form-control" id="nrc_number" name="nrc_number" placeholder="e.g., 123456/78/1">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" id="phone" name="phone" placeholder="e.g., 0971234567">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="email" name="email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Physical Address</label>
+                        <input type="text" class="form-control" id="address" name="address">
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="province" class="form-label">Province</label>
+                            <select class="form-select" id="province" name="province">
+                                <option value="">-- Select province --</option>
+                                <option value="Central">Central</option>
+                                <option value="Copperbelt">Copperbelt</option>
+                                <option value="Eastern">Eastern</option>
+                                <option value="Luapula">Luapula</option>
+                                <option value="Lusaka">Lusaka</option>
+                                <option value="Muchinga">Muchinga</option>
+                                <option value="Northern">Northern</option>
+                                <option value="North-Western">North-Western</option>
+                                <option value="Southern">Southern</option>
+                                <option value="Western">Western</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="district" class="form-label">District</label>
+                            <input type="text" class="form-control" id="district" name="district">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="occupation" class="form-label">Occupation</label>
+                        <input type="text" class="form-control" id="occupation" name="occupation">
+                    </div>
+
+                    <h6 class="text-primary border-bottom pb-2 mb-3"><i class="bi bi-cash"></i> Financial Loss Information</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="loss_amount" class="form-label">Loss Amount <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" class="form-control" id="loss_amount" name="loss_amount" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="loss_currency" class="form-label">Currency</label>
+                            <select class="form-select" id="loss_currency" name="loss_currency">
+                                <option value="ZMW" selected>ZMW (Zambian Kwacha)</option>
+                                <option value="USD">USD (US Dollar)</option>
+                                <option value="GBP">GBP (British Pound)</option>
+                                <option value="EUR">EUR (Euro)</option>
+                                <option value="ZAR">ZAR (South African Rand)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="loss_type" class="form-label">Loss Type <span class="text-danger">*</span></label>
+                        <select class="form-select" id="loss_type" name="loss_type" required>
+                            <option value="">-- Select loss type --</option>
+                            <option value="mobile_money_fraud">Mobile Money Fraud</option>
+                            <option value="bank_fraud">Bank Fraud</option>
+                            <option value="crypto_scam">Cryptocurrency Scam</option>
+                            <option value="phishing">Phishing</option>
+                            <option value="identity_theft">Identity Theft</option>
+                            <option value="romance_scam">Romance Scam</option>
+                            <option value="investment_fraud">Investment Fraud</option>
+                            <option value="ransomware">Ransomware</option>
+                            <option value="sim_swap">SIM Swap Fraud</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="loss_description" class="form-label">Loss Description</label>
+                        <textarea class="form-control" id="loss_description" name="loss_description" rows="3" placeholder="Describe how the loss occurred..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="date_of_incident" class="form-label">Date of Incident</label>
+                        <input type="date" class="form-control" id="date_of_incident" name="date_of_incident">
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-person-plus"></i> Register Victim</button>
+                        <a href="{{ url_for('victims.list_victims') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to Victims</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

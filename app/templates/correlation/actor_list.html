@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Threat Actors{% endblock %}
+{% block page_title %}Threat Actor Profiles{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{{ url_for('correlation.dashboard') }}" class="btn btn-light btn-sm"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    </div>
+    <span class="badge bg-primary fs-6">{{ actors|length }} Actor{{ 's' if actors|length != 1 }}</span>
+</div>
+
+{% if actors %}
+<div class="row">
+    {% for actor in actors %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="bi bi-person-x"></i> {{ actor.name }}</h6>
+                <span class="badge bg-{{ 'danger' if actor.risk_level == 'critical' else ('warning' if actor.risk_level == 'high' else ('info' if actor.risk_level == 'medium' else 'success')) }}">
+                    {{ actor.risk_level|default('Unknown')|upper }}
+                </span>
+            </div>
+            <div class="card-body">
+                {% if actor.aliases %}
+                <p class="mb-1"><strong>Aliases:</strong> {{ actor.aliases|join(', ') if actor.aliases is iterable and actor.aliases is not string else actor.aliases }}</p>
+                {% endif %}
+                {% if actor.description %}
+                <p class="text-muted small">{{ actor.description|truncate(120) }}</p>
+                {% endif %}
+                <p class="mb-1"><small><strong>Linked Cases:</strong> {{ actor.linked_cases|default([])|length }}</small></p>
+                <p class="mb-0"><small class="text-muted">Created: {{ actor.created_at.strftime('%Y-%m-%d') if actor.created_at else 'N/A' }}</small></p>
+            </div>
+            <div class="card-footer text-end">
+                <a href="{{ url_for('correlation.view_actor', actor_id=actor.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> View Profile</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card shadow">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-person-x display-1 text-muted"></i>
+        <h5 class="mt-3">No Threat Actors Identified</h5>
+        <p class="text-muted">Run a correlation scan to identify threat actors across cases.</p>
+        <a href="{{ url_for('correlation.dashboard') }}" class="btn btn-primary"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

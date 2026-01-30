@@ -238,6 +238,264 @@
             </div>
         </div>
     </div>
+
+    <!-- Financial Transaction Tracer -->
+    {% if config.get('FEATURE_FINANCIAL_TRACER', True) %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card shadow-sm h-100 border-success">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-cash-stack"></i> Financial Tracer
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    Analyze mobile money and bank transactions:
+                </p>
+                <ul class="small">
+                    <li>Import MTN MoMo, Airtel Money, Zamtel data</li>
+                    <li>Detect suspicious transaction patterns</li>
+                    <li>Identify mule accounts</li>
+                    <li>Transaction flow visualization</li>
+                    <li>Money laundering network detection</li>
+                    <li>Financial evidence reporting</li>
+                </ul>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('financial.index') }}" class="btn btn-success">
+                        <i class="bi bi-search"></i> Analyze Transactions
+                    </a>
+                    <a href="{{ url_for('financial.import_transactions') }}" class="btn btn-outline-success">
+                        <i class="bi bi-upload"></i> Import Data
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer bg-light">
+                <small class="text-muted">
+                    <i class="bi bi-clock"></i> 10-30 seconds per analysis
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Domain/IP OSINT -->
+    {% if config.get('FEATURE_DOMAIN_IP_OSINT', True) %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card shadow-sm h-100 border-info">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-globe2"></i> Domain/IP OSINT
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    Investigate domains and IP addresses:
+                </p>
+                <ul class="small">
+                    <li>WHOIS registration lookup</li>
+                    <li>DNS records and SSL certificates</li>
+                    <li>Subdomain enumeration</li>
+                    <li>Typosquatting detection</li>
+                    <li>IP geolocation and ASN info</li>
+                    <li>VPN/Proxy/Tor detection</li>
+                </ul>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('domain_ip.domain_search') }}" class="btn btn-info text-white">
+                        <i class="bi bi-search"></i> Domain Investigation
+                    </a>
+                    <a href="{{ url_for('domain_ip.ip_search') }}" class="btn btn-outline-info">
+                        <i class="bi bi-hdd-network"></i> IP Investigation
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer bg-light">
+                <small class="text-muted">
+                    <i class="bi bi-clock"></i> 5-15 seconds per lookup
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Cryptocurrency Tracer -->
+    {% if config.get('FEATURE_CRYPTO_TRACER', True) %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card shadow-sm h-100 border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0">
+                    <i class="bi bi-currency-bitcoin"></i> Crypto Tracer
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    Trace cryptocurrency wallets and transactions:
+                </p>
+                <ul class="small">
+                    <li>Bitcoin, Ethereum, Tron, BNB Chain</li>
+                    <li>Wallet balance and transaction history</li>
+                    <li>Exchange identification</li>
+                    <li>Risk scoring and flagging</li>
+                    <li>Wallet cluster analysis</li>
+                    <li>Transaction flow graphs</li>
+                </ul>
+                <div class="d-grid">
+                    <a href="{{ url_for('crypto.search') }}" class="btn btn-warning">
+                        <i class="bi bi-search"></i> Trace Wallet
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer bg-light">
+                <small class="text-muted">
+                    <i class="bi bi-clock"></i> 10-20 seconds per trace
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- SIM Swap Detection -->
+    {% if config.get('FEATURE_SIM_SWAP', True) %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card shadow-sm h-100 border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-sim"></i> SIM Swap Detection
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    Detect unauthorized SIM swap events:
+                </p>
+                <ul class="small">
+                    <li>SIM change history analysis</li>
+                    <li>Carrier data import (MTN, Airtel, Zamtel)</li>
+                    <li>Suspicious swap pattern detection</li>
+                    <li>Correlation with fraud events</li>
+                    <li>Visual event timeline</li>
+                    <li>Risk assessment scoring</li>
+                </ul>
+                <div class="d-grid">
+                    <a href="{{ url_for('sim_swap.search') }}" class="btn btn-danger">
+                        <i class="bi bi-search"></i> Detect SIM Swaps
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer bg-light">
+                <small class="text-muted">
+                    <i class="bi bi-clock"></i> 5-10 seconds per analysis
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Messaging Forensics -->
+    {% if config.get('FEATURE_MESSAGING_FORENSICS', True) %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card shadow-sm h-100 border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-chat-dots"></i> Messaging Forensics
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    Analyze exported chat conversations:
+                </p>
+                <ul class="small">
+                    <li>WhatsApp, Telegram, Signal support</li>
+                    <li>Extract links and phone numbers</li>
+                    <li>Suspicious content flagging</li>
+                    <li>Participant and keyword analysis</li>
+                    <li>Chat-style conversation viewer</li>
+                    <li>Engagement statistics</li>
+                </ul>
+                <div class="d-grid">
+                    <a href="{{ url_for('messaging.upload') }}" class="btn btn-primary">
+                        <i class="bi bi-upload"></i> Upload & Analyze
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer bg-light">
+                <small class="text-muted">
+                    <i class="bi bi-clock"></i> 10-30 seconds per analysis
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Image/Document Forensics -->
+    {% if config.get('FEATURE_FORENSICS', True) %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card shadow-sm h-100 border-dark">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-fingerprint"></i> Image/Doc Forensics
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    Forensic analysis of images and documents:
+                </p>
+                <ul class="small">
+                    <li>EXIF metadata extraction</li>
+                    <li>GPS location from images</li>
+                    <li>Error Level Analysis (ELA)</li>
+                    <li>Image manipulation detection</li>
+                    <li>OCR text extraction</li>
+                    <li>Document metadata and embedded objects</li>
+                </ul>
+                <div class="d-grid">
+                    <a href="{{ url_for('forensics.upload') }}" class="btn btn-dark">
+                        <i class="bi bi-upload"></i> Analyze File
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer bg-light">
+                <small class="text-muted">
+                    <i class="bi bi-clock"></i> 5-20 seconds per file
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Evidence Preservation -->
+    {% if config.get('FEATURE_EVIDENCE_PRESERVATION', True) %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card shadow-sm h-100 border-secondary">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-archive"></i> Evidence Preservation
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    Preserve social media content as evidence:
+                </p>
+                <ul class="small">
+                    <li>Screenshot capture with timestamps</li>
+                    <li>Content text extraction</li>
+                    <li>Author and engagement data</li>
+                    <li>Forensic-grade evidence hashing</li>
+                    <li>Wayback Machine archiving</li>
+                    <li>Legal content flagging</li>
+                </ul>
+                <div class="d-grid">
+                    <a href="{{ url_for('social_preservation.capture') }}" class="btn btn-secondary">
+                        <i class="bi bi-camera"></i> Capture & Preserve
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer bg-light">
+                <small class="text-muted">
+                    <i class="bi bi-clock"></i> 10-30 seconds per capture
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <!-- Quick Links -->

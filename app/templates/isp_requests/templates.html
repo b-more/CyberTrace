@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block title %}Request Templates{% endblock %}
+{% block page_title %}ISP Request Templates{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-file-earmark-ruled"></i> Request Templates</h5>
+            <a href="{{ url_for('isp_requests.create_request') }}" class="btn btn-light btn-sm"><i class="bi bi-plus-circle"></i> Create Request</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> <strong>Use these templates as starting points for ISP/Telco data requests. Copy the sample text and customize it for your specific case.</strong>
+        </div>
+    </div>
+</div>
+
+<!-- Subscriber Information Template -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-light">
+        <div class="d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="bi bi-person-vcard"></i> Subscriber Information Request</h6>
+            <button class="btn btn-sm btn-outline-primary btn-copy" data-target="template-subscriber"><i class="bi bi-clipboard"></i> Copy</button>
+        </div>
+    </div>
+    <div class="card-body">
+        <pre class="bg-light p-3 rounded" id="template-subscriber">FORMAL REQUEST FOR SUBSCRIBER INFORMATION
+
+To: [Provider Name] - Legal/Compliance Department
+From: Zambia Police Service - Cybercrime Unit
+Date: [Date]
+Case Reference: [Case Number]
+Legal Authority: [Court Order / Warrant Number / Statutory Authority]
+
+REQUEST:
+Pursuant to [legal authority], we hereby request subscriber information associated with the following identifier(s):
+
+Target: [Phone number / IP address / Account ID]
+Period: [Date From] to [Date To]
+
+Information Requested:
+1. Full name of account holder
+2. National Registration Card (NRC) number
+3. Date of registration
+4. Physical address provided at registration
+5. Alternate contact information
+6. Account status (active/suspended/terminated)
+7. SIM card ICCID and IMSI numbers (if applicable)
+
+This information is required for an ongoing criminal investigation. Please respond within [SLA] days.
+
+Authorized Officer: [Name, Rank, Badge Number]
+Contact: [Phone / Email]</pre>
+    </div>
+</div>
+
+<!-- Call Records Template -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-light">
+        <div class="d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="bi bi-telephone"></i> Call Detail Records (CDR) Request</h6>
+            <button class="btn btn-sm btn-outline-primary btn-copy" data-target="template-cdr"><i class="bi bi-clipboard"></i> Copy</button>
+        </div>
+    </div>
+    <div class="card-body">
+        <pre class="bg-light p-3 rounded" id="template-cdr">FORMAL REQUEST FOR CALL DETAIL RECORDS
+
+To: [Provider Name] - Legal/Compliance Department
+From: Zambia Police Service - Cybercrime Unit
+Date: [Date]
+Case Reference: [Case Number]
+Legal Authority: [Court Order / Warrant Number]
+
+REQUEST:
+Pursuant to [legal authority], we hereby request Call Detail Records (CDR) for:
+
+Target Number: [Phone Number]
+Period: [Date From] to [Date To]
+
+Records Requested:
+1. All incoming and outgoing calls (number, date, time, duration)
+2. All SMS messages (sender/receiver, date, time)
+3. Cell tower location data (Cell ID, LAC) for each communication
+4. IMEI of device(s) used
+5. Data session logs (if available)
+6. Mobile money transaction logs (if applicable)
+
+Format: CSV or Excel preferred.
+
+Authorized Officer: [Name, Rank, Badge Number]
+Contact: [Phone / Email]</pre>
+    </div>
+</div>
+
+<!-- IP Logs Template -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-light">
+        <div class="d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="bi bi-hdd-network"></i> IP Address Logs Request</h6>
+            <button class="btn btn-sm btn-outline-primary btn-copy" data-target="template-ip"><i class="bi bi-clipboard"></i> Copy</button>
+        </div>
+    </div>
+    <div class="card-body">
+        <pre class="bg-light p-3 rounded" id="template-ip">FORMAL REQUEST FOR IP ADDRESS LOGS
+
+To: [ISP Name] - Legal/Compliance Department
+From: Zambia Police Service - Cybercrime Unit
+Date: [Date]
+Case Reference: [Case Number]
+Legal Authority: [Court Order / Warrant Number]
+
+REQUEST:
+Pursuant to [legal authority], we request subscriber and session logs for:
+
+IP Address: [IP Address]
+Date/Time of Interest: [Specific date and time, including timezone]
+Period: [Date From] to [Date To]
+
+Information Requested:
+1. Subscriber assigned to the IP address at specified date/time
+2. Full subscriber details (name, address, NRC)
+3. Session logs (connection start/end times)
+4. MAC address of connected device (if available)
+5. NAT translation logs (if applicable)
+
+Note: Please include timezone (CAT/UTC+2) for all timestamps.
+
+Authorized Officer: [Name, Rank, Badge Number]
+Contact: [Phone / Email]</pre>
+    </div>
+</div>
+
+<!-- Content Preservation Template -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-light">
+        <div class="d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="bi bi-shield-lock"></i> Content Preservation Request</h6>
+            <button class="btn btn-sm btn-outline-primary btn-copy" data-target="template-preserve"><i class="bi bi-clipboard"></i> Copy</button>
+        </div>
+    </div>
+    <div class="card-body">
+        <pre class="bg-light p-3 rounded" id="template-preserve">URGENT: CONTENT PRESERVATION REQUEST
+
+To: [Provider Name] - Legal/Compliance Department
+From: Zambia Police Service - Cybercrime Unit
+Date: [Date]
+Case Reference: [Case Number]
+Legal Authority: [Statutory Authority / Emergency Preservation]
+
+REQUEST:
+We request immediate preservation of all data and content associated with:
+
+Account/Identifier: [Target Identifier]
+
+Data to Preserve:
+1. All account information and settings
+2. Communication content (messages, calls, media)
+3. Login/access logs
+4. Associated IP addresses and device information
+5. Contact lists and group memberships
+6. Any stored files or media
+
+Duration: Please preserve data for a minimum of 90 days pending formal legal process.
+
+THIS IS TIME-SENSITIVE. Please confirm receipt and preservation within 24 hours.
+
+Authorized Officer: [Name, Rank, Badge Number]
+Contact: [Phone / Email]</pre>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2">
+    <a href="{{ url_for('isp_requests.list_requests') }}" class="btn btn-primary"><i class="bi bi-arrow-left"></i> Back to Requests</a>
+    <a href="{{ url_for('isp_requests.create_request') }}" class="btn btn-outline-primary"><i class="bi bi-plus-circle"></i> Create New Request</a>
+</div>
+{% endblock %}

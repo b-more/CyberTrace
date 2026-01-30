@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}Victim Details{% endblock %}
+{% block page_title %}Victim Details{% endblock %}
+
+{% block content %}
+<!-- Victim Info Card -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-person"></i> {{ victim.full_name }}</h5>
+            <span class="badge bg-light text-dark">{{ victim.victim_type|default('Individual')|title }}</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table table-sm">
+                    <tr><th style="width:35%">Full Name</th><td>{{ victim.full_name }}</td></tr>
+                    <tr><th>NRC Number</th><td>{{ victim.nrc_number|default('N/A') }}</td></tr>
+                    <tr><th>Phone</th><td>{{ victim.phone|default('N/A') }}</td></tr>
+                    <tr><th>Email</th><td>{{ victim.email|default('N/A') }}</td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table class="table table-sm">
+                    <tr><th style="width:35%">Address</th><td>{{ victim.address|default('N/A') }}</td></tr>
+                    <tr><th>Province</th><td>{{ victim.province|default('N/A') }}</td></tr>
+                    <tr><th>District</th><td>{{ victim.district|default('N/A') }}</td></tr>
+                    <tr><th>Occupation</th><td>{{ victim.occupation|default('N/A') }}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Linked Case -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0"><i class="bi bi-folder"></i> Linked Case</h6>
+    </div>
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <strong>{{ victim.case_number }}</strong> - {{ victim.case_title|default('') }}
+            </div>
+            <a href="{{ url_for('cases.view_case', case_id=victim.case_id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> View Case</a>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Loss Summary -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-danger text-white">
+        <h6 class="mb-0"><i class="bi bi-cash"></i> Financial Loss Summary</h6>
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-md-4">
+                <h3 class="text-danger">{{ victim.loss_currency|default('ZMW') }} {{ victim.loss_amount|default(0)|round(2) }}</h3>
+                <p>Total Loss</p>
+            </div>
+            <div class="col-md-4">
+                <h5><span class="badge bg-secondary fs-6">{{ victim.loss_type|default('N/A')|replace('_', ' ')|title }}</span></h5>
+                <p>Loss Type</p>
+            </div>
+            <div class="col-md-4">
+                <h5>{{ victim.date_of_incident|default('N/A') }}</h5>
+                <p>Date of Incident</p>
+            </div>
+        </div>
+        {% if victim.loss_description %}
+        <hr>
+        <h6>Description</h6>
+        <p>{{ victim.loss_description }}</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Statement Section -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="bi bi-pencil-square"></i> Victim Statement</h6>
+            <a href="{{ url_for('victims.add_statement', victim_id=victim.id) }}" class="btn btn-light btn-sm">
+                {% if victim.statement_recorded %}
+                <i class="bi bi-eye"></i> View Statement
+                {% else %}
+                <i class="bi bi-plus-circle"></i> Record Statement
+                {% endif %}
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if victim.statement_recorded %}
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle"></i> Statement recorded on {{ victim.statement_date|default('N/A') }}
+            <br><small>Format: {{ victim.statement_format|default('Written')|title }}</small>
+        </div>
+        {% if victim.statement_text %}
+        <div class="bg-light p-3 rounded" style="max-height:300px;overflow-y:auto;">
+            {{ victim.statement_text }}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-4">
+            <i class="bi bi-pencil-square display-4 text-muted"></i>
+            <h6 class="text-muted mt-2">No statement recorded yet</h6>
+            <a href="{{ url_for('victims.add_statement', victim_id=victim.id) }}" class="btn btn-primary mt-2"><i class="bi bi-plus-circle"></i> Record Statement</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Notification Log -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0"><i class="bi bi-bell"></i> Notification Log</h6>
+    </div>
+    <div class="card-body">
+        {% if victim.notifications %}
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Message</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for notif in victim.notifications %}
+                    <tr>
+                        <td>{{ notif.date }}</td>
+                        <td><span class="badge bg-info">{{ notif.type }}</span></td>
+                        <td>{{ notif.message }}</td>
+                        <td><span class="badge bg-{{ 'success' if notif.delivered else 'warning' }}">{{ 'Delivered' if notif.delivered else 'Pending' }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No notifications sent yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2">
+    <a href="{{ url_for('victims.list_victims') }}" class="btn btn-primary"><i class="bi bi-arrow-left"></i> Back to Victims</a>
+    <a href="{{ url_for('victims.add_statement', victim_id=victim.id) }}" class="btn btn-outline-primary"><i class="bi bi-pencil-square"></i> Record Statement</a>
+    <a href="{{ url_for('cases.view_case', case_id=victim.case_id) }}" class="btn btn-outline-secondary"><i class="bi bi-folder"></i> View Case</a>
+</div>
+{% endblock %}

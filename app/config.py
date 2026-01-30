@@ -92,6 +92,8 @@ class Config:
     DEHASHED_EMAIL = os.environ.get('DEHASHED_EMAIL', '')
     DEHASHED_API_KEY = os.environ.get('DEHASHED_API_KEY', '')
     INTELX_API_KEY = os.environ.get('INTELX_API_KEY', '')
+    BSCSCAN_API_KEY = os.environ.get('BSCSCAN_API_KEY', '')
+    TRONSCAN_API_KEY = os.environ.get('TRONSCAN_API_KEY', '')
 
     # Threat Intelligence API Keys (mostly free)
     ALIENVAULT_OTX_API_KEY = os.environ.get('ALIENVAULT_OTX_API_KEY', '')
@@ -164,6 +166,15 @@ class Config:
     ENABLE_ASYNC_TASKS = os.environ.get('ENABLE_ASYNC_TASKS', 'True').lower() == 'true'
     ENABLE_API_ACCESS = os.environ.get('ENABLE_API_ACCESS', 'True').lower() == 'true'
     ENABLE_THREAT_INTELLIGENCE = os.environ.get('ENABLE_THREAT_INTELLIGENCE', 'True').lower() == 'true'
+    ENABLE_FINANCIAL_TRACER = os.environ.get('ENABLE_FINANCIAL_TRACER', 'True').lower() == 'true'
+    ENABLE_SIM_SWAP_DETECTION = os.environ.get('ENABLE_SIM_SWAP_DETECTION', 'True').lower() == 'true'
+    ENABLE_MESSAGING_FORENSICS = os.environ.get('ENABLE_MESSAGING_FORENSICS', 'True').lower() == 'true'
+    ENABLE_IMAGE_FORENSICS = os.environ.get('ENABLE_IMAGE_FORENSICS', 'True').lower() == 'true'
+    ENABLE_SOCIAL_PRESERVATION = os.environ.get('ENABLE_SOCIAL_PRESERVATION', 'True').lower() == 'true'
+    ENABLE_CORRELATION_ENGINE = os.environ.get('ENABLE_CORRELATION_ENGINE', 'True').lower() == 'true'
+    ENABLE_ISP_REQUESTS = os.environ.get('ENABLE_ISP_REQUESTS', 'True').lower() == 'true'
+    ENABLE_VICTIM_MANAGEMENT = os.environ.get('ENABLE_VICTIM_MANAGEMENT', 'True').lower() == 'true'
+    ENABLE_ANALYTICS_DASHBOARD = os.environ.get('ENABLE_ANALYTICS_DASHBOARD', 'True').lower() == 'true'
 
     # Legal and Compliance
     REQUIRE_WARRANT_INFO = os.environ.get('REQUIRE_WARRANT_INFO', 'True').lower() == 'true'

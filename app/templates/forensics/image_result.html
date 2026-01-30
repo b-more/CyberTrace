@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}Image Forensics Results{% endblock %}
+{% block page_title %}Image Forensics Results{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-dark text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-image"></i> {{ investigation.target_identifier }}</h5>
+            <span class="badge bg-{{ 'success' if investigation.status == 'completed' else 'danger' }}">{{ investigation.status|title }}</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Case:</strong> {{ investigation.case.case_number }}</p>
+                <p><strong>Investigator:</strong> {{ investigation.investigator.full_name }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Date:</strong> {{ investigation.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p><strong>Duration:</strong> {{ investigation.execution_time|round(2) if investigation.execution_time else 'N/A' }}s</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Manipulation Warning -->
+{% if results.manipulation_detected %}
+<div class="alert alert-danger shadow">
+    <h5><i class="bi bi-exclamation-octagon"></i> Manipulation Detected</h5>
+    <p class="mb-0">{{ results.manipulation_details|default('Error Level Analysis indicates this image may have been manipulated or edited. Review ELA results below for details.') }}</p>
+</div>
+{% endif %}
+
+<!-- Original Image Display -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-dark text-white">
+        <h6 class="mb-0"><i class="bi bi-image"></i> Original Image</h6>
+    </div>
+    <div class="card-body text-center">
+        {% if results.image_url %}
+        <img src="{{ results.image_url }}" alt="Original Image" class="img-fluid rounded" style="max-height:500px;">
+        {% else %}
+        <div class="bg-light p-5 rounded">
+            <i class="bi bi-image display-1 text-muted"></i>
+            <p class="text-muted mt-2">Image preview not available</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- EXIF Metadata -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-dark text-white">
+        <h6 class="mb-0"><i class="bi bi-info-circle"></i> EXIF Metadata</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:35%">Property</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for key, value in results.exif|default({})|dictsort %}
+                    <tr>
+                        <td><strong>{{ key|replace('_', ' ')|title }}</strong></td>
+                        <td>{{ value }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- GPS Location Map -->
+{% if results.gps %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-dark text-white">
+        <h6 class="mb-0"><i class="bi bi-geo-alt"></i> GPS Location</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <table class="table table-sm">
+                    <tr><th>Latitude</th><td>{{ results.gps.latitude }}</td></tr>
+                    <tr><th>Longitude</th><td>{{ results.gps.longitude }}</td></tr>
+                    <tr><th>Altitude</th><td>{{ results.gps.altitude|default('N/A') }}</td></tr>
+                </table>
+            </div>
+            <div class="col-md-8">
+                <iframe
+                    width="100%" height="300" frameborder="0" scrolling="no" style="border-radius:8px;"
+                    src="https://www.openstreetmap.org/export/embed.html?bbox={{ results.gps.longitude - 0.01 }}%2C{{ results.gps.latitude - 0.01 }}%2C{{ results.gps.longitude + 0.01 }}%2C{{ results.gps.latitude + 0.01 }}&layer=mapnik&marker={{ results.gps.latitude }}%2C{{ results.gps.longitude }}">
+                </iframe>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ELA Result -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-dark text-white">
+        <h6 class="mb-0"><i class="bi bi-layers"></i> Error Level Analysis (ELA)</h6>
+    </div>
+    <div class="card-body text-center">
+        {% if results.ela_image_url %}
+        <img src="{{ results.ela_image_url }}" alt="ELA Result" class="img-fluid rounded" style="max-height:500px;">
+        <p class="mt-2 text-muted"><small>Bright areas in the ELA image may indicate regions that have been modified.</small></p>
+        {% else %}
+        <div class="bg-light p-5 rounded">
+            <i class="bi bi-layers display-4 text-muted"></i>
+            <p class="text-muted mt-2">ELA analysis not available for this image.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Device Information -->
+{% if results.device %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-dark text-white">
+        <h6 class="mb-0"><i class="bi bi-phone"></i> Device Information</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <tbody>
+                    <tr><th style="width:35%">Make</th><td>{{ results.device.make|default('N/A') }}</td></tr>
+                    <tr><th>Model</th><td>{{ results.device.model|default('N/A') }}</td></tr>
+                    <tr><th>Software</th><td>{{ results.device.software|default('N/A') }}</td></tr>
+                    <tr><th>Lens</th><td>{{ results.device.lens|default('N/A') }}</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- OCR Text -->
+{% if results.ocr_text %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-dark text-white">
+        <h6 class="mb-0"><i class="bi bi-fonts"></i> OCR Extracted Text</h6>
+    </div>
+    <div class="card-body">
+        <pre class="bg-light p-3 rounded">{{ results.ocr_text }}</pre>
+    </div>
+</div>
+{% endif %}
+
+<!-- Evidence Hash -->
+<div class="card shadow mb-4">
+    <div class="card-header"><h6 class="mb-0"><i class="bi bi-file-lock"></i> Evidence Integrity</h6></div>
+    <div class="card-body">
+        <pre class="bg-light p-2 rounded"><code>{{ investigation.evidence_hash }}</code></pre>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2">
+    <a href="{{ url_for('forensics.upload') }}" class="btn btn-dark"><i class="bi bi-upload"></i> Analyze Another File</a>
+    <a href="{{ url_for('cases.view_case', case_id=investigation.case_id) }}" class="btn btn-outline-secondary"><i class="bi bi-folder"></i> View Case</a>
+</div>
+{% endblock %}

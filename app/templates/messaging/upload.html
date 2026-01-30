@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Messaging Forensics{% endblock %}
+{% block page_title %}Messaging Forensics{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-chat-dots"></i> Messaging Forensics Upload</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> <strong>Upload exported chat logs from messaging platforms for forensic analysis. Extracts links, phone numbers, keywords, and generates conversation statistics.</strong>
+                </div>
+                <form method="POST" action="{{ url_for('messaging.upload') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="mb-3">
+                        <label for="case_id" class="form-label"><i class="bi bi-folder"></i> Select Case <span class="text-danger">*</span></label>
+                        <select class="form-select" id="case_id" name="case_id" required>
+                            <option value="">-- Select a case --</option>
+                            {% for case in cases %}
+                            <option value="{{ case.id }}">{{ case.case_number }} - {{ case.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="platform" class="form-label"><i class="bi bi-phone"></i> Messaging Platform <span class="text-danger">*</span></label>
+                        <select class="form-select" id="platform" name="platform" required>
+                            <option value="">-- Select platform --</option>
+                            <option value="whatsapp">WhatsApp</option>
+                            <option value="telegram">Telegram</option>
+                            <option value="signal">Signal</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="chat_file" class="form-label"><i class="bi bi-file-earmark-arrow-up"></i> Chat Export File <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control" id="chat_file" name="chat_file" accept=".txt,.zip" required>
+                        <div class="form-text">Accepted formats: .txt (plain text export), .zip (media included export). Max 100MB.</div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-upload"></i> Upload & Analyze</button>
+                        <a href="{{ url_for('investigations.index') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

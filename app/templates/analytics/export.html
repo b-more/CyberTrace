@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Export Reports{% endblock %}
+{% block page_title %}Export Reports{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-download"></i> Generate & Export Report</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> <strong>Generate comprehensive reports from CyberTrace data. Select a date range, report type, and export format below.</strong>
+                </div>
+                <form method="POST" action="{{ url_for('analytics.export_data') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="date_from" class="form-label"><i class="bi bi-calendar-event"></i> Date From <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="date_from" name="date_from" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="date_to" class="form-label"><i class="bi bi-calendar-event"></i> Date To <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="date_to" name="date_to" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="report_type" class="form-label"><i class="bi bi-file-text"></i> Report Type <span class="text-danger">*</span></label>
+                        <select class="form-select" id="report_type" name="report_type" required>
+                            <option value="">-- Select report type --</option>
+                            <option value="executive_summary">Executive Summary</option>
+                            <option value="case_report">Case Report</option>
+                            <option value="financial_report">Financial Report</option>
+                            <option value="threat_report">Threat Intelligence Report</option>
+                        </select>
+                        <div class="form-text">
+                            <ul class="mb-0 small">
+                                <li><strong>Executive Summary:</strong> High-level overview of cases, investigations, and outcomes</li>
+                                <li><strong>Case Report:</strong> Detailed breakdown of all cases in the period</li>
+                                <li><strong>Financial Report:</strong> Financial losses, transaction analysis, recovery data</li>
+                                <li><strong>Threat Report:</strong> Threat actors, indicators, attack patterns, trends</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="export_format" class="form-label"><i class="bi bi-file-earmark"></i> Export Format <span class="text-danger">*</span></label>
+                        <select class="form-select" id="export_format" name="export_format" required>
+                            <option value="">-- Select format --</option>
+                            <option value="pdf">PDF Document</option>
+                            <option value="csv">CSV Spreadsheet</option>
+                        </select>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-download"></i> Generate Report</button>
+                        <a href="{{ url_for('analytics.dashboard') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

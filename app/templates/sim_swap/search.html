@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}SIM Swap Detection{% endblock %}
+{% block page_title %}SIM Swap Detection{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card shadow">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-sim"></i> SIM Swap Detection</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> <strong>Detect and analyze SIM swap events by investigating phone numbers and importing carrier data to identify unauthorized SIM changes.</strong>
+                </div>
+                <form method="POST" action="{{ url_for('sim_swap.search') }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="mb-3">
+                        <label for="case_id" class="form-label"><i class="bi bi-folder"></i> Select Case <span class="text-danger">*</span></label>
+                        <select class="form-select" id="case_id" name="case_id" required>
+                            <option value="">-- Select a case --</option>
+                            {% for case in cases %}
+                            <option value="{{ case.id }}">{{ case.case_number }} - {{ case.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone_number" class="form-label"><i class="bi bi-phone"></i> Phone Number <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="phone_number" name="phone_number" placeholder="e.g., 0971234567 or +260971234567" required>
+                        <div class="form-text">Enter the Zambian phone number to investigate.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="carrier" class="form-label"><i class="bi bi-broadcast"></i> Carrier <span class="text-danger">*</span></label>
+                        <select class="form-select" id="carrier" name="carrier" required>
+                            <option value="">-- Select carrier --</option>
+                            <option value="mtn">MTN Zambia</option>
+                            <option value="airtel">Airtel Zambia</option>
+                            <option value="zamtel">Zamtel</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="carrier_data" class="form-label"><i class="bi bi-file-earmark-arrow-up"></i> Carrier Data Import (Optional)</label>
+                        <input type="file" class="form-control" id="carrier_data" name="carrier_data" accept=".csv,.xlsx,.xls">
+                        <div class="form-text">Upload carrier-provided SIM change history data (CSV/Excel).</div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-danger btn-lg"><i class="bi bi-search"></i> Detect SIM Swaps</button>
+                        <a href="{{ url_for('investigations.index') }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

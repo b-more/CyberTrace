@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Analytics Dashboard{% endblock %}
+{% block page_title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stat Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-primary">{{ stats.total_cases|default(0) }}</h3>
+                <p class="mb-0"><i class="bi bi-folder2"></i> Total Cases</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-success">{{ stats.open_cases|default(0) }}</h3>
+                <p class="mb-0"><i class="bi bi-folder2-open"></i> Open Cases</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-info">{{ stats.total_investigations|default(0) }}</h3>
+                <p class="mb-0"><i class="bi bi-search"></i> Total Investigations</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow text-center">
+            <div class="card-body">
+                <h3 class="text-danger">ZMW {{ stats.total_losses|default(0)|round(2) }}</h3>
+                <p class="mb-0"><i class="bi bi-cash"></i> Total Losses</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 1 -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0"><i class="bi bi-pie-chart"></i> Cases by Type</h6>
+            </div>
+            <div class="card-body">
+                <div id="chart-cases-by-type" style="height:350px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0"><i class="bi bi-bar-chart"></i> Cases by Month</h6>
+            </div>
+            <div class="card-body">
+                <div id="chart-cases-by-month" style="height:350px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0"><i class="bi bi-diagram-3"></i> Investigations by Type</h6>
+            </div>
+            <div class="card-body">
+                <div id="chart-investigations-by-type" style="height:350px;"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h6 class="mb-0"><i class="bi bi-shield-exclamation"></i> Top Threat Types</h6>
+            </div>
+            <div class="card-body">
+                <div id="chart-top-threats" style="height:350px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-body">
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="{{ url_for('analytics.case_stats') }}" class="btn btn-outline-primary"><i class="bi bi-bar-chart-line"></i> Case Statistics</a>
+                    <a href="{{ url_for('analytics.performance') }}" class="btn btn-outline-success"><i class="bi bi-people"></i> Investigator Performance</a>
+                    <a href="{{ url_for('analytics.export_data') }}" class="btn btn-outline-secondary"><i class="bi bi-download"></i> Export Reports</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist@2"></script>
+<script>
+    // Cases by Type (Pie Chart)
+    var casesByTypeData = {{ chart_data.cases_by_type|tojson|safe }};
+    Plotly.newPlot('chart-cases-by-type', [{
+        values: casesByTypeData.values,
+        labels: casesByTypeData.labels,
+        type: 'pie',
+        hole: 0.3,
+        marker: { colors: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#0dcaf0', '#6c757d', '#6610f2', '#d63384'] }
+    }], { margin: {t:10, b:10, l:10, r:10}, showlegend: true, legend: {orientation: 'h', y: -0.1} }, {responsive: true});
+
+    // Cases by Month (Bar Chart)
+    var casesByMonthData = {{ chart_data.cases_by_month|tojson|safe }};
+    Plotly.newPlot('chart-cases-by-month', [{
+        x: casesByMonthData.labels,
+        y: casesByMonthData.values,
+        type: 'bar',
+        marker: { color: '#0d6efd' }
+    }], { margin: {t:10, b:40, l:40, r:10}, xaxis: {title: 'Month'}, yaxis: {title: 'Cases'} }, {responsive: true});
+
+    // Investigations by Type (Doughnut Chart)
+    var invByTypeData = {{ chart_data.investigations_by_type|tojson|safe }};
+    Plotly.newPlot('chart-investigations-by-type', [{
+        values: invByTypeData.values,
+        labels: invByTypeData.labels,
+        type: 'pie',
+        hole: 0.5,
+        marker: { colors: ['#198754', '#0dcaf0', '#ffc107', '#dc3545', '#6610f2', '#fd7e14', '#20c997', '#6c757d'] }
+    }], { margin: {t:10, b:10, l:10, r:10}, showlegend: true, legend: {orientation: 'h', y: -0.1} }, {responsive: true});
+
+    // Top Threat Types (Horizontal Bar)
+    var topThreatsData = {{ chart_data.top_threats|tojson|safe }};
+    Plotly.newPlot('chart-top-threats', [{
+        y: topThreatsData.labels,
+        x: topThreatsData.values,
+        type: 'bar',
+        orientation: 'h',
+        marker: { color: '#dc3545' }
+    }], { margin: {t:10, b:40, l:150, r:10}, xaxis: {title: 'Count'} }, {responsive: true});
+</script>
+{% endblock %}

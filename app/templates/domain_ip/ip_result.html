@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}IP Address Investigation Results{% endblock %}
+{% block page_title %}IP Address Investigation Results{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-info text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-hdd-network"></i> {{ investigation.target_identifier }}</h5>
+            <span class="badge bg-{{ 'success' if investigation.status == 'completed' else 'danger' }}">{{ investigation.status|title }}</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Case:</strong> {{ investigation.case.case_number }}</p>
+                <p><strong>Investigator:</strong> {{ investigation.investigator.full_name }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Date:</strong> {{ investigation.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p><strong>Duration:</strong> {{ investigation.execution_time|round(2) if investigation.execution_time else 'N/A' }}s</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Geolocation Map -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-info text-white">
+        <h6 class="mb-0"><i class="bi bi-geo-alt"></i> Geolocation</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table table-hover table-sm">
+                    <tbody>
+                        <tr><th>Country</th><td>{{ results.geolocation.country|default('N/A') }}</td></tr>
+                        <tr><th>Region</th><td>{{ results.geolocation.region|default('N/A') }}</td></tr>
+                        <tr><th>City</th><td>{{ results.geolocation.city|default('N/A') }}</td></tr>
+                        <tr><th>Latitude</th><td>{{ results.geolocation.latitude|default('N/A') }}</td></tr>
+                        <tr><th>Longitude</th><td>{{ results.geolocation.longitude|default('N/A') }}</td></tr>
+                        <tr><th>Timezone</th><td>{{ results.geolocation.timezone|default('N/A') }}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-6">
+                {% if results.geolocation and results.geolocation.latitude and results.geolocation.longitude %}
+                <iframe
+                    width="100%" height="300" frameborder="0" scrolling="no" style="border-radius:8px;"
+                    src="https://www.openstreetmap.org/export/embed.html?bbox={{ results.geolocation.longitude - 0.05 }}%2C{{ results.geolocation.latitude - 0.05 }}%2C{{ results.geolocation.longitude + 0.05 }}%2C{{ results.geolocation.latitude + 0.05 }}&layer=mapnik&marker={{ results.geolocation.latitude }}%2C{{ results.geolocation.longitude }}">
+                </iframe>
+                {% else %}
+                <div class="bg-light rounded p-5 text-center">
+                    <i class="bi bi-geo-alt display-4 text-muted"></i>
+                    <p class="text-muted mt-2">Map unavailable - no coordinates found</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ASN Information -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-info text-white">
+        <h6 class="mb-0"><i class="bi bi-building"></i> ASN Information</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <tbody>
+                    <tr><th style="width:30%">ASN</th><td>{{ results.asn.number|default('N/A') }}</td></tr>
+                    <tr><th>Organization</th><td>{{ results.asn.organization|default('N/A') }}</td></tr>
+                    <tr><th>ISP</th><td>{{ results.asn.isp|default('N/A') }}</td></tr>
+                    <tr><th>Network Range</th><td><code>{{ results.asn.network|default('N/A') }}</code></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Reverse DNS -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-info text-white">
+        <h6 class="mb-0"><i class="bi bi-arrow-left-right"></i> Reverse DNS</h6>
+    </div>
+    <div class="card-body">
+        {% if results.reverse_dns %}
+        <ul class="list-group">
+            {% for hostname in results.reverse_dns %}
+            <li class="list-group-item"><i class="bi bi-globe"></i> {{ hostname }}</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted mb-0">No reverse DNS records found.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Reputation Scores -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-info text-white">
+        <h6 class="mb-0"><i class="bi bi-shield-check"></i> Reputation Scores</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for source, score in results.reputation|default({})|dictsort %}
+            <div class="col-md-4 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h4 class="text-{{ 'danger' if score > 70 else ('warning' if score > 40 else 'success') }}">{{ score }}/100</h4>
+                        <p class="mb-0"><strong>{{ source|replace('_', ' ')|title }}</strong></p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- VPN/Proxy/Tor Indicators -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h6 class="mb-0"><i class="bi bi-shield-exclamation"></i> Anonymity Indicators</h6>
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-md-4">
+                <div class="p-3">
+                    <i class="bi bi-{{ 'check-circle text-danger' if results.indicators.vpn|default(false) else 'x-circle text-success' }} display-6"></i>
+                    <h6 class="mt-2">VPN Detected</h6>
+                    <span class="badge bg-{{ 'danger' if results.indicators.vpn|default(false) else 'success' }}">
+                        {{ 'Yes' if results.indicators.vpn|default(false) else 'No' }}
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3">
+                    <i class="bi bi-{{ 'check-circle text-danger' if results.indicators.proxy|default(false) else 'x-circle text-success' }} display-6"></i>
+                    <h6 class="mt-2">Proxy Detected</h6>
+                    <span class="badge bg-{{ 'danger' if results.indicators.proxy|default(false) else 'success' }}">
+                        {{ 'Yes' if results.indicators.proxy|default(false) else 'No' }}
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3">
+                    <i class="bi bi-{{ 'check-circle text-danger' if results.indicators.tor|default(false) else 'x-circle text-success' }} display-6"></i>
+                    <h6 class="mt-2">Tor Exit Node</h6>
+                    <span class="badge bg-{{ 'danger' if results.indicators.tor|default(false) else 'success' }}">
+                        {{ 'Yes' if results.indicators.tor|default(false) else 'No' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Evidence Hash -->
+<div class="card shadow mb-4">
+    <div class="card-header"><h6 class="mb-0"><i class="bi bi-file-lock"></i> Evidence Integrity</h6></div>
+    <div class="card-body">
+        <pre class="bg-light p-2 rounded"><code>{{ investigation.evidence_hash }}</code></pre>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2">
+    <a href="{{ url_for('domain_ip.ip_search') }}" class="btn btn-info text-white"><i class="bi bi-search"></i> New IP Investigation</a>
+    <a href="{{ url_for('cases.view_case', case_id=investigation.case_id) }}" class="btn btn-outline-secondary"><i class="bi bi-folder"></i> View Case</a>
+</div>
+{% endblock %}

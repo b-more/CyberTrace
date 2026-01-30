@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Wallet Cluster Analysis{% endblock %}
+{% block page_title %}Wallet Cluster Analysis{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-warning text-dark">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-diagram-2"></i> Wallet Cluster: {{ investigation.target_identifier }}</h5>
+            <span class="badge bg-{{ 'success' if investigation.status == 'completed' else 'danger' }}">{{ investigation.status|title }}</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Case:</strong> {{ investigation.case.case_number }}</p>
+                <p><strong>Investigator:</strong> {{ investigation.investigator.full_name }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Cluster Size:</strong> {{ results.cluster_size|default(0) }} wallets</p>
+                <p><strong>Total Volume:</strong> {{ results.total_volume|default('N/A') }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cluster Visualization -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-warning text-dark">
+        <div class="d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="bi bi-diagram-3"></i> Cluster Visualization</h6>
+            <div>
+                <button class="btn btn-dark btn-sm" id="btnZoomIn"><i class="bi bi-zoom-in"></i></button>
+                <button class="btn btn-dark btn-sm" id="btnZoomOut"><i class="bi bi-zoom-out"></i></button>
+                <button class="btn btn-dark btn-sm" id="btnReset"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="d-flex gap-3 mb-3 flex-wrap">
+            <span><i class="bi bi-circle-fill text-primary"></i> Target Wallet</span>
+            <span><i class="bi bi-circle-fill text-warning"></i> Connected Wallet</span>
+            <span><i class="bi bi-circle-fill text-danger"></i> High Risk</span>
+            <span><i class="bi bi-circle-fill text-info"></i> Exchange</span>
+        </div>
+        <div id="cluster-graph" style="width:100%;height:500px;border:1px solid #dee2e6;border-radius:8px;"></div>
+    </div>
+</div>
+
+<!-- Connected Wallets Table -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h6 class="mb-0"><i class="bi bi-wallet2"></i> Connected Wallets</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Wallet Address</th>
+                        <th>Label</th>
+                        <th>Transactions</th>
+                        <th>Volume</th>
+                        <th>Risk</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for wallet in results.connected_wallets|default([]) %}
+                    <tr>
+                        <td><code title="{{ wallet.address }}">{{ wallet.address[:16] }}...</code></td>
+                        <td>{{ wallet.label|default('Unknown') }}</td>
+                        <td>{{ wallet.tx_count }}</td>
+                        <td>{{ wallet.volume }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'danger' if wallet.risk == 'high' else ('warning' if wallet.risk == 'medium' else 'success') }}">
+                                {{ wallet.risk|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('crypto.search') }}?wallet={{ wallet.address }}" class="btn btn-sm btn-outline-warning"><i class="bi bi-search"></i> Trace</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Evidence Hash -->
+<div class="card shadow mb-4">
+    <div class="card-header"><h6 class="mb-0"><i class="bi bi-file-lock"></i> Evidence Integrity</h6></div>
+    <div class="card-body">
+        <pre class="bg-light p-2 rounded"><code>{{ investigation.evidence_hash }}</code></pre>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2">
+    <a href="{{ url_for('crypto.view_result', investigation_id=investigation.id) }}" class="btn btn-warning"><i class="bi bi-arrow-left"></i> Back to Results</a>
+    <a href="{{ url_for('crypto.search') }}" class="btn btn-primary"><i class="bi bi-search"></i> New Trace</a>
+    <a href="{{ url_for('cases.view_case', case_id=investigation.case_id) }}" class="btn btn-outline-secondary"><i class="bi bi-folder"></i> View Case</a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script>
+    const clusterData = {{ cluster_data|tojson|safe }};
+</script>
+<script src="{{ url_for('static', filename='js/d3-cluster-graph.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Conversation View{% endblock %}
+{% block page_title %}Conversation View{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-chat-square-text"></i> Conversation: {{ investigation.target_identifier }}</h5>
+            <span class="badge bg-light text-dark">{{ messages|default([])|length }} messages</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row mb-2">
+            <div class="col-md-6">
+                <p><strong>Case:</strong> {{ investigation.case.case_number }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Platform:</strong> {{ results.platform|default('Unknown')|title }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chat Display -->
+<style>
+    .chat-container {
+        max-height: 700px;
+        overflow-y: auto;
+        padding: 20px;
+        background: #e5ddd5;
+        border-radius: 8px;
+    }
+    .chat-bubble {
+        max-width: 70%;
+        padding: 8px 14px;
+        border-radius: 12px;
+        margin-bottom: 10px;
+        position: relative;
+        word-wrap: break-word;
+    }
+    .chat-bubble-left {
+        background: #ffffff;
+        margin-right: auto;
+        border-top-left-radius: 4px;
+    }
+    .chat-bubble-right {
+        background: #dcf8c6;
+        margin-left: auto;
+        border-top-right-radius: 4px;
+    }
+    .chat-sender {
+        font-weight: bold;
+        font-size: 0.85rem;
+        color: #075e54;
+    }
+    .chat-time {
+        font-size: 0.7rem;
+        color: #999;
+        text-align: right;
+        margin-top: 4px;
+    }
+    .chat-media-indicator {
+        font-style: italic;
+        color: #888;
+    }
+    .chat-date-separator {
+        text-align: center;
+        margin: 15px 0;
+    }
+    .chat-date-separator span {
+        background: #d4eaf7;
+        padding: 4px 12px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        color: #555;
+    }
+</style>
+
+<div class="card shadow mb-4">
+    <div class="card-body p-0">
+        <div class="chat-container" id="chatContainer">
+            {% set ns = namespace(last_date='') %}
+            {% for msg in messages|default([]) %}
+                {% if msg.date != ns.last_date %}
+                <div class="chat-date-separator">
+                    <span><i class="bi bi-calendar"></i> {{ msg.date }}</span>
+                </div>
+                {% set ns.last_date = msg.date %}
+                {% endif %}
+
+                <div class="d-flex {{ 'justify-content-end' if msg.is_target else 'justify-content-start' }}">
+                    <div class="chat-bubble {{ 'chat-bubble-right' if msg.is_target else 'chat-bubble-left' }}">
+                        {% if not msg.is_target %}
+                        <div class="chat-sender">{{ msg.sender }}</div>
+                        {% endif %}
+                        {% if msg.media %}
+                        <div class="chat-media-indicator">
+                            <i class="bi bi-{{ 'image' if msg.media_type == 'image' else ('camera-video' if msg.media_type == 'video' else ('mic' if msg.media_type == 'audio' else 'file-earmark')) }}"></i>
+                            {{ msg.media_type|default('Media')|title }} {{ 'omitted' if not msg.media_url else '' }}
+                        </div>
+                        {% endif %}
+                        <div>{{ msg.text }}</div>
+                        <div class="chat-time">{{ msg.time }}</div>
+                    </div>
+                </div>
+            {% endfor %}
+
+            {% if not messages %}
+            <div class="text-center py-5">
+                <i class="bi bi-chat-square display-1 text-muted"></i>
+                <h5 class="text-muted mt-3">No messages to display</h5>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2">
+    <a href="{{ url_for('messaging.view_result', investigation_id=investigation.id) }}" class="btn btn-primary"><i class="bi bi-arrow-left"></i> Back to Analysis</a>
+    <a href="{{ url_for('messaging.upload') }}" class="btn btn-info text-white"><i class="bi bi-upload"></i> New Upload</a>
+    <a href="{{ url_for('cases.view_case', case_id=investigation.case_id) }}" class="btn btn-outline-secondary"><i class="bi bi-folder"></i> View Case</a>
+</div>
+{% endblock %}

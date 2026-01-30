@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Threat Actor Profile{% endblock %}
+{% block page_title %}Threat Actor Profile{% endblock %}
+
+{% block content %}
+<!-- Actor Header -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-person-x"></i> {{ actor.name }}</h5>
+            <span class="badge bg-{{ 'danger' if actor.risk_level == 'critical' else ('warning' if actor.risk_level == 'high' else ('info' if actor.risk_level == 'medium' else 'success')) }} fs-6">
+                {{ actor.risk_level|default('Unknown')|upper }} RISK
+            </span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8">
+                <h6>Aliases</h6>
+                <div class="mb-3">
+                    {% for alias in actor.aliases|default([]) %}
+                    <span class="badge bg-secondary me-1">{{ alias }}</span>
+                    {% endfor %}
+                    {% if not actor.aliases %}
+                    <span class="text-muted">No known aliases</span>
+                    {% endif %}
+                </div>
+                <h6>Description</h6>
+                <p>{{ actor.description|default('No description available.') }}</p>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <i class="bi bi-person-x display-4 text-danger"></i>
+                        <h5 class="mt-2">{{ actor.name }}</h5>
+                        <p class="mb-0"><small>First identified: {{ actor.first_identified|default('N/A') }}</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Associated Cases -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0"><i class="bi bi-folder2-open"></i> Associated Cases ({{ actor.cases|default([])|length }})</h6>
+    </div>
+    <div class="card-body">
+        {% if actor.cases %}
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Case Number</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Connection</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for case in actor.cases %}
+                    <tr>
+                        <td>{{ case.case_number }}</td>
+                        <td>{{ case.title }}</td>
+                        <td><span class="badge bg-{{ 'success' if case.status == 'closed' else 'primary' }}">{{ case.status|title }}</span></td>
+                        <td>{{ case.connection_type|default('Linked') }}</td>
+                        <td><a href="{{ url_for('cases.view_case', case_id=case.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> View</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No associated cases.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Indicators -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0"><i class="bi bi-bullseye"></i> Known Indicators ({{ actor.indicators|default([])|length }})</h6>
+    </div>
+    <div class="card-body">
+        {% if actor.indicators %}
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Type</th>
+                        <th>Value</th>
+                        <th>First Seen</th>
+                        <th>Last Seen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for indicator in actor.indicators %}
+                    <tr>
+                        <td><span class="badge bg-info">{{ indicator.type }}</span></td>
+                        <td><code>{{ indicator.value }}</code></td>
+                        <td>{{ indicator.first_seen|default('N/A') }}</td>
+                        <td>{{ indicator.last_seen|default('N/A') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No known indicators.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- TTPs -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0"><i class="bi bi-shield-exclamation"></i> Tactics, Techniques & Procedures (TTPs)</h6>
+    </div>
+    <div class="card-body">
+        {% if actor.ttps %}
+        <div class="row">
+            {% for ttp in actor.ttps %}
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <div class="card-body py-2">
+                        <h6 class="mb-1"><i class="bi bi-gear"></i> {{ ttp.name }}</h6>
+                        <p class="mb-0 small text-muted">{{ ttp.description }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">No TTPs documented.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Timeline -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0"><i class="bi bi-clock-history"></i> Activity Timeline</h6>
+    </div>
+    <div class="card-body">
+        {% for event in actor.timeline|default([]) %}
+        <div class="d-flex mb-3">
+            <div class="flex-shrink-0 text-center" style="width:80px;">
+                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:36px;height:36px;">
+                    <i class="bi bi-clock"></i>
+                </div>
+                <small class="d-block text-muted mt-1">{{ event.date }}</small>
+            </div>
+            <div class="flex-grow-1 ms-3">
+                <div class="card bg-light">
+                    <div class="card-body py-2">
+                        <strong>{{ event.title }}</strong>
+                        <p class="mb-0 small">{{ event.description }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% if not actor.timeline %}
+        <p class="text-muted mb-0">No timeline events recorded.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="d-flex gap-2">
+    <a href="{{ url_for('correlation.dashboard') }}" class="btn btn-primary"><i class="bi bi-arrow-left"></i> Back to Dashboard</a>
+    <a href="{{ url_for('correlation.network_viz') }}" class="btn btn-info text-white"><i class="bi bi-diagram-3"></i> View Network</a>
+</div>
+{% endblock %}
